@@ -28,12 +28,14 @@ const LessonMaterials: React.FC<LessonMaterialsProps> = ({
 
   const handleDownload = async (material: any) => {
     try {
-      await trackDownload({
-        materialId: material._id,
-        userId: currentUser?._id || '',
-        ipAddress: undefined,
-        userAgent: navigator.userAgent,
-      });
+      if (currentUser?._id) {
+        await trackDownload({
+          materialId: material._id as Id<"lessonMaterials">,
+          userId: currentUser._id as Id<"users">,
+          ipAddress: undefined,
+          userAgent: navigator.userAgent,
+        });
+      }
 
       if (material.externalUrl) {
         window.open(material.externalUrl, '_blank');

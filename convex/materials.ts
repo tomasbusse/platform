@@ -41,6 +41,16 @@ export const uploadMaterial = mutation({
       throw new Error("Not authenticated");
     }
 
+    // Get the user from Convex database
+    const convexUser = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("clerkId"), user.subject))
+      .first();
+
+    if (!convexUser) {
+      throw new Error("User not found in database");
+    }
+
     const now = Date.now();
     const materialId = await ctx.db.insert("lessonMaterials", {
       companyId: args.companyId,
@@ -57,7 +67,7 @@ export const uploadMaterial = mutation({
       accessStudentIds: args.accessStudentIds,
       scheduledLessonId: args.scheduledLessonId,
       virtualLessonId: args.virtualLessonId,
-      uploadedBy: user.email,
+      uploadedBy: convexUser._id,
       isActive: true,
       createdAt: now,
       updatedAt: now,
@@ -74,7 +84,7 @@ export const uploadMaterial = mutation({
 export const getMaterialsForUser = query({
   args: {
     companyId: v.id("companies"),
-    userId: v.optional(v.string()),
+    userId: v.optional(v.id("users")),
     groupIds: v.optional(v.array(v.id("groups"))),
   },
   handler: async (ctx, args) => {
@@ -84,17 +94,10 @@ export const getMaterialsForUser = query({
         .query("lessonMaterials")
         .collect();
 
-      // Convert companyId to string for comparison
-      const companyIdStr = args.companyId.toString();
-
       // Filter by company and access scope
       const materials = allMaterials.filter((material) => {
         // Must be from the same company
-        const materialCompanyId = typeof material.companyId === 'string'
-          ? material.companyId
-          : material.companyId.toString();
-
-        if (materialCompanyId !== companyIdStr) {
+        if (material.companyId !== args.companyId) {
           return false;
         }
 
@@ -112,11 +115,9 @@ export const getMaterialsForUser = query({
           if (!args.groupIds || args.groupIds.length === 0) {
             return false;
           }
-          const groupIdStrs = args.groupIds.map(g => g.toString());
-          const hasAccess = material.accessGroupIds?.some((gid) => {
-            const gidStr = typeof gid === 'string' ? gid : gid.toString();
-            return groupIdStrs.includes(gidStr);
-          });
+          const hasAccess = material.accessGroupIds?.some((gid) =>
+            args.groupIds!.includes(gid)
+          );
           return hasAccess || false;
         }
 
@@ -253,7 +254,7 @@ export const deleteMaterial = mutation({
 export const trackMaterialDownload = mutation({
   args: {
     materialId: v.id("lessonMaterials"),
-    userId: v.string(),
+    userId: v.id("users"),
     ipAddress: v.optional(v.string()),
     userAgent: v.optional(v.string()),
   },
@@ -322,7 +323,7 @@ export const getMaterialDownloadStats = query({
 
 export const getUserNotifications = query({
   args: {
-    userId: v.string(),
+    userId: v.id("users"),
     companyId: v.id("companies"),
     unreadOnly: v.optional(v.boolean()),
   },
@@ -332,14 +333,9 @@ export const getUserNotifications = query({
         .query("materialNotifications")
         .collect();
 
-      const companyIdStr = args.companyId.toString();
-
-      let filtered = notifications.filter((n) => {
-        const nCompanyId = typeof n.companyId === 'string'
-          ? n.companyId
-          : n.companyId.toString();
-        return n.recipientId === args.userId && nCompanyId === companyIdStr;
-      });
+      let filtered = notifications.filter((n) =>
+        n.recipientId === args.userId && n.companyId === args.companyId
+      );
 
       if (args.unreadOnly) {
         filtered = filtered.filter((n) => !n.isRead);

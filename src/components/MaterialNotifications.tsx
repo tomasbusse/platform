@@ -20,7 +20,7 @@ const MaterialNotifications: React.FC<MaterialNotificationsProps> = ({
   }
 
   const notifications = useQuery(api.materials.getUserNotifications, {
-    userId: currentUser._id,
+    userId: currentUser._id as Id<"users">,
     companyId: company._id as Id<"companies">,
     unreadOnly: !showAll,
   });

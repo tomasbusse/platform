@@ -23,7 +23,7 @@ const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({ currentUser, compan
   // Get materials accessible to user
   const materials = useQuery(api.materials.getMaterialsForUser, {
     companyId: company._id as Id<"companies">,
-    userId: currentUser._id,
+    userId: currentUser._id as Id<"users">,
     groupIds: userGroups as Id<"groups">[],
   });
 
@@ -48,12 +48,14 @@ const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({ currentUser, compan
   const handleDownload = async (material: any) => {
     try {
       // Track the download
-      await trackDownload({
-        materialId: material._id,
-        userId: currentUser?._id || '',
-        ipAddress: undefined,
-        userAgent: navigator.userAgent,
-      });
+      if (currentUser?._id) {
+        await trackDownload({
+          materialId: material._id as Id<"lessonMaterials">,
+          userId: currentUser._id as Id<"users">,
+          ipAddress: undefined,
+          userAgent: navigator.userAgent,
+        });
+      }
 
       // Generate and open download URL
       if (material.externalUrl) {

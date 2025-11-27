@@ -946,10 +946,10 @@ export default defineSchema({
 
   // Lesson materials (uploaded files) - with access scoping
   lessonMaterials: defineTable({
-    companyId: v.union(v.id("companies"), v.string()),
+    companyId: v.id("companies"),
     scheduledLessonId: v.optional(v.id("scheduledLessons")),
     virtualLessonId: v.optional(v.id("virtualLessons")),
-    uploadedBy: v.union(v.id("users"), v.string()),
+    uploadedBy: v.id("users"),
     // File info
     fileName: v.string(),
     fileType: v.string(), // MIME type
@@ -975,7 +975,7 @@ export default defineSchema({
       v.literal("individual")  // Only specific student(s) can access
     ),
     // For group-scoped materials
-    accessGroupIds: v.optional(v.array(v.union(v.id("groups"), v.string()))),
+    accessGroupIds: v.optional(v.array(v.id("groups"))),
     // For individual-scoped materials
     accessStudentIds: v.optional(v.array(v.string())),
     isActive: v.boolean(),
@@ -1091,8 +1091,8 @@ export default defineSchema({
   // Material download tracking
   materialDownloads: defineTable({
     materialId: v.id("lessonMaterials"),
-    userId: v.string(),
-    companyId: v.union(v.id("companies"), v.string()),
+    userId: v.id("users"),
+    companyId: v.id("companies"),
     downloadedAt: v.number(),
     ipAddress: v.optional(v.string()),
     userAgent: v.optional(v.string()),
@@ -1104,8 +1104,8 @@ export default defineSchema({
   // Material sharing notifications
   materialNotifications: defineTable({
     materialId: v.id("lessonMaterials"),
-    recipientId: v.string(),
-    companyId: v.union(v.id("companies"), v.string()),
+    recipientId: v.id("users"),
+    companyId: v.id("companies"),
     notificationType: v.union(
       v.literal("material_shared"),
       v.literal("material_updated"),
