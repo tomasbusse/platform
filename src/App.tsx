@@ -173,6 +173,18 @@ const App: React.FC = () => {
     );
   }
 
+  // Authenticated with user but company is still loading
+  if (currentUser && company === undefined) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-simmonds-cream to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-simmonds-primary mx-auto"></div>
+          <p className="mt-4 text-simmonds-stone">Loading company data...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Authenticated but missing user/company setup
   return (
     <div className="min-h-screen bg-gradient-to-br from-simmonds-cream to-white flex items-center justify-center">

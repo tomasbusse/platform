@@ -106,12 +106,15 @@ export const ensureUser = mutation({
       company = await ctx.db.get(companyId);
     }
 
+    // Determine role: first user is admin, others are teachers (can manage students)
+    const role = isFirstUser ? "corporate_admin" : "teacher";
+
     // Create new user
     const userId = await ctx.db.insert("users", {
       email: email,
       name: name,
       clerkId: clerkUserId,
-      role: isFirstUser ? "corporate_admin" : "student", // First user is admin, others are students
+      role: role,
       companyId: company!._id,
       isActive: true,
       totalScore: 0,
