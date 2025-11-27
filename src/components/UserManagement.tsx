@@ -113,20 +113,19 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
           throw new Error('User session not found. Please refresh the page and try again.');
         }
 
-        // Create user with invitation
-        const result = await createUserWithInvitation({
+        // Create user directly (they'll authenticate via Clerk)
+        await addEmployee({
           companyId: companyId as Id<"companies">,
           name: formData.name,
           email: formData.email,
           role: formData.role,
           ...(formData.role === 'student' && { currentLevel: formData.currentLevel }),
-          createdBy: currentUserId as Id<"users">,
         });
 
-        // Generate invite link - always use production URL
+        // Generate sign-up link - user will sign up through Clerk
         const baseUrl = 'https://app.simmonds.online';
-        const link = `${baseUrl}/setup-password?token=${result.token}`;
-        setInviteLink(link);
+        const signUpLink = `${baseUrl}`;
+        setInviteLink(signUpLink);
 
         // Try to send email automatically if Resend is configured
         console.log('Company data:', company);
@@ -141,7 +140,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
               toEmail: formData.email,
               userName: formData.name,
               companyName: company?.name || 'Simmonds Platform',
-              inviteUrl: link,
+              inviteUrl: signUpLink,
               role: formData.role,
             });
 
@@ -161,14 +160,13 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
 
         setShowInviteModal(true);
       } else {
-        // Create user with password directly
+        // Create user directly (they'll authenticate via Clerk)
         await addEmployee({
           companyId: companyId as Id<"companies">,
           name: formData.name,
           email: formData.email,
           role: formData.role,
           ...(formData.role === 'student' && { currentLevel: formData.currentLevel }),
-          ...(formData.password && { password: formData.password }),
         });
       }
 
@@ -207,10 +205,10 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
         resendBy: currentUserId as Id<"users">,
       });
 
-      // Generate invite link - always use production URL
+      // Generate sign-up link - user will sign up through Clerk
       const baseUrl = 'https://app.simmonds.online';
-      const link = `${baseUrl}/setup-password?token=${result.token}`;
-      setInviteLink(link);
+      const signUpLink = `${baseUrl}`;
+      setInviteLink(signUpLink);
 
       // Try to send email automatically if Resend is configured
       const resendApiKey = company?.settings?.resendApiKey;
@@ -224,7 +222,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
             toEmail: userEmail,
             userName: userName,
             companyName: company?.name || 'Simmonds Platform',
-            inviteUrl: link,
+            inviteUrl: signUpLink,
             role: user?.role || 'student',
           });
 
@@ -727,8 +725,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
 
               <p className="text-sm text-gray-600">
                 {emailSent
-                  ? 'You can also share this link manually if needed. The link expires in 7 days.'
-                  : 'Share this link with the user. They can use it to set their password and activate their account. The link expires in 7 days.'}
+                  ? 'The user has been created and can now sign up using this link. They will authenticate through Google or email.'
+                  : 'Share this link with the user. They can sign up and authenticate through Google or email.'}
               </p>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-sm font-mono break-all text-gray-800">{inviteLink}</p>
