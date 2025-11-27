@@ -79,15 +79,24 @@ export const getMaterialsForUser = query({
   },
   handler: async (ctx, args) => {
     try {
-      const materials = await ctx.db
+      // Get all materials for the company
+      const allMaterials = await ctx.db
         .query("lessonMaterials")
-        .withIndex("by_company", (q) => q.eq("companyId", args.companyId))
         .collect();
 
-      // Filter based on access scope
-      return materials.filter((material) => {
-        if (!material.isActive) return false;
+      // Filter by company and access scope
+      const materials = allMaterials.filter((material) => {
+        // Must be from the same company
+        if (material.companyId !== args.companyId) {
+          return false;
+        }
 
+        // Must be active
+        if (!material.isActive) {
+          return false;
+        }
+
+        // Check access scope
         if (material.accessScope === "company") {
           return true;
         }
@@ -96,9 +105,10 @@ export const getMaterialsForUser = query({
           if (!args.groupIds || args.groupIds.length === 0) {
             return false;
           }
-          return material.accessGroupIds?.some((gid) =>
+          const hasAccess = material.accessGroupIds?.some((gid) =>
             args.groupIds!.includes(gid as any)
-          ) || false;
+          );
+          return hasAccess || false;
         }
 
         if (material.accessScope === "individual") {
@@ -110,6 +120,8 @@ export const getMaterialsForUser = query({
 
         return false;
       });
+
+      return materials;
     } catch (error) {
       console.error("Error in getMaterialsForUser:", error);
       return [];
@@ -126,12 +138,18 @@ export const getMaterialsForLesson = query({
     lessonId: v.id("virtualLessons"),
   },
   handler: async (ctx, args) => {
-    const materials = await ctx.db
-      .query("lessonMaterials")
-      .withIndex("by_virtual_lesson", (q) => q.eq("virtualLessonId", args.lessonId))
-      .collect();
+    try {
+      const materials = await ctx.db
+        .query("lessonMaterials")
+        .collect();
 
-    return materials.filter((m) => m.isActive);
+      return materials.filter((m) =>
+        m.isActive && m.virtualLessonId === args.lessonId
+      );
+    } catch (error) {
+      console.error("Error in getMaterialsForLesson:", error);
+      return [];
+    }
   },
 });
 
@@ -259,23 +277,33 @@ export const getMaterialDownloadStats = query({
     materialId: v.id("lessonMaterials"),
   },
   handler: async (ctx, args) => {
-    const downloads = await ctx.db
-      .query("materialDownloads")
-      .withIndex("by_material", (q) => q.eq("materialId", args.materialId))
-      .collect();
+    try {
+      const downloads = await ctx.db
+        .query("materialDownloads")
+        .collect();
 
-    const uniqueUsers = new Set(downloads.map((d) => d.userId)).size;
-    const totalDownloads = downloads.length;
-    const lastDownloadedAt = downloads.length > 0
-      ? Math.max(...downloads.map((d) => d.downloadedAt))
-      : null;
+      const filtered = downloads.filter((d) => d.materialId === args.materialId);
+      const uniqueUsers = new Set(filtered.map((d) => d.userId)).size;
+      const totalDownloads = filtered.length;
+      const lastDownloadedAt = filtered.length > 0
+        ? Math.max(...filtered.map((d) => d.downloadedAt))
+        : null;
 
-    return {
-      totalDownloads,
-      uniqueUsers,
-      lastDownloadedAt,
-      downloads: downloads.sort((a, b) => b.downloadedAt - a.downloadedAt),
-    };
+      return {
+        totalDownloads,
+        uniqueUsers,
+        lastDownloadedAt,
+        downloads: filtered.sort((a, b) => b.downloadedAt - a.downloadedAt),
+      };
+    } catch (error) {
+      console.error("Error in getMaterialDownloadStats:", error);
+      return {
+        totalDownloads: 0,
+        uniqueUsers: 0,
+        lastDownloadedAt: null,
+        downloads: [],
+      };
+    }
   },
 });
 
@@ -293,10 +321,11 @@ export const getUserNotifications = query({
     try {
       const notifications = await ctx.db
         .query("materialNotifications")
-        .withIndex("by_recipient", (q) => q.eq("recipientId", args.userId))
         .collect();
 
-      let filtered = notifications.filter((n) => n.companyId === args.companyId);
+      let filtered = notifications.filter((n) =>
+        n.recipientId === args.userId && n.companyId === args.companyId
+      );
 
       if (args.unreadOnly) {
         filtered = filtered.filter((n) => !n.isRead);
