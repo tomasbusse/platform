@@ -64,7 +64,7 @@ export const ensureUser = mutation({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity || !identity.email) {
-      throw new Error("Not authenticated");
+      return null;
     }
 
     const email = identity.email;
@@ -125,7 +125,7 @@ export const ensureUser = mutation({
   },
 });
 
-// Setup admin account - promotes a user to admin (manual)
+// Setup admin account - creates company if needed and assigns user as admin
 export const setupAdminAccount = mutation({
   args: {
     email: v.string(),
