@@ -3,6 +3,7 @@ import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { User, Company } from '../types';
 import { Id } from '../../convex/_generated/dataModel';
+import RecentMaterialsWidget from '../components/RecentMaterialsWidget';
 
 interface StudentDashboardProps {
   currentUser: User;
@@ -209,6 +210,9 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ currentUser, compan
             )}
           </div>
         </div>
+
+        {/* Recent Materials Widget */}
+        <RecentMaterialsWidget currentUser={currentUser} company={company} isTeacher={false} />
 
         {/* Virtual Lessons */}
         <div className="bg-white rounded-2xl shadow-sm border border-simmonds-cream overflow-hidden">

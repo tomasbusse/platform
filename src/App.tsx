@@ -7,6 +7,7 @@ import SeedAdmin from './pages/SeedAdmin';
 import PublicAssessment from './pages/PublicAssessment';
 import JoinCompany from './pages/JoinCompany';
 import QuizTest from './pages/QuizTest';
+import MaterialsPage from './pages/MaterialsPage';
 
 const App: React.FC = () => {
   const { isLoaded, isSignedIn } = useAuth();
@@ -15,6 +16,7 @@ const App: React.FC = () => {
   const [assessmentToken, setAssessmentToken] = useState<string | null>(null);
   const [joinToken, setJoinToken] = useState<string | null>(null);
   const [testSessionId, setTestSessionId] = useState<string | null>(null);
+  const [showMaterials, setShowMaterials] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
   const [isEnsuring, setIsEnsuring] = useState(false);
 
@@ -72,6 +74,12 @@ const App: React.FC = () => {
       return;
     }
 
+    // Check if URL is for materials library (/materials)
+    if (path === '/materials') {
+      setShowMaterials(true);
+      return;
+    }
+
     // Check if URL is for public assessment (/assessment/:token)
     const assessmentMatch = path.match(/^\/assessment\/([a-zA-Z0-9]+)$/);
     if (assessmentMatch) {
@@ -110,6 +118,17 @@ const App: React.FC = () => {
       return <SignIn />;
     }
     return <QuizTest sessionId={testSessionId} currentUser={currentUser || null} company={company || null} />;
+  }
+
+  // Show materials library (requires login)
+  if (showMaterials) {
+    if (!isLoaded) {
+      return <div className="p-8 text-center">Loading...</div>;
+    }
+    if (!isSignedIn) {
+      return <SignIn />;
+    }
+    return <MaterialsPage currentUser={currentUser || null} company={company || null} />;
   }
 
   // Show public assessment page (no login required)

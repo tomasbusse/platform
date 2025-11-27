@@ -4,6 +4,7 @@ import { api } from '../../convex/_generated/api';
 import { User, Company, DashboardStats } from '../types';
 import UserManagement from '../components/UserManagement';
 import CompanyRegistrationForm from '../components/CompanyRegistrationForm';
+import RecentMaterialsWidget from '../components/RecentMaterialsWidget';
 import TestTaking from './TestTaking';
 import TestResults from './TestResults';
 import LearningManagement from './LearningManagement';
@@ -13,6 +14,7 @@ import SettingsPage from './SettingsPage';
 import CompanyManagement from './CompanyManagement';
 import LessonsPage from './LessonsPage';
 import StudentDashboard from './StudentDashboard';
+import MaterialsPage from './MaterialsPage';
 
 interface DashboardProps {
   currentUser: User | null;
@@ -79,6 +81,12 @@ const BuildingIcon = () => (
 const LessonsIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+  </svg>
+);
+
+const MaterialsIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
   </svg>
 );
 
@@ -232,6 +240,11 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout })
                 </div>
               </div>
             </div>
+
+            {/* Recent Materials Widget */}
+            <div className="mt-6">
+              <RecentMaterialsWidget currentUser={currentUser} company={company} isTeacher={isTeacher} />
+            </div>
           </div>
         );
 
@@ -252,6 +265,9 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout })
 
       case 'lessons':
         return <LessonsPage currentUser={currentUser} company={company} />;
+
+      case 'materials':
+        return <MaterialsPage currentUser={currentUser} company={company} />;
 
       case 'email-system':
         return <EmailSystem currentUser={currentUser} company={company} />;
@@ -283,6 +299,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout })
   const navItems = [
     { id: 'overview', name: 'Dashboard', icon: HomeIcon, show: true },
     { id: 'lessons', name: 'Lessons', icon: LessonsIcon, show: true },
+    { id: 'materials', name: 'Materials', icon: MaterialsIcon, show: true },
     { id: 'test-taking', name: 'Take Test', icon: TestIcon, show: true },
     { id: 'learning-mgmt', name: 'Learning', icon: LearnIcon, show: true },
     { id: 'test-results', name: 'Results', icon: ChartIcon, show: isTeacher },
