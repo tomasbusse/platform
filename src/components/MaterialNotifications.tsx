@@ -35,7 +35,12 @@ const MaterialNotifications: React.FC<MaterialNotificationsProps> = ({
     }
   };
 
-  if (!notifications || notifications.length === 0) {
+  // Handle loading or error state
+  if (!notifications) {
+    return null;
+  }
+
+  if (notifications.length === 0) {
     return null;
   }
 

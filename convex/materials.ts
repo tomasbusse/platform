@@ -78,31 +78,42 @@ export const getMaterialsForUser = query({
     groupIds: v.optional(v.array(v.union(v.id("groups"), v.string()))),
   },
   handler: async (ctx, args) => {
-    const materials = await ctx.db
-      .query("lessonMaterials")
-      .withIndex("by_company", (q) => q.eq("companyId", args.companyId))
-      .collect();
+    try {
+      const materials = await ctx.db
+        .query("lessonMaterials")
+        .withIndex("by_company", (q) => q.eq("companyId", args.companyId))
+        .collect();
 
-    // Filter based on access scope
-    return materials.filter((material) => {
-      if (!material.isActive) return false;
+      // Filter based on access scope
+      return materials.filter((material) => {
+        if (!material.isActive) return false;
 
-      if (material.accessScope === "company") {
-        return true;
-      }
+        if (material.accessScope === "company") {
+          return true;
+        }
 
-      if (material.accessScope === "group" && args.groupIds) {
-        return material.accessGroupIds?.some((gid) =>
-          args.groupIds!.includes(gid as any)
-        );
-      }
+        if (material.accessScope === "group") {
+          if (!args.groupIds || args.groupIds.length === 0) {
+            return false;
+          }
+          return material.accessGroupIds?.some((gid) =>
+            args.groupIds!.includes(gid as any)
+          ) || false;
+        }
 
-      if (material.accessScope === "individual" && args.userId) {
-        return material.accessStudentIds?.includes(args.userId);
-      }
+        if (material.accessScope === "individual") {
+          if (!args.userId) {
+            return false;
+          }
+          return material.accessStudentIds?.includes(args.userId) || false;
+        }
 
-      return false;
-    });
+        return false;
+      });
+    } catch (error) {
+      console.error("Error in getMaterialsForUser:", error);
+      return [];
+    }
   },
 });
 
@@ -279,18 +290,23 @@ export const getUserNotifications = query({
     unreadOnly: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const notifications = await ctx.db
-      .query("materialNotifications")
-      .withIndex("by_recipient", (q) => q.eq("recipientId", args.userId))
-      .collect();
+    try {
+      const notifications = await ctx.db
+        .query("materialNotifications")
+        .withIndex("by_recipient", (q) => q.eq("recipientId", args.userId))
+        .collect();
 
-    let filtered = notifications.filter((n) => n.companyId === args.companyId);
+      let filtered = notifications.filter((n) => n.companyId === args.companyId);
 
-    if (args.unreadOnly) {
-      filtered = filtered.filter((n) => !n.isRead);
+      if (args.unreadOnly) {
+        filtered = filtered.filter((n) => !n.isRead);
+      }
+
+      return filtered.sort((a, b) => b.createdAt - a.createdAt);
+    } catch (error) {
+      console.error("Error in getUserNotifications:", error);
+      return [];
     }
-
-    return filtered.sort((a, b) => b.createdAt - a.createdAt);
   },
 });
 

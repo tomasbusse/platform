@@ -44,9 +44,6 @@ const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({ currentUser, compan
   });
 
   const trackDownload = useMutation(api.materials.trackMaterialDownload);
-  const generateDownloadUrl = useQuery(api.materials.generateDownloadUrl, {
-    materialId: undefined as any,
-  });
 
   const handleDownload = async (material: any) => {
     try {
@@ -63,14 +60,18 @@ const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({ currentUser, compan
         window.open(material.externalUrl, '_blank');
       } else if (material.storageId) {
         // Get download URL from Convex storage
-        const response = await fetch('/api/download', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ storageId: material.storageId }),
-        }).then((r) => r.json());
+        try {
+          const response = await fetch('/api/download', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ storageId: material.storageId }),
+          }).then((r) => r.json());
 
-        if (response.url) {
-          window.open(response.url, '_blank');
+          if (response.url) {
+            window.open(response.url, '_blank');
+          }
+        } catch (downloadErr) {
+          console.error('Download URL error:', downloadErr);
         }
       }
     } catch (err) {
