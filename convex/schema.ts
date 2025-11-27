@@ -1071,6 +1071,16 @@ export default defineSchema({
     expiresAt: v.optional(v.number()), // Optional expiration
     maxUses: v.optional(v.number()), // Optional max number of uses
     currentUses: v.number(), // Current number of uses
+    // Optional test/quiz to send with invitation
+    quizId: v.optional(v.id("quizzes")),
+    testType: v.optional(v.union(
+      v.literal("placement"),
+      v.literal("follow_up"),
+      v.literal("level_assessment"),
+      v.literal("practice"),
+      v.literal("diagnostic"),
+      v.literal("certification")
+    )),
     createdBy: v.id("users"),
     createdAt: v.number(),
     updatedAt: v.number(),

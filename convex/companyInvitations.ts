@@ -14,6 +14,15 @@ export const createCompanyInvitationLink = mutation({
     role: v.union(v.literal("student"), v.literal("teacher"), v.literal("admin")),
     expiresAt: v.optional(v.number()), // Optional expiration date
     maxUses: v.optional(v.number()), // Optional max uses
+    quizId: v.optional(v.id("quizzes")), // Optional quiz to send with invitation
+    testType: v.optional(v.union(
+      v.literal("placement"),
+      v.literal("follow_up"),
+      v.literal("level_assessment"),
+      v.literal("practice"),
+      v.literal("diagnostic"),
+      v.literal("certification")
+    )),
   },
   handler: async (ctx, args) => {
     // Check if user is authenticated and is admin
@@ -43,6 +52,8 @@ export const createCompanyInvitationLink = mutation({
       expiresAt: args.expiresAt,
       maxUses: args.maxUses,
       currentUses: 0,
+      quizId: args.quizId,
+      testType: args.testType,
       createdBy: currentUser._id,
       createdAt: now,
       updatedAt: now,
@@ -137,9 +148,9 @@ export const acceptInvitationLink = mutation({
       .withIndex("by_email", (q) => q.eq("email", user.email))
       .first();
 
+    const now = Date.now();
     if (!currentUser) {
       // Create new user
-      const now = Date.now();
       const userId = await ctx.db.insert("users", {
         email: user.email,
         name: user.name || user.email,
@@ -158,17 +169,38 @@ export const acceptInvitationLink = mutation({
       await ctx.db.patch(currentUser._id, {
         companyId: link.companyId,
         role: link.role,
-        updatedAt: Date.now(),
+        updatedAt: now,
       });
+    }
+
+    // If a quiz is attached, create a test session
+    let testSessionId: string | null = null;
+    if (link.quizId && currentUser) {
+      const sessionId = await ctx.db.insert("testSessions", {
+        quizId: link.quizId,
+        userId: currentUser._id,
+        companyId: link.companyId,
+        status: "pending",
+        startedAt: now,
+        totalQuestions: 0,
+        questionsAnswered: 0,
+        attemptNumber: 1,
+      });
+      testSessionId = sessionId;
     }
 
     // Increment usage count
     await ctx.db.patch(link._id, {
       currentUses: link.currentUses + 1,
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
 
-    return { success: true, userId: currentUser._id };
+    return {
+      success: true,
+      userId: currentUser._id,
+      testSessionId: testSessionId,
+      quizId: link.quizId,
+    };
   },
 });
 

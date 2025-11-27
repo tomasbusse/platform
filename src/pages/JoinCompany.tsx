@@ -21,9 +21,14 @@ const JoinCompany: React.FC<JoinCompanyProps> = ({ token }) => {
     if (isSignedIn && invitationLink && !isAccepting) {
       setIsAccepting(true);
       acceptInvitationLink({ token })
-        .then(() => {
-          // Redirect to dashboard
-          window.location.href = '/';
+        .then((result) => {
+          // If there's a test session, redirect to test taking page
+          if (result.testSessionId && result.quizId) {
+            window.location.href = `/test/${result.testSessionId}`;
+          } else {
+            // Otherwise redirect to dashboard
+            window.location.href = '/';
+          }
         })
         .catch((err) => {
           console.error('Error accepting invitation:', err);

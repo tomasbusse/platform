@@ -23,6 +23,7 @@ interface UserFormData {
   currentLevel: string;
   password: string;
   sendInvite: boolean;
+  quizId?: string;
 }
 
 interface UserManagementProps {
@@ -45,6 +46,9 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
     companyId: companyId as Id<"companies">
   });
   const company = useQuery(api.userManagement.getCompany, {
+    companyId: companyId as Id<"companies">
+  });
+  const quizzes = useQuery(api.quizzes.getCompanyQuizzes, {
     companyId: companyId as Id<"companies">
   });
   const addEmployee = useMutation(api.userManagement.addEmployee);
@@ -113,6 +117,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
         const linkResult = await createCompanyInvitationLink({
           companyId: companyId as Id<"companies">,
           role: formData.role,
+          ...(formData.quizId && { quizId: formData.quizId as Id<"quizzes"> }),
         });
 
         setInviteLink(linkResult.url);
@@ -522,6 +527,29 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
                     placeholder="Min. 8 characters"
                   />
                   {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+                </div>
+              )}
+
+              {formData.sendInvite && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Send Test with Invitation (Optional)
+                  </label>
+                  <select
+                    value={formData.quizId || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, quizId: e.target.value || undefined }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
+                  >
+                    <option value="">No test</option>
+                    {quizzes?.map((quiz: any) => (
+                      <option key={quiz._id} value={quiz._id}>
+                        {quiz.title} ({quiz.level})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    If selected, the user will take this test after signing up. Their performance will determine their level allocation.
+                  </p>
                 </div>
               )}
             </div>
