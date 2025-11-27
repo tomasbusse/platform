@@ -29,11 +29,13 @@ const App: React.FC = () => {
 
   // Auto-ensure user exists in Convex when signed in with Clerk
   useEffect(() => {
-    if (isSignedIn && currentUser === null && !isEnsuring) {
+    if (isSignedIn && currentUser === undefined && !isEnsuring) {
       setIsEnsuring(true);
       ensureUser({})
         .then((result) => {
-          console.log("User ensured in Convex:", result);
+          if (result) {
+            console.log("User ensured in Convex:", result);
+          }
           setIsEnsuring(false);
         })
         .catch((error) => {
