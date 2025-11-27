@@ -1,0 +1,44 @@
+import React, { useState } from 'react';
+import { User, Company } from '../types';
+
+interface LearningManagementProps {
+  currentUser: User | null;
+  company: Company | null;
+}
+
+const LearningManagement: React.FC<LearningManagementProps> = ({ currentUser, company }) => {
+  const [activeTab, setActiveTab] = useState('dashboard');
+
+  return (
+    <div className="max-w-7xl mx-auto">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Learning Management</h1>
+        <p className="text-gray-600">Track your progress and continue your English learning journey</p>
+      </div>
+
+      <div className="bg-white p-6 rounded-lg shadow">
+        <h2 className="text-xl font-semibold mb-4">Welcome to Learning Management</h2>
+        <p className="text-gray-600">
+          This section will contain comprehensive progress tracking, lesson management, 
+          and analytics features. Currently under development.
+        </p>
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-4 bg-blue-50 rounded-lg">
+            <h3 className="font-semibold text-blue-900">Progress Tracking</h3>
+            <p className="text-sm text-blue-700">Monitor learning progress across all skills</p>
+          </div>
+          <div className="p-4 bg-green-50 rounded-lg">
+            <h3 className="font-semibold text-green-900">Lesson Management</h3>
+            <p className="text-sm text-green-700">Access and manage your learning content</p>
+          </div>
+          <div className="p-4 bg-purple-50 rounded-lg">
+            <h3 className="font-semibold text-purple-900">Analytics Dashboard</h3>
+            <p className="text-sm text-purple-700">Detailed insights and performance metrics</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LearningManagement;

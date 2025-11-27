@@ -1,0 +1,99 @@
+/* eslint-disable */
+/**
+ * Generated `api` utility.
+ *
+ * THIS CODE IS AUTOMATICALLY GENERATED.
+ *
+ * To regenerate, run `npx convex dev`.
+ * @module
+ */
+
+import type * as aiContent from "../aiContent.js";
+import type * as analytics from "../analytics.js";
+import type * as apiIntegrations from "../apiIntegrations.js";
+import type * as assessmentActions from "../assessmentActions.js";
+import type * as assessmentInvitations from "../assessmentInvitations.js";
+import type * as audioContent from "../audioContent.js";
+import type * as auth from "../auth.js";
+import type * as authLegacy from "../authLegacy.js";
+import type * as authUtils from "../authUtils.js";
+import type * as companies from "../companies.js";
+import type * as dashboard from "../dashboard.js";
+import type * as debug from "../debug.js";
+import type * as emailActions from "../emailActions.js";
+import type * as emailCampaigns from "../emailCampaigns.js";
+import type * as emailTemplates from "../emailTemplates.js";
+import type * as groups from "../groups.js";
+import type * as http from "../http.js";
+import type * as lessons from "../lessons.js";
+import type * as mediaActions from "../mediaActions.js";
+import type * as notifications from "../notifications.js";
+import type * as progress from "../progress.js";
+import type * as quizzes from "../quizzes.js";
+import type * as seedAdmin from "../seedAdmin.js";
+import type * as settings from "../settings.js";
+import type * as testSessions from "../testSessions.js";
+import type * as userManagement from "../userManagement.js";
+
+import type {
+  ApiFromModules,
+  FilterApi,
+  FunctionReference,
+} from "convex/server";
+
+declare const fullApi: ApiFromModules<{
+  aiContent: typeof aiContent;
+  analytics: typeof analytics;
+  apiIntegrations: typeof apiIntegrations;
+  assessmentActions: typeof assessmentActions;
+  assessmentInvitations: typeof assessmentInvitations;
+  audioContent: typeof audioContent;
+  auth: typeof auth;
+  authLegacy: typeof authLegacy;
+  authUtils: typeof authUtils;
+  companies: typeof companies;
+  dashboard: typeof dashboard;
+  debug: typeof debug;
+  emailActions: typeof emailActions;
+  emailCampaigns: typeof emailCampaigns;
+  emailTemplates: typeof emailTemplates;
+  groups: typeof groups;
+  http: typeof http;
+  lessons: typeof lessons;
+  mediaActions: typeof mediaActions;
+  notifications: typeof notifications;
+  progress: typeof progress;
+  quizzes: typeof quizzes;
+  seedAdmin: typeof seedAdmin;
+  settings: typeof settings;
+  testSessions: typeof testSessions;
+  userManagement: typeof userManagement;
+}>;
+
+/**
+ * A utility for referencing Convex functions in your app's public API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = api.myModule.myFunction;
+ * ```
+ */
+export declare const api: FilterApi<
+  typeof fullApi,
+  FunctionReference<any, "public">
+>;
+
+/**
+ * A utility for referencing Convex functions in your app's internal API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = internal.myModule.myFunction;
+ * ```
+ */
+export declare const internal: FilterApi<
+  typeof fullApi,
+  FunctionReference<any, "internal">
+>;
+
+export declare const components: {};
