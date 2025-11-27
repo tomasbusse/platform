@@ -862,4 +862,25 @@ export default defineSchema({
   }).index("by_company", ["companyId"])
     .index("by_status", ["status"])
     .index("by_scheduled", ["scheduledAt"]),
+
+  // User invitations for password setup
+  userInvitations: defineTable({
+    userId: v.id("users"),
+    companyId: v.union(v.id("companies"), v.string()),
+    email: v.string(),
+    token: v.string(), // Unique token for the invitation link
+    status: v.union(
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("expired")
+    ),
+    expiresAt: v.number(),
+    createdBy: v.union(v.id("users"), v.string()),
+    createdAt: v.number(),
+    acceptedAt: v.optional(v.number()),
+  }).index("by_token", ["token"])
+    .index("by_email", ["email"])
+    .index("by_user", ["userId"])
+    .index("by_company", ["companyId"])
+    .index("by_status", ["status"]),
 });

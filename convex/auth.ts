@@ -17,26 +17,43 @@ async function getUserFromIdentity(ctx: any) {
   // Get user ID from subject (format: "userId|sessionId")
   if (identity.subject) {
     const subjectParts = identity.subject.split("|");
-    const userId = subjectParts[0];
+    const authUserId = subjectParts[0];
     try {
-      const doc = await ctx.db.get(userId as any);
-      // Make sure we got a user record (has 'role' field), not a session (has 'expirationTime')
-      if (doc && 'role' in doc) {
-        return doc;
-      }
-      // If we got a session record, look up the user by userId field
-      if (doc && 'userId' in doc) {
-        const actualUser = await ctx.db.get(doc.userId);
-        if (actualUser) {
-          return actualUser;
+      // First, try to get the user directly by the auth user ID
+      const authUser = await ctx.db.get(authUserId as any);
+
+      if (authUser) {
+        // Check if this user record has the required app fields (role)
+        if ('role' in authUser && authUser.role) {
+          return authUser;
         }
+
+        // If the auth user has an email, find the app user by email
+        if (authUser.email) {
+          const appUser = await ctx.db
+            .query("users")
+            .withIndex("by_email", (q: any) => q.eq("email", authUser.email))
+            .first();
+
+          // If we found a different user record with the same email that has role set
+          if (appUser && appUser._id !== authUser._id && 'role' in appUser && appUser.role) {
+            return appUser;
+          }
+
+          // Otherwise return the auth user (it just needs to be set up)
+          return authUser;
+        }
+
+        // Return the auth user even without role
+        return authUser;
       }
     } catch (e) {
+      console.error("Error getting user from subject:", e);
       // Continue to email lookup
     }
   }
 
-  // Fallback: Try to find user by email
+  // Fallback: Try to find user by email from identity
   if (identity.email) {
     const user = await ctx.db
       .query("users")

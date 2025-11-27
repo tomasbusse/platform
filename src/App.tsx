@@ -6,12 +6,14 @@ import Dashboard from './pages/Dashboard';
 import LoginForm from './components/LoginForm';
 import SeedAdmin from './pages/SeedAdmin';
 import PublicAssessment from './pages/PublicAssessment';
+import SetupPassword from './pages/SetupPassword';
 
 const App: React.FC = () => {
   const { isLoading, isAuthenticated } = useConvexAuth();
   const { signOut } = useAuthActions();
   const [showSeedPage, setShowSeedPage] = useState(false);
   const [assessmentToken, setAssessmentToken] = useState<string | null>(null);
+  const [setupPasswordToken, setSetupPasswordToken] = useState<string | null>(null);
 
   // Get the current authenticated user (only when authenticated)
   const currentUser = useQuery(
@@ -46,6 +48,16 @@ const App: React.FC = () => {
       return;
     }
 
+    // Check if URL is for password setup (/setup-password?token=xxx)
+    if (path === '/setup-password') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      if (token) {
+        setSetupPasswordToken(token);
+        return;
+      }
+    }
+
     // Check if URL has ?seed=admin parameter
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('seed') === 'admin') {
@@ -66,6 +78,11 @@ const App: React.FC = () => {
   // Show public assessment page (no login required)
   if (assessmentToken) {
     return <PublicAssessment token={assessmentToken} />;
+  }
+
+  // Show password setup page for invited users (no login required)
+  if (setupPasswordToken) {
+    return <SetupPassword token={setupPasswordToken} />;
   }
 
   // Loading state

@@ -213,7 +213,7 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ({ currentUser }) =>
           </svg>
           Back to Company Details
         </button>
-        <UserManagement companyId={selectedCompanyId} />
+        <UserManagement companyId={selectedCompanyId} currentUserId={currentUser?._id} />
       </div>
     );
   }

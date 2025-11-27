@@ -238,7 +238,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout })
         );
 
       case 'employees':
-        return company ? <UserManagement companyId={company._id} /> : <div>No company data</div>;
+        return company ? <UserManagement companyId={company._id} currentUserId={currentUser?._id} /> : <div>No company data</div>;
 
       case 'test-taking':
         return <TestTaking currentUser={currentUser} company={company} />;

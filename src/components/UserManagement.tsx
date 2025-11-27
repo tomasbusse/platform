@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation } from 'convex/react';
+import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
 
 interface User {
   _id: string;
-  name: string;
-  email: string;
-  role: string;
-  isActive: boolean;
+  name?: string;
+  email?: string;
+  role?: string;
+  isActive?: boolean;
   currentLevel?: string;
-  createdAt: number;
+  createdAt?: number;
   lastLogin?: number;
 }
 
@@ -22,26 +22,38 @@ interface UserFormData {
   role: UserRole;
   currentLevel: string;
   password: string;
+  sendInvite: boolean;
 }
 
 interface UserManagementProps {
   companyId: string;
+  currentUserId?: string;
 }
 
-const UserManagement: React.FC<UserManagementProps> = ({ companyId }) => {
+const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserId }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   // Convex queries and mutations
   const employees = useQuery(api.userManagement.getCompanyEmployees, {
     companyId: companyId as Id<"companies">
   });
+  const company = useQuery(api.userManagement.getCompany, {
+    companyId: companyId as Id<"companies">
+  });
   const addEmployee = useMutation(api.userManagement.addEmployee);
+  const createUserWithInvitation = useMutation(api.userManagement.createUserWithInvitation);
+  const resendInvitation = useMutation(api.userManagement.resendInvitation);
   const deleteUserMutation = useMutation(api.userManagement.deleteUser);
   const updateUserStatus = useMutation(api.userManagement.updateUserStatus);
   const updateUser = useMutation(api.userManagement.updateUser);
+  const sendInvitationEmail = useAction(api.emailActions.sendInvitationEmail);
 
   const [formData, setFormData] = useState<UserFormData>({
     name: '',
@@ -49,6 +61,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId }) => {
     role: 'student',
     currentLevel: 'A1',
     password: '',
+    sendInvite: true,
   });
 
   const [errors, setErrors] = useState<Partial<UserFormData>>({});
@@ -57,8 +70,6 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId }) => {
     status: 'all',
     search: '',
   });
-
-
 
   const validateForm = (isEdit: boolean = false): boolean => {
     const newErrors: Partial<UserFormData> = {};
@@ -73,10 +84,10 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId }) => {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    // Password is required only when adding new users (not editing)
-    if (!isEdit && formData.password) {
-      if (formData.password.length < 6) {
-        newErrors.password = 'Password must be at least 6 characters';
+    // Password validation only when not sending invite
+    if (!isEdit && !formData.sendInvite && formData.password) {
+      if (formData.password.length < 8) {
+        newErrors.password = 'Password must be at least 8 characters';
       }
     }
 
@@ -92,18 +103,74 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId }) => {
     }
 
     setIsProcessing(true);
+    setEmailSent(false);
+    setEmailError(null);
 
     try {
-      await addEmployee({
-        companyId: companyId as Id<"companies">,
-        name: formData.name,
-        email: formData.email,
-        role: formData.role,
-        // Only include currentLevel for students
-        ...(formData.role === 'student' && { currentLevel: formData.currentLevel }),
-        // Include password if provided
-        ...(formData.password && { password: formData.password }),
-      });
+      if (formData.sendInvite) {
+        // Check if currentUserId is available
+        if (!currentUserId) {
+          throw new Error('User session not found. Please refresh the page and try again.');
+        }
+
+        // Create user with invitation
+        const result = await createUserWithInvitation({
+          companyId: companyId as Id<"companies">,
+          name: formData.name,
+          email: formData.email,
+          role: formData.role,
+          ...(formData.role === 'student' && { currentLevel: formData.currentLevel }),
+          createdBy: currentUserId as Id<"users">,
+        });
+
+        // Generate invite link - always use production URL
+        const baseUrl = 'https://app.simmonds.online';
+        const link = `${baseUrl}/setup-password?token=${result.token}`;
+        setInviteLink(link);
+
+        // Try to send email automatically if Resend is configured
+        console.log('Company data:', company);
+        console.log('Company settings:', company?.settings);
+        const resendApiKey = company?.settings?.resendApiKey;
+        console.log('Resend API key found:', !!resendApiKey, resendApiKey ? `(${resendApiKey.substring(0, 8)}...)` : '');
+        if (resendApiKey) {
+          try {
+            const emailResult = await sendInvitationEmail({
+              apiKey: resendApiKey,
+              domain: company?.domain,
+              toEmail: formData.email,
+              userName: formData.name,
+              companyName: company?.name || 'Simmonds Platform',
+              inviteUrl: link,
+              role: formData.role,
+            });
+
+            console.log('Email result:', emailResult);
+            if (emailResult.success) {
+              setEmailSent(true);
+            } else {
+              setEmailError(emailResult.message);
+            }
+          } catch (emailErr) {
+            console.error('Error sending invitation email:', emailErr);
+            setEmailError('Failed to send email. You can still share the link manually.');
+          }
+        } else {
+          console.log('No Resend API key configured, skipping email');
+        }
+
+        setShowInviteModal(true);
+      } else {
+        // Create user with password directly
+        await addEmployee({
+          companyId: companyId as Id<"companies">,
+          name: formData.name,
+          email: formData.email,
+          role: formData.role,
+          ...(formData.role === 'student' && { currentLevel: formData.currentLevel }),
+          ...(formData.password && { password: formData.password }),
+        });
+      }
 
       setFormData({
         name: '',
@@ -111,12 +178,14 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId }) => {
         role: 'student',
         currentLevel: 'A1',
         password: '',
+        sendInvite: true,
       });
       setShowAddForm(false);
       setErrors({});
-      alert(formData.password
-        ? 'User added successfully! They can now log in.'
-        : 'User added. They will need to set their password via invitation link.');
+
+      if (!formData.sendInvite) {
+        alert('User added successfully! They can now log in.');
+      }
     } catch (error) {
       console.error('Error adding user:', error);
       alert(`Failed to add user: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -125,14 +194,87 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId }) => {
     }
   };
 
+  const handleResendInvite = async (userId: string, userEmail?: string, userName?: string) => {
+    if (!currentUserId) return;
+
+    setIsProcessing(true);
+    setEmailSent(false);
+    setEmailError(null);
+
+    try {
+      const result = await resendInvitation({
+        userId: userId as Id<"users">,
+        resendBy: currentUserId as Id<"users">,
+      });
+
+      // Generate invite link - always use production URL
+      const baseUrl = 'https://app.simmonds.online';
+      const link = `${baseUrl}/setup-password?token=${result.token}`;
+      setInviteLink(link);
+
+      // Try to send email automatically if Resend is configured
+      const resendApiKey = company?.settings?.resendApiKey;
+      if (resendApiKey && userEmail && userName) {
+        try {
+          // Get user role from employees list
+          const user = employees?.find(e => e._id === userId);
+          const emailResult = await sendInvitationEmail({
+            apiKey: resendApiKey,
+            domain: company?.domain,
+            toEmail: userEmail,
+            userName: userName,
+            companyName: company?.name || 'Simmonds Platform',
+            inviteUrl: link,
+            role: user?.role || 'student',
+          });
+
+          if (emailResult.success) {
+            setEmailSent(true);
+          } else {
+            setEmailError(emailResult.message);
+          }
+        } catch (emailErr) {
+          console.error('Error sending invitation email:', emailErr);
+          setEmailError('Failed to send email. You can still share the link manually.');
+        }
+      }
+
+      setShowInviteModal(true);
+    } catch (error) {
+      console.error('Error resending invitation:', error);
+      alert(`Failed to resend invitation: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const copyInviteLink = async () => {
+    if (!inviteLink) return;
+
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      alert('Invite link copied to clipboard!');
+    } catch {
+      // Fallback for browsers that don't support clipboard API
+      const textArea = document.createElement('textarea');
+      textArea.value = inviteLink;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Invite link copied to clipboard!');
+    }
+  };
+
   const handleEditUser = (user: User) => {
     setEditingUser(user);
     setFormData({
-      name: user.name,
-      email: user.email,
-      role: user.role as UserRole,
+      name: user.name || '',
+      email: user.email || '',
+      role: (user.role as UserRole) || 'student',
       currentLevel: user.currentLevel || 'A1',
-      password: '', // Don't show password in edit mode
+      password: '',
+      sendInvite: false,
     });
     setShowEditModal(true);
   };
@@ -163,6 +305,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId }) => {
         role: 'student',
         currentLevel: 'A1',
         password: '',
+        sendInvite: true,
       });
       setErrors({});
     } catch (error) {
@@ -206,8 +349,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId }) => {
       (filter.status === 'active' && user.isActive) ||
       (filter.status === 'inactive' && !user.isActive);
     const matchesSearch = filter.search === '' ||
-      user.name.toLowerCase().includes(filter.search.toLowerCase()) ||
-      user.email.toLowerCase().includes(filter.search.toLowerCase());
+      (user.name?.toLowerCase() || '').includes(filter.search.toLowerCase()) ||
+      (user.email?.toLowerCase() || '').includes(filter.search.toLowerCase());
 
     return matchesRole && matchesStatus && matchesSearch;
   });
@@ -253,8 +396,11 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId }) => {
         </div>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="bg-simmonds-primary hover:bg-simmonds-primary/90 text-white px-4 py-2 rounded-md font-medium"
+          className="bg-simmonds-primary hover:bg-simmonds-primary/90 text-white px-4 py-2 rounded-md font-medium flex items-center gap-2"
         >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+          </svg>
           Add User
         </button>
       </div>
@@ -365,26 +511,40 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId }) => {
                   </select>
                 </div>
               )}
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
-                  <span className="text-gray-400 font-normal ml-1">(optional)</span>
-                </label>
+            {/* Invitation Option */}
+            <div className="border-t pt-4">
+              <div className="flex items-center mb-4">
                 <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-simmonds-primary ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="Min. 6 characters"
+                  type="checkbox"
+                  id="sendInvite"
+                  checked={formData.sendInvite}
+                  onChange={(e) => setFormData(prev => ({ ...prev, sendInvite: e.target.checked, password: '' }))}
+                  className="h-4 w-4 text-simmonds-primary focus:ring-simmonds-primary border-gray-300 rounded"
                 />
-                {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
-                <p className="mt-1 text-xs text-gray-500">
-                  If left empty, user will receive an invitation to set their password
-                </p>
+                <label htmlFor="sendInvite" className="ml-2 block text-sm text-gray-700">
+                  Send invitation link (user will set their own password)
+                </label>
               </div>
+
+              {!formData.sendInvite && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Password *
+                  </label>
+                  <input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-simmonds-primary ${
+                      errors.password ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Min. 8 characters"
+                  />
+                  {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end space-x-3">
@@ -407,7 +567,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId }) => {
                     : 'bg-simmonds-primary hover:bg-simmonds-primary/90'
                 }`}
               >
-                {isProcessing ? 'Adding...' : 'Add User'}
+                {isProcessing ? 'Adding...' : formData.sendInvite ? 'Create & Get Invite Link' : 'Add User'}
               </button>
             </div>
           </form>
@@ -461,44 +621,59 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId }) => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleBadgeColor(user.role)}`}>
-                        {user.role}
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleBadgeColor(user.role || '')}`}>
+                        {user.role || '-'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {user.role === 'student' ? (user.currentLevel || '-') : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(user.isActive)}`}>
-                        {user.isActive ? 'Active' : 'Inactive'}
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(user.isActive ?? false)}`}>
+                        {user.isActive ? 'Active' : 'Pending'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {user.lastLogin ? formatDate(user.lastLogin) : 'Never'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">
-                      <button
-                        onClick={() => handleEditUser(user)}
-                        className="text-simmonds-olive hover:text-simmonds-olive/70"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleStatusToggle(user._id, user.isActive)}
-                        className={`${
-                          user.isActive
-                            ? 'text-simmonds-terracotta hover:text-simmonds-terracotta/70'
-                            : 'text-simmonds-primary hover:text-simmonds-primary/70'
-                        }`}
-                      >
-                        {user.isActive ? 'Deactivate' : 'Activate'}
-                      </button>
-                      <button
-                        onClick={() => handleDeleteUser(user._id, user.name)}
-                        className="text-simmonds-terracotta hover:text-simmonds-terracotta/70"
-                      >
-                        Delete
-                      </button>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => handleEditUser(user as User)}
+                          className="text-simmonds-olive hover:text-simmonds-olive/70"
+                          title="Edit user"
+                        >
+                          Edit
+                        </button>
+                        {!user.isActive && (
+                          <button
+                            onClick={() => handleResendInvite(user._id, user.email, user.name)}
+                            disabled={isProcessing}
+                            className="text-simmonds-primary hover:text-simmonds-primary/70"
+                            title="Resend invitation"
+                          >
+                            Invite
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleStatusToggle(user._id, user.isActive ?? false)}
+                          className={`${
+                            user.isActive
+                              ? 'text-simmonds-terracotta hover:text-simmonds-terracotta/70'
+                              : 'text-simmonds-primary hover:text-simmonds-primary/70'
+                          }`}
+                          title={user.isActive ? 'Deactivate user' : 'Activate user'}
+                        >
+                          {user.isActive ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(user._id, user.name || 'Unknown')}
+                          className="text-simmonds-terracotta hover:text-simmonds-terracotta/70"
+                          title="Delete user"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -507,6 +682,83 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId }) => {
           </div>
         )}
       </div>
+
+      {/* Invite Link Modal */}
+      {showInviteModal && inviteLink && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">
+                {emailSent ? 'Invitation Sent!' : 'Invitation Link Created'}
+              </h3>
+            </div>
+            <div className="p-6 space-y-4">
+              {emailSent ? (
+                <div className="flex items-start gap-3 p-4 bg-green-50 rounded-lg border border-green-200">
+                  <svg className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-green-800">Email sent successfully!</p>
+                    <p className="text-sm text-green-700">The invitation has been sent to the user's email address.</p>
+                  </div>
+                </div>
+              ) : emailError ? (
+                <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                  <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-amber-800">Couldn't send email</p>
+                    <p className="text-sm text-amber-700">{emailError}</p>
+                  </div>
+                </div>
+              ) : !company?.settings?.resendApiKey ? (
+                <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-blue-800">Email not configured</p>
+                    <p className="text-sm text-blue-700">Configure Resend in settings to send invitation emails automatically.</p>
+                  </div>
+                </div>
+              ) : null}
+
+              <p className="text-sm text-gray-600">
+                {emailSent
+                  ? 'You can also share this link manually if needed. The link expires in 7 days.'
+                  : 'Share this link with the user. They can use it to set their password and activate their account. The link expires in 7 days.'}
+              </p>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm font-mono break-all text-gray-800">{inviteLink}</p>
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowInviteModal(false);
+                    setInviteLink(null);
+                    setEmailSent(false);
+                    setEmailError(null);
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={copyInviteLink}
+                  className="px-4 py-2 bg-simmonds-primary text-white rounded-md hover:bg-simmonds-primary/90 flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copy Link
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit User Modal */}
       {showEditModal && editingUser && (

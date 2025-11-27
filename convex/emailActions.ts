@@ -1,7 +1,8 @@
 "use node";
 
-import { action } from "./_generated/server";
+import { action, internalAction } from "./_generated/server";
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 
 // Send test email action (uses Node.js runtime for fetch)
 export const sendTestEmail = action({
@@ -92,6 +93,115 @@ export const sendTestEmail = action({
       }
     } catch (error: any) {
       console.error('Error sending test email:', error);
+      return {
+        success: false,
+        message: `Network error: ${error.message || 'Unknown error'}`,
+      };
+    }
+  },
+});
+
+// Send invitation email action
+export const sendInvitationEmail = action({
+  args: {
+    apiKey: v.string(),
+    domain: v.optional(v.string()),
+    toEmail: v.string(),
+    userName: v.string(),
+    companyName: v.string(),
+    inviteUrl: v.string(),
+    role: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { apiKey, domain, toEmail, userName, companyName, inviteUrl, role } = args;
+
+    if (!apiKey) {
+      return { success: false, message: 'Resend API key is required' };
+    }
+
+    const fromEmail = domain ? `noreply@${domain}` : 'onboarding@resend.dev';
+    const roleDisplay = role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: fromEmail,
+          to: [toEmail],
+          subject: `You've been invited to join ${companyName} on Simmonds Platform`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #003F37, #9F9D38); padding: 30px; border-radius: 16px 16px 0 0; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 24px;">Welcome to Simmonds Platform</h1>
+              </div>
+              <div style="background: #fff; padding: 30px; border: 1px solid #E3C6AB; border-top: none; border-radius: 0 0 16px 16px;">
+                <p style="color: #333; font-size: 16px; line-height: 1.6;">
+                  Hi ${userName},
+                </p>
+                <p style="color: #333; font-size: 16px; line-height: 1.6;">
+                  You've been invited to join <strong>${companyName}</strong> as a <strong>${roleDisplay}</strong> on the Simmonds Language Platform.
+                </p>
+                <p style="color: #666; font-size: 14px; line-height: 1.6;">
+                  Click the button below to set up your password and activate your account:
+                </p>
+                <div style="text-align: center; margin: 30px 0;">
+                  <a href="${inviteUrl}" style="display: inline-block; background: #003F37; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                    Set Up Your Account
+                  </a>
+                </div>
+                <p style="color: #888; font-size: 12px; line-height: 1.6;">
+                  This invitation link will expire in 7 days. If you didn't expect this email, you can safely ignore it.
+                </p>
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+                  <p style="color: #888; font-size: 12px; margin: 0;">
+                    If the button doesn't work, copy and paste this link into your browser:<br>
+                    <a href="${inviteUrl}" style="color: #003F37; word-break: break-all;">${inviteUrl}</a>
+                  </p>
+                </div>
+              </div>
+            </div>
+          `,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          success: true,
+          message: `Invitation email sent successfully to ${toEmail}`,
+          emailId: data.id,
+        };
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+
+        if (response.status === 401) {
+          return {
+            success: false,
+            message: 'Resend API key is invalid or unauthorized.',
+          };
+        } else if (response.status === 422) {
+          return {
+            success: false,
+            message: `Validation error: ${errorData.message || 'Check your domain configuration'}`,
+          };
+        } else if (response.status === 429) {
+          return {
+            success: false,
+            message: 'Rate limit exceeded. Please wait a moment and try again.',
+          };
+        } else {
+          return {
+            success: false,
+            message: `Failed to send invitation: ${errorData.message || response.statusText}`,
+          };
+        }
+      }
+    } catch (error: any) {
+      console.error('Error sending invitation email:', error);
       return {
         success: false,
         message: `Network error: ${error.message || 'Unknown error'}`,
