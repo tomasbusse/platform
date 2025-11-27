@@ -57,7 +57,75 @@ export const currentUserCompany = query({
   },
 });
 
-// Setup admin account - creates company and user if needed
+// Auto-setup user from Clerk - called when user signs in and doesn't exist in Convex
+// First user becomes admin, subsequent users need to be invited
+export const ensureUser = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity || !identity.email) {
+      throw new Error("Not authenticated");
+    }
+
+    const email = identity.email;
+    const clerkUserId = identity.subject;
+    const name = identity.name || identity.nickname || email.split("@")[0];
+    const now = Date.now();
+
+    // Check if user already exists
+    let user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", email))
+      .first();
+
+    if (user) {
+      // User exists - just update clerkId if needed
+      if (!user.clerkId && clerkUserId) {
+        await ctx.db.patch(user._id, { clerkId: clerkUserId });
+      }
+      return { success: true, userId: user._id, companyId: user.companyId, existing: true };
+    }
+
+    // User doesn't exist - check if this is the first user (becomes admin)
+    const existingUsers = await ctx.db.query("users").first();
+    const isFirstUser = !existingUsers;
+
+    // Get or create company
+    let company = await ctx.db.query("companies").first();
+
+    if (!company) {
+      // Create default company for first user
+      const companyId = await ctx.db.insert("companies", {
+        name: "Simmonds Language Services",
+        contactEmail: email,
+        isActive: true,
+        currentStudentCount: 0,
+        createdAt: now,
+        updatedAt: now,
+      });
+      company = await ctx.db.get(companyId);
+    }
+
+    // Create new user
+    const userId = await ctx.db.insert("users", {
+      email: email,
+      name: name,
+      clerkId: clerkUserId,
+      role: isFirstUser ? "corporate_admin" : "student", // First user is admin, others are students
+      companyId: company!._id,
+      isActive: true,
+      totalScore: 0,
+      averageScore: 0,
+      completedTests: 0,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return { success: true, userId, companyId: company!._id, existing: false, isAdmin: isFirstUser };
+  },
+});
+
+// Setup admin account - promotes a user to admin (manual)
 export const setupAdminAccount = mutation({
   args: {
     email: v.string(),

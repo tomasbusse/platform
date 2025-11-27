@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { useAuth, useClerk, SignIn, SignUp } from '@clerk/clerk-react';
 import { api } from '../convex/_generated/api';
 import Dashboard from './pages/Dashboard';
@@ -12,6 +12,10 @@ const App: React.FC = () => {
   const [showSeedPage, setShowSeedPage] = useState(false);
   const [assessmentToken, setAssessmentToken] = useState<string | null>(null);
   const [showSignUp, setShowSignUp] = useState(false);
+  const [isEnsuring, setIsEnsuring] = useState(false);
+
+  // Mutation to auto-create user in Convex when they sign in with Clerk
+  const ensureUser = useMutation(api.auth.ensureUser);
 
   // Get the current authenticated user (only when authenticated)
   const currentUser = useQuery(
@@ -22,6 +26,22 @@ const App: React.FC = () => {
     api.auth.currentUserCompany,
     isSignedIn ? {} : "skip"
   );
+
+  // Auto-ensure user exists in Convex when signed in with Clerk
+  useEffect(() => {
+    if (isSignedIn && currentUser === null && !isEnsuring) {
+      setIsEnsuring(true);
+      ensureUser({})
+        .then((result) => {
+          console.log("User ensured in Convex:", result);
+          setIsEnsuring(false);
+        })
+        .catch((error) => {
+          console.error("Failed to ensure user:", error);
+          setIsEnsuring(false);
+        });
+    }
+  }, [isSignedIn, currentUser, ensureUser, isEnsuring]);
 
   useEffect(() => {
     if (isSignedIn) {
@@ -128,8 +148,8 @@ const App: React.FC = () => {
     );
   }
 
-  // Authenticated but loading user data
-  if (currentUser === undefined || company === undefined) {
+  // Authenticated but loading user data or ensuring user exists
+  if (currentUser === undefined || company === undefined || isEnsuring) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-simmonds-cream to-white flex items-center justify-center">
         <div className="text-center">
