@@ -48,6 +48,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
     companyId: companyId as Id<"companies">
   });
   const addEmployee = useMutation(api.userManagement.addEmployee);
+  const createCompanyInvitationLink = useMutation(api.companyInvitations.createCompanyInvitationLink);
   const createUserWithInvitation = useMutation(api.userManagement.createUserWithInvitation);
   const resendInvitation = useMutation(api.userManagement.resendInvitation);
   const deleteUserMutation = useMutation(api.userManagement.deleteUser);
@@ -108,24 +109,13 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
 
     try {
       if (formData.sendInvite) {
-        // Check if currentUserId is available
-        if (!currentUserId) {
-          throw new Error('User session not found. Please refresh the page and try again.');
-        }
-
-        // Create user directly (they'll authenticate via Clerk)
-        await addEmployee({
+        // Create a company invitation link
+        const linkResult = await createCompanyInvitationLink({
           companyId: companyId as Id<"companies">,
-          name: formData.name,
-          email: formData.email,
           role: formData.role,
-          ...(formData.role === 'student' && { currentLevel: formData.currentLevel }),
         });
 
-        // Generate sign-up link - user will sign up through Clerk
-        const baseUrl = 'https://app.simmonds.online';
-        const signUpLink = `${baseUrl}`;
-        setInviteLink(signUpLink);
+        setInviteLink(linkResult.url);
 
         // Try to send email automatically if Resend is configured
         console.log('Company data:', company);
@@ -140,7 +130,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
               toEmail: formData.email,
               userName: formData.name,
               companyName: company?.name || 'Simmonds Platform',
-              inviteUrl: signUpLink,
+              inviteUrl: linkResult.url,
               role: formData.role,
             });
 
@@ -159,15 +149,6 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
         }
 
         setShowInviteModal(true);
-      } else {
-        // Create user directly (they'll authenticate via Clerk)
-        await addEmployee({
-          companyId: companyId as Id<"companies">,
-          name: formData.name,
-          email: formData.email,
-          role: formData.role,
-          ...(formData.role === 'student' && { currentLevel: formData.currentLevel }),
-        });
       }
 
       setFormData({

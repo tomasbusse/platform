@@ -5,12 +5,14 @@ import { api } from '../convex/_generated/api';
 import Dashboard from './pages/Dashboard';
 import SeedAdmin from './pages/SeedAdmin';
 import PublicAssessment from './pages/PublicAssessment';
+import JoinCompany from './pages/JoinCompany';
 
 const App: React.FC = () => {
   const { isLoaded, isSignedIn } = useAuth();
   const { signOut } = useClerk();
   const [showSeedPage, setShowSeedPage] = useState(false);
   const [assessmentToken, setAssessmentToken] = useState<string | null>(null);
+  const [joinToken, setJoinToken] = useState<string | null>(null);
   const [showSignUp, setShowSignUp] = useState(false);
   const [isEnsuring, setIsEnsuring] = useState(false);
 
@@ -53,8 +55,15 @@ const App: React.FC = () => {
   }, [isSignedIn, currentUser, company]);
 
   useEffect(() => {
-    // Check if URL is for public assessment (/assessment/:token)
+    // Check if URL is for joining a company (/join/:token)
     const path = window.location.pathname;
+    const joinMatch = path.match(/^\/join\/([a-zA-Z0-9]+)$/);
+    if (joinMatch) {
+      setJoinToken(joinMatch[1]);
+      return;
+    }
+
+    // Check if URL is for public assessment (/assessment/:token)
     const assessmentMatch = path.match(/^\/assessment\/([a-zA-Z0-9]+)$/);
     if (assessmentMatch) {
       setAssessmentToken(assessmentMatch[1]);
@@ -76,6 +85,11 @@ const App: React.FC = () => {
   // Show seed admin page if requested
   if (showSeedPage) {
     return <SeedAdmin />;
+  }
+
+  // Show join company page (no login required)
+  if (joinToken) {
+    return <JoinCompany token={joinToken} />;
   }
 
   // Show public assessment page (no login required)

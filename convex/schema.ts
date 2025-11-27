@@ -1057,4 +1057,24 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_company", ["companyId"])
     .index("by_status", ["status"]),
+
+  // Company invitation links (for students to join a company)
+  companyInvitationLinks: defineTable({
+    companyId: v.id("companies"),
+    token: v.string(), // Unique token for the link
+    role: v.union(
+      v.literal("student"),
+      v.literal("teacher"),
+      v.literal("admin")
+    ),
+    isActive: v.boolean(),
+    expiresAt: v.optional(v.number()), // Optional expiration
+    maxUses: v.optional(v.number()), // Optional max number of uses
+    currentUses: v.number(), // Current number of uses
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_token", ["token"])
+    .index("by_company", ["companyId"])
+    .index("by_active", ["isActive"]),
 });
