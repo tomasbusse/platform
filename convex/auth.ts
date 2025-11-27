@@ -57,21 +57,14 @@ export const currentUserCompany = query({
   },
 });
 
-// Setup admin account - creates company if needed and assigns user as admin
+// Setup admin account - creates company and user if needed
 export const setupAdminAccount = mutation({
   args: {
     email: v.string(),
+    name: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // Find the user by email
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found. Please sign up first.");
-    }
+    const now = Date.now();
 
     // Check if there's an existing company, or create one
     let company = await ctx.db.query("companies").first();
@@ -83,25 +76,47 @@ export const setupAdminAccount = mutation({
         contactEmail: args.email,
         isActive: true,
         currentStudentCount: 0,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+        createdAt: now,
+        updatedAt: now,
       });
       company = await ctx.db.get(companyId);
     }
 
-    // Update the user with admin role and company
+    // Find or create user by email
+    let user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .first();
+
+    if (!user) {
+      // Create new user
+      const userId = await ctx.db.insert("users", {
+        email: args.email,
+        name: args.name || args.email.split("@")[0],
+        role: "corporate_admin",
+        companyId: company!._id,
+        isActive: true,
+        totalScore: 0,
+        averageScore: 0,
+        completedTests: 0,
+        createdAt: now,
+        updatedAt: now,
+      });
+      return { success: true, userId, companyId: company!._id, created: true };
+    }
+
+    // Update existing user with admin role and company
     await ctx.db.patch(user._id, {
       role: "corporate_admin",
       companyId: company!._id,
       isActive: true,
-      name: args.email.split("@")[0],
-      totalScore: 0,
-      averageScore: 0,
-      completedTests: 0,
-      createdAt: user.createdAt || Date.now(),
-      updatedAt: Date.now(),
+      name: args.name || user.name || args.email.split("@")[0],
+      totalScore: user.totalScore || 0,
+      averageScore: user.averageScore || 0,
+      completedTests: user.completedTests || 0,
+      updatedAt: now,
     });
 
-    return { success: true, userId: user._id, companyId: company!._id };
+    return { success: true, userId: user._id, companyId: company!._id, created: false };
   },
 });
