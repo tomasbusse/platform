@@ -1,5 +1,16 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
+
+// Determine CEFR level based on score
+function determineCEFRLevel(score: number): "A1" | "A2" | "B1" | "B2" | "C1" | "C2" {
+  if (score >= 90) return 'C2';
+  if (score >= 80) return 'C1';
+  if (score >= 70) return 'B2';
+  if (score >= 60) return 'B1';
+  if (score >= 50) return 'A2';
+  return 'A1';
+}
 
 export const getTestSession = query({
   args: { sessionId: v.id("testSessions") },
@@ -160,5 +171,120 @@ export const abandonTestSession = mutation({
       completedAt: Date.now(),
     });
     return args.sessionId;
+  },
+});
+
+// Complete test and auto-assign to group based on performance
+export const completeTestAndAssignGroup = mutation({
+  args: {
+    sessionId: v.id("testSessions"),
+    answers: v.array(v.object({
+      questionId: v.string(),
+      answer: v.string(),
+      isCorrect: v.boolean(),
+      timeSpent: v.number(),
+    })),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const session = await ctx.db.get(args.sessionId);
+
+    if (!session) {
+      throw new Error("Test session not found");
+    }
+
+    // Calculate score
+    const questions = session.customQuestions || [];
+    let totalPoints = 0;
+    let earnedPoints = 0;
+
+    for (const answer of args.answers) {
+      const question = questions.find((q: any) => q.id === answer.questionId);
+      if (question) {
+        totalPoints += 1; // Each question is worth 1 point
+        if (answer.isCorrect) {
+          earnedPoints += 1;
+        }
+      }
+    }
+
+    const percentageScore = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
+    const recommendedLevel = determineCEFRLevel(percentageScore);
+
+    // Update test session with results
+    await ctx.db.patch(args.sessionId, {
+      status: "completed",
+      completedAt: now,
+      answers: args.answers,
+      questionsAnswered: args.answers.length,
+      totalScore: earnedPoints,
+      percentageScore,
+      recommendedLevel,
+      updatedAt: now,
+    });
+
+    // Auto-assign to group if user is logged in
+    if (session.userId) {
+      const availableGroups = await ctx.db
+        .query("groups")
+        .withIndex("by_level", (q) => q.eq("level", recommendedLevel))
+        .filter((g) =>
+          g.eq(g.field("companyId"), session.companyId) &&
+          g.eq(g.field("isActive"), true) &&
+          g.eq(g.field("autoAssign"), true)
+        )
+        .collect();
+
+      // Find group with capacity
+      const groupWithCapacity = availableGroups.find(
+        g => g.currentStudentCount < g.maxStudents
+      );
+
+      if (groupWithCapacity) {
+        // Add student to group
+        await ctx.db.patch(groupWithCapacity._id, {
+          studentIds: [...groupWithCapacity.studentIds, session.userId as string],
+          currentStudentCount: groupWithCapacity.currentStudentCount + 1,
+          updatedAt: now,
+        });
+
+        // Update user's level
+        const user = await ctx.db.get(session.userId as any);
+        if (user) {
+          await ctx.db.patch(session.userId as any, {
+            currentLevel: recommendedLevel,
+            updatedAt: now,
+          });
+        }
+
+        // Create notification
+        await ctx.db.insert("notifications", {
+          userId: session.userId as string,
+          companyId: session.companyId,
+          title: "Group Assignment",
+          message: `You have been assigned to ${groupWithCapacity.name} (${recommendedLevel} level) based on your test performance`,
+          type: "info",
+          isEmailSent: false,
+          isRead: false,
+          relatedEntityId: groupWithCapacity._id,
+          relatedEntityType: "group",
+          createdAt: now,
+        });
+
+        return {
+          success: true,
+          recommendedLevel,
+          assignedGroupId: groupWithCapacity._id,
+          assignedGroupName: groupWithCapacity.name,
+        };
+      }
+    }
+
+    return {
+      success: true,
+      recommendedLevel,
+      assignedGroupId: null,
+      message: "Test completed. No group assignment available.",
+    };
   },
 });
