@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { internal } from "./_generated/api";
 
 // ============================================================================
 // UPLOAD MATERIAL
@@ -187,12 +188,205 @@ export const deleteMaterial = mutation({
       throw new Error("Not authenticated");
     }
 
+    const material = await ctx.db.get(args.materialId);
+    if (!material) {
+      throw new Error("Material not found");
+    }
+
     await ctx.db.patch(args.materialId, {
       isActive: false,
       updatedAt: Date.now(),
     });
 
+    // Create notification for users who had access
+    await ctx.scheduler.runAfter(0, internal.materials.notifyMaterialRemoved, {
+      materialId: args.materialId,
+      companyId: material.companyId,
+    });
+
     return { success: true };
+  },
+});
+
+// ============================================================================
+// TRACK MATERIAL DOWNLOAD
+// ============================================================================
+
+export const trackMaterialDownload = mutation({
+  args: {
+    materialId: v.id("lessonMaterials"),
+    userId: v.string(),
+    ipAddress: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const material = await ctx.db.get(args.materialId);
+    if (!material) {
+      throw new Error("Material not found");
+    }
+
+    // Record download
+    await ctx.db.insert("materialDownloads", {
+      materialId: args.materialId,
+      userId: args.userId,
+      companyId: material.companyId,
+      downloadedAt: Date.now(),
+      ipAddress: args.ipAddress,
+      userAgent: args.userAgent,
+    });
+
+    return { success: true };
+  },
+});
+
+// ============================================================================
+// GET DOWNLOAD STATS FOR MATERIAL
+// ============================================================================
+
+export const getMaterialDownloadStats = query({
+  args: {
+    materialId: v.id("lessonMaterials"),
+  },
+  handler: async (ctx, args) => {
+    const downloads = await ctx.db
+      .query("materialDownloads")
+      .withIndex("by_material", (q) => q.eq("materialId", args.materialId))
+      .collect();
+
+    const uniqueUsers = new Set(downloads.map((d) => d.userId)).size;
+    const totalDownloads = downloads.length;
+    const lastDownloadedAt = downloads.length > 0
+      ? Math.max(...downloads.map((d) => d.downloadedAt))
+      : null;
+
+    return {
+      totalDownloads,
+      uniqueUsers,
+      lastDownloadedAt,
+      downloads: downloads.sort((a, b) => b.downloadedAt - a.downloadedAt),
+    };
+  },
+});
+
+// ============================================================================
+// GET NOTIFICATIONS FOR USER
+// ============================================================================
+
+export const getUserNotifications = query({
+  args: {
+    userId: v.string(),
+    companyId: v.union(v.id("companies"), v.string()),
+    unreadOnly: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const notifications = await ctx.db
+      .query("materialNotifications")
+      .withIndex("by_recipient", (q) => q.eq("recipientId", args.userId))
+      .collect();
+
+    let filtered = notifications.filter((n) => n.companyId === args.companyId);
+
+    if (args.unreadOnly) {
+      filtered = filtered.filter((n) => !n.isRead);
+    }
+
+    return filtered.sort((a, b) => b.createdAt - a.createdAt);
+  },
+});
+
+// ============================================================================
+// MARK NOTIFICATION AS READ
+// ============================================================================
+
+export const markNotificationAsRead = mutation({
+  args: {
+    notificationId: v.id("materialNotifications"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.notificationId, {
+      isRead: true,
+      readAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+// ============================================================================
+// GENERATE DOWNLOAD URL
+// ============================================================================
+
+export const generateDownloadUrl = query({
+  args: {
+    materialId: v.id("lessonMaterials"),
+  },
+  handler: async (ctx, args) => {
+    const material = await ctx.db.get(args.materialId);
+    if (!material) {
+      throw new Error("Material not found");
+    }
+
+    if (material.externalUrl) {
+      return { url: material.externalUrl, type: "external" };
+    }
+
+    if (material.storageId) {
+      const url = await ctx.storage.getUrl(material.storageId);
+      return { url, type: "storage" };
+    }
+
+    throw new Error("No download URL available for this material");
+  },
+});
+
+// ============================================================================
+// INTERNAL: NOTIFY MATERIAL REMOVED
+// ============================================================================
+
+export const notifyMaterialRemoved = mutation({
+  args: {
+    materialId: v.id("lessonMaterials"),
+    companyId: v.union(v.id("companies"), v.string()),
+  },
+  handler: async (ctx, args) => {
+    const material = await ctx.db.get(args.materialId);
+    if (!material) return;
+
+    // Get all users who had access to this material
+    const usersToNotify = new Set<string>();
+
+    if (material.accessScope === "company") {
+      // Notify all company users
+      const users = await ctx.db
+        .query("users")
+        .withIndex("by_company", (q) => q.eq("companyId", args.companyId))
+        .collect();
+      users.forEach((u) => usersToNotify.add(u._id));
+    } else if (material.accessScope === "group" && material.accessGroupIds) {
+      // Notify users in specified groups
+      for (const groupId of material.accessGroupIds) {
+        const group = await ctx.db.get(groupId as Id<"groups">);
+        if (group?.studentIds) {
+          group.studentIds.forEach((id) => usersToNotify.add(id));
+        }
+      }
+    } else if (material.accessScope === "individual" && material.accessStudentIds) {
+      // Notify specified students
+      material.accessStudentIds.forEach((id) => usersToNotify.add(id));
+    }
+
+    // Create notifications
+    for (const userId of usersToNotify) {
+      await ctx.db.insert("materialNotifications", {
+        materialId: args.materialId,
+        recipientId: userId,
+        companyId: args.companyId,
+        notificationType: "material_removed",
+        message: `Material "${material.title}" has been removed.`,
+        isRead: false,
+        createdAt: Date.now(),
+      });
+    }
   },
 });
 

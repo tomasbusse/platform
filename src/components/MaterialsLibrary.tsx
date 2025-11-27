@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
 import { User, Company } from '../types';
@@ -43,12 +43,38 @@ const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({ currentUser, compan
     return matchesCategory && matchesSearch;
   });
 
-  const handleDownload = (material: any) => {
-    if (material.externalUrl) {
-      window.open(material.externalUrl, '_blank');
-    } else if (material.storageId) {
-      // TODO: Generate download URL from Convex storage
-      console.log('Download:', material.storageId);
+  const trackDownload = useMutation(api.materials.trackMaterialDownload);
+  const generateDownloadUrl = useQuery(api.materials.generateDownloadUrl, {
+    materialId: undefined as any,
+  });
+
+  const handleDownload = async (material: any) => {
+    try {
+      // Track the download
+      await trackDownload({
+        materialId: material._id,
+        userId: currentUser?._id || '',
+        ipAddress: undefined,
+        userAgent: navigator.userAgent,
+      });
+
+      // Generate and open download URL
+      if (material.externalUrl) {
+        window.open(material.externalUrl, '_blank');
+      } else if (material.storageId) {
+        // Get download URL from Convex storage
+        const response = await fetch('/api/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ storageId: material.storageId }),
+        }).then((r) => r.json());
+
+        if (response.url) {
+          window.open(response.url, '_blank');
+        }
+      }
+    } catch (err) {
+      console.error('Download error:', err);
     }
   };
 

@@ -1087,4 +1087,36 @@ export default defineSchema({
   }).index("by_token", ["token"])
     .index("by_company", ["companyId"])
     .index("by_active", ["isActive"]),
+
+  // Material download tracking
+  materialDownloads: defineTable({
+    materialId: v.id("lessonMaterials"),
+    userId: v.string(),
+    companyId: v.union(v.id("companies"), v.string()),
+    downloadedAt: v.number(),
+    ipAddress: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+  }).index("by_material", ["materialId"])
+    .index("by_user", ["userId"])
+    .index("by_company", ["companyId"])
+    .index("by_downloaded_at", ["downloadedAt"]),
+
+  // Material sharing notifications
+  materialNotifications: defineTable({
+    materialId: v.id("lessonMaterials"),
+    recipientId: v.string(),
+    companyId: v.union(v.id("companies"), v.string()),
+    notificationType: v.union(
+      v.literal("material_shared"),
+      v.literal("material_updated"),
+      v.literal("material_removed")
+    ),
+    message: v.string(),
+    isRead: v.boolean(),
+    readAt: v.optional(v.number()),
+    createdAt: v.number(),
+  }).index("by_recipient", ["recipientId"])
+    .index("by_material", ["materialId"])
+    .index("by_company", ["companyId"])
+    .index("by_is_read", ["isRead"]),
 });

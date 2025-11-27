@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { User, Company } from '../types';
 import MaterialsLibrary from '../components/MaterialsLibrary';
 import MaterialUploadForm from '../components/MaterialUploadForm';
+import MaterialNotifications from '../components/MaterialNotifications';
 
 interface MaterialsPageProps {
   currentUser: User | null;
@@ -29,6 +30,11 @@ const MaterialsPage: React.FC<MaterialsPageProps> = ({ currentUser, company }) =
               {showUploadForm ? '✕ Close' : '+ Upload Material'}
             </button>
           )}
+        </div>
+
+        {/* Notifications */}
+        <div className="mb-8">
+          <MaterialNotifications currentUser={currentUser} company={company} />
         </div>
 
         {/* Upload Form */}

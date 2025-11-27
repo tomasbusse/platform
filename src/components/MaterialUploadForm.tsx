@@ -75,12 +75,35 @@ const MaterialUploadForm: React.FC<MaterialUploadFormProps> = ({
     setIsUploading(true);
 
     try {
-      // TODO: Upload file to Convex storage if file exists
       let storageId: Id<"_storage"> | undefined;
+
+      // Upload file to Convex storage if file exists
       if (file) {
-        // This would require using Convex's file upload API
-        // For now, we'll just store the file metadata
-        console.log('File upload would happen here:', file);
+        try {
+          const uploadUrl = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fileName: file.name,
+              fileType: file.type,
+              fileSize: file.size,
+            }),
+          }).then((r) => r.json());
+
+          // Upload file to the provided URL
+          const formData = new FormData();
+          formData.append('file', file);
+
+          const uploadResponse = await fetch(uploadUrl.uploadUrl, {
+            method: 'POST',
+            body: formData,
+          }).then((r) => r.json());
+
+          storageId = uploadResponse.storageId;
+        } catch (uploadErr) {
+          console.error('File upload error:', uploadErr);
+          // Continue without storage ID - will use external URL if provided
+        }
       }
 
       await uploadMaterial({
