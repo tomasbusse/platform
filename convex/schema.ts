@@ -1,21 +1,15 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { authTables } from "@convex-dev/auth/server";
 
 export default defineSchema({
-  ...authTables,
-  // User management tables - extended from authTables
+  // User management tables
   users: defineTable({
-    // Convex Auth fields (required by auth system)
+    // Clerk user ID for authentication
+    clerkId: v.optional(v.string()),
+    // User profile fields
     name: v.optional(v.string()),
     email: v.optional(v.string()),
     image: v.optional(v.string()),
-    emailVerificationTime: v.optional(v.number()),
-    phone: v.optional(v.string()),
-    phoneVerificationTime: v.optional(v.number()),
-    isAnonymous: v.optional(v.boolean()),
-    // Legacy field - kept for migration, no longer used
-    passwordHash: v.optional(v.string()),
     // Application-specific fields
     role: v.optional(v.union(
       v.literal("corporate_admin"),
@@ -32,7 +26,14 @@ export default defineSchema({
     lastLogin: v.optional(v.number()),
     createdAt: v.optional(v.number()),
     updatedAt: v.optional(v.number()),
+    // Student-specific: individual lessons only (not in any group)
+    individualLessonsOnly: v.optional(v.boolean()),
+    // Placement test status
+    placementTestCompleted: v.optional(v.boolean()),
+    placementTestDate: v.optional(v.number()),
+    placementTestScore: v.optional(v.number()),
   }).index("by_email", ["email"])
+    .index("by_clerk_id", ["clerkId"])
     .index("by_company", ["companyId"])
     .index("by_role", ["role"]),
 
@@ -43,28 +44,18 @@ export default defineSchema({
     contactPhone: v.optional(v.string()),
     domain: v.optional(v.string()),
     description: v.optional(v.string()),
-    subscriptionPlan: v.union(
-      v.literal("trial"),
-      v.literal("basic"),
-      v.literal("professional"),
-      v.literal("enterprise")
-    ),
-    subscriptionStatus: v.union(
-      v.literal("active"),
-      v.literal("suspended"),
-      v.literal("cancelled")
-    ),
-    maxStudents: v.number(),
+    // Status - simple active/inactive without subscription tiers
+    isActive: v.boolean(),
+    // Student tracking (for analytics, not limits)
     currentStudentCount: v.number(),
     settings: v.optional(v.object({
-      openRouterApiKey: v.string(),
-      elevenLabsApiKey: v.string(),
-      resendApiKey: v.string(),
-      cambridgeApiKey: v.string(),
+      openRouterApiKey: v.optional(v.string()),
+      elevenLabsApiKey: v.optional(v.string()),
+      resendApiKey: v.optional(v.string()),
+      cambridgeApiKey: v.optional(v.string()),
       geminiApiKey: v.optional(v.string()),
-      testFrequency: v.number(),
-      autoGrouping: v.boolean(),
-      emailNotifications: v.boolean(),
+      testFrequency: v.optional(v.number()),
+      emailNotifications: v.optional(v.boolean()),
     })),
     // AI Prompt Templates for Virtual Lesson Generation
     aiPromptTemplates: v.optional(v.object({
@@ -76,6 +67,8 @@ export default defineSchema({
       homeworkFormat: v.optional(v.string()),
       // Default language for lessons
       defaultLanguage: v.optional(v.union(v.literal("english"), v.literal("german"))),
+      // Explanation language for grammar/vocabulary
+      explanationLanguage: v.optional(v.union(v.literal("english"), v.literal("german"))),
     })),
     // Voice Configuration for TTS
     voiceConfig: v.optional(v.object({
@@ -93,8 +86,7 @@ export default defineSchema({
     })),
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index("by_subscription_plan", ["subscriptionPlan"])
-    .index("by_status", ["subscriptionStatus"])
+  }).index("by_active", ["isActive"])
     .index("by_contact_email", ["contactEmail"]),
 
   // Test sessions
@@ -139,27 +131,33 @@ export default defineSchema({
     .index("by_quiz", ["quizId"])
     .index("by_assignment", ["assignmentId"]),
 
-  // Quizzes
+  // Quizzes / Tests
   quizzes: defineTable({
     companyId: v.union(v.id("companies"), v.string()),
     createdBy: v.union(v.id("users"), v.string()),
     title: v.string(),
     description: v.optional(v.string()),
+    // Target level (can be "mixed" for placement tests that span levels)
     level: v.union(
       v.literal("A1"),
       v.literal("A2"),
       v.literal("B1"),
       v.literal("B2"),
       v.literal("C1"),
-      v.literal("C2")
+      v.literal("C2"),
+      v.literal("mixed")
     ),
-    quizType: v.union(
-      v.literal("placement"),
-      v.literal("progress"),
-      v.literal("practice"),
-      v.literal("custom")
+    // Test purpose/category
+    testPurpose: v.union(
+      v.literal("placement"),      // Initial assessment to determine student level
+      v.literal("follow_up"),      // Progress check after lessons
+      v.literal("level_assessment"), // Assess readiness for next level
+      v.literal("practice"),       // General practice without scoring impact
+      v.literal("diagnostic"),     // Identify specific skill gaps
+      v.literal("certification")   // Formal level certification
     ),
-    category: v.union(
+    // Skill focus
+    skillFocus: v.union(
       v.literal("grammar"),
       v.literal("vocabulary"),
       v.literal("reading"),
@@ -168,13 +166,21 @@ export default defineSchema({
       v.literal("speaking"),
       v.literal("mixed")
     ),
-    duration: v.number(),
-    passingScore: v.number(),
+    duration: v.number(), // minutes
+    passingScore: v.number(), // percentage
     totalQuestions: v.number(),
     totalPoints: v.number(),
-    isPublished: v.boolean(),
+    // Test status - allows editing until published
+    status: v.union(
+      v.literal("draft"),
+      v.literal("published"),
+      v.literal("archived")
+    ),
     isCambridgeAligned: v.boolean(),
     cambridgeLevel: v.optional(v.string()),
+    // Instructions shown before test
+    instructions: v.optional(v.string()),
+    // Settings
     settings: v.object({
       shuffleQuestions: v.boolean(),
       shuffleOptions: v.boolean(),
@@ -184,32 +190,75 @@ export default defineSchema({
       maxAttempts: v.number(),
       requirePassingScore: v.boolean(),
       showTimer: v.boolean(),
+      // New settings
+      showProgressBar: v.optional(v.boolean()),
+      allowSkip: v.optional(v.boolean()),
+      allowReview: v.optional(v.boolean()), // Review answers before submit
+      autoSubmitOnTimeout: v.optional(v.boolean()),
     }),
     tags: v.array(v.string()),
     questionIds: v.optional(v.array(v.id("questionBank"))),
+    // Inline questions (alternative to questionIds for simpler tests)
+    inlineQuestions: v.optional(v.array(v.object({
+      id: v.string(),
+      questionType: v.string(),
+      questionText: v.string(),
+      questionData: v.any(),
+      points: v.number(),
+      skill: v.string(),
+      level: v.string(),
+    }))),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_company", ["companyId"])
     .index("by_level", ["level"])
-    .index("by_type", ["quizType"])
-    .index("by_published", ["isPublished"])
+    .index("by_purpose", ["testPurpose"])
+    .index("by_status", ["status"])
     .index("by_created_by", ["createdBy"]),
 
-  // Question Bank
+  // Question Bank - Enhanced with more question types and audio support
   questionBank: defineTable({
     companyId: v.union(v.id("companies"), v.string()),
     createdBy: v.union(v.id("users"), v.string()),
+    // Extended question types
     questionType: v.union(
+      // Basic types
       v.literal("multiple_choice"),
+      v.literal("multiple_select"),    // Select all that apply
       v.literal("fill_in_blank"),
       v.literal("true_false"),
-      v.literal("listening"),
-      v.literal("reading_comprehension"),
-      v.literal("image_description"),
-      v.literal("video_dialogue"),
+      // Text-based
+      v.literal("short_answer"),       // Free text, short
+      v.literal("long_answer"),        // Free text, paragraph
       v.literal("sentence_completion"),
       v.literal("error_correction"),
-      v.literal("word_formation")
+      v.literal("word_formation"),
+      v.literal("sentence_reorder"),   // Reorder words to form sentence
+      // Matching & ordering
+      v.literal("matching"),           // Match pairs
+      v.literal("ordering"),           // Put items in correct order
+      v.literal("categorization"),     // Sort items into categories
+      // Reading
+      v.literal("reading_comprehension"),
+      v.literal("cloze_test"),         // Fill in multiple blanks in passage
+      // Listening
+      v.literal("listening"),
+      v.literal("audio_transcription"), // Write what you hear
+      v.literal("audio_multiple_choice"), // Listen and choose
+      v.literal("dictation"),          // Listen and type
+      // Visual
+      v.literal("image_description"),
+      v.literal("image_labeling"),     // Label parts of image
+      v.literal("image_sequence"),     // Order images to tell story
+      v.literal("video_comprehension"),
+      // Speaking (for recording)
+      v.literal("speaking_response"),  // Record spoken answer
+      v.literal("pronunciation"),      // Pronounce word/phrase
+      v.literal("read_aloud"),         // Read text aloud
+      // Interactive
+      v.literal("drag_and_drop"),
+      v.literal("hotspot"),            // Click on correct area
+      v.literal("conversation_completion") // Complete dialogue
     ),
     skill: v.union(
       v.literal("grammar"),
@@ -217,7 +266,8 @@ export default defineSchema({
       v.literal("reading"),
       v.literal("listening"),
       v.literal("writing"),
-      v.literal("speaking")
+      v.literal("speaking"),
+      v.literal("pronunciation")
     ),
     level: v.union(
       v.literal("A1"),
@@ -233,38 +283,140 @@ export default defineSchema({
       v.literal("hard")
     ),
     questionText: v.string(),
+    // Rich question data structure
     questionData: v.object({
+      // Basic options
       options: v.optional(v.array(v.string())),
-      correctAnswer: v.any(),
+      correctAnswer: v.any(), // Can be string, array, or object depending on type
       explanation: v.optional(v.string()),
+      hints: v.optional(v.array(v.string())),
+
+      // Audio support (enhanced)
+      audio: v.optional(v.object({
+        storageId: v.optional(v.id("_storage")), // Convex storage for uploaded audio
+        url: v.optional(v.string()),              // External URL
+        generatedId: v.optional(v.id("audioContent")), // AI-generated audio
+        transcript: v.optional(v.string()),
+        duration: v.optional(v.number()),        // seconds
+        playbackSpeed: v.optional(v.array(v.number())), // e.g., [0.75, 1, 1.25]
+        maxPlays: v.optional(v.number()),        // Limit playback count
+        autoPlay: v.optional(v.boolean()),
+      })),
+      // Legacy audio fields for backward compatibility
       audioUrl: v.optional(v.string()),
       audioTranscript: v.optional(v.string()),
+
+      // Image support (enhanced)
+      image: v.optional(v.object({
+        storageId: v.optional(v.id("_storage")),
+        url: v.optional(v.string()),
+        alt: v.optional(v.string()),
+        hotspots: v.optional(v.array(v.object({
+          id: v.string(),
+          x: v.number(),
+          y: v.number(),
+          width: v.number(),
+          height: v.number(),
+          label: v.optional(v.string()),
+          isCorrect: v.optional(v.boolean()),
+        }))),
+        labels: v.optional(v.array(v.object({
+          id: v.string(),
+          x: v.number(),
+          y: v.number(),
+          correctLabel: v.string(),
+        }))),
+      })),
+      // Legacy image fields
       imageUrl: v.optional(v.string()),
       imageAlt: v.optional(v.string()),
+
+      // Video support
+      video: v.optional(v.object({
+        storageId: v.optional(v.id("_storage")),
+        url: v.optional(v.string()),
+        transcript: v.optional(v.string()),
+        startTime: v.optional(v.number()),
+        endTime: v.optional(v.number()),
+        pausePoints: v.optional(v.array(v.number())), // Times to pause for questions
+      })),
+      // Legacy video fields
       videoUrl: v.optional(v.string()),
       videoTranscript: v.optional(v.string()),
+
+      // Reading passage
       readingPassage: v.optional(v.string()),
-      hints: v.optional(v.array(v.string())),
+
+      // Fill in blank / cloze
+      textWithBlanks: v.optional(v.string()), // Use {{blank}} or {{1}}, {{2}} for blanks
+      blanks: v.optional(v.array(v.object({
+        id: v.string(),
+        correctAnswers: v.array(v.string()), // Accept multiple correct answers
+        caseSensitive: v.optional(v.boolean()),
+      }))),
       caseSensitive: v.optional(v.boolean()),
-      // For sentence completion / word formation
+
+      // Sentence manipulation
       sentenceWithGap: v.optional(v.string()),
-      wordToTransform: v.optional(v.string()),
-      // For error correction
       sentenceWithError: v.optional(v.string()),
-      // For matching exercises
+      wordToTransform: v.optional(v.string()),
+      wordsToReorder: v.optional(v.array(v.string())),
+
+      // Matching
       matchingPairs: v.optional(v.array(v.object({
         left: v.string(),
         right: v.string(),
       }))),
+
+      // Ordering
+      itemsToOrder: v.optional(v.array(v.string())),
+      correctOrder: v.optional(v.array(v.number())),
+
+      // Categorization
+      categories: v.optional(v.array(v.object({
+        name: v.string(),
+        correctItems: v.array(v.string()),
+      }))),
+      itemsToSort: v.optional(v.array(v.string())),
+
+      // Conversation/dialogue
+      dialogue: v.optional(v.array(v.object({
+        speaker: v.string(),
+        text: v.string(),
+        isBlank: v.optional(v.boolean()),
+        correctResponse: v.optional(v.string()),
+      }))),
+
+      // Speaking/pronunciation
+      targetText: v.optional(v.string()), // Text to pronounce
+      referenceAudio: v.optional(v.object({
+        storageId: v.optional(v.id("_storage")),
+        url: v.optional(v.string()),
+      })),
+      acceptableVariations: v.optional(v.array(v.string())),
+
+      // Scoring rubric for open-ended questions
+      scoringRubric: v.optional(v.object({
+        criteria: v.array(v.object({
+          name: v.string(),
+          description: v.string(),
+          maxPoints: v.number(),
+        })),
+        sampleAnswer: v.optional(v.string()),
+        keyPoints: v.optional(v.array(v.string())),
+      })),
     }),
     points: v.number(),
-    timeLimit: v.optional(v.number()),
+    timeLimit: v.optional(v.number()), // seconds per question
     tags: v.array(v.string()),
     usageCount: v.number(),
     averageScore: v.number(),
     isActive: v.boolean(),
     isCambridgeAligned: v.boolean(),
     cambridgeReference: v.optional(v.string()),
+    // For grouping related questions (e.g., multiple questions about same passage)
+    questionGroupId: v.optional(v.string()),
+    questionGroupOrder: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_company", ["companyId"])
@@ -272,7 +424,8 @@ export default defineSchema({
     .index("by_level", ["level"])
     .index("by_type", ["questionType"])
     .index("by_difficulty", ["difficulty"])
-    .index("by_active", ["isActive"]),
+    .index("by_active", ["isActive"])
+    .index("by_group", ["questionGroupId"]),
 
   // Quiz Assignments
   quizAssignments: defineTable({
@@ -494,10 +647,14 @@ export default defineSchema({
     email: v.string(),
     name: v.string(),
     quizId: v.optional(v.id("quizzes")),
+    // Enhanced test type to match quiz testPurpose
     testType: v.union(
       v.literal("placement"),
-      v.literal("progress"),
-      v.literal("practice")
+      v.literal("follow_up"),
+      v.literal("level_assessment"),
+      v.literal("practice"),
+      v.literal("diagnostic"),
+      v.literal("certification")
     ),
     status: v.union(
       v.literal("pending"),
@@ -511,13 +668,19 @@ export default defineSchema({
     testSessionId: v.optional(v.id("testSessions")),
     score: v.optional(v.number()),
     recommendedLevel: v.optional(v.string()),
+    // Can optionally assign to group after completion
     assignedGroupId: v.optional(v.id("groups")),
+    // Link to user if they get created
+    userId: v.optional(v.id("users")),
+    // For individual lesson students
+    forIndividualLessons: v.optional(v.boolean()),
     createdBy: v.union(v.id("users"), v.string()),
     createdAt: v.number(),
   }).index("by_token", ["token"])
     .index("by_email", ["email"])
     .index("by_company", ["companyId"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .index("by_user", ["userId"]),
 
   // Scheduled lessons (real-time lessons with teacher)
   scheduledLessons: defineTable({
@@ -781,7 +944,7 @@ export default defineSchema({
     .index("by_company", ["companyId"])
     .index("by_status", ["status"]),
 
-  // Lesson materials (uploaded files)
+  // Lesson materials (uploaded files) - with access scoping
   lessonMaterials: defineTable({
     companyId: v.union(v.id("companies"), v.string()),
     scheduledLessonId: v.optional(v.id("scheduledLessons")),
@@ -791,7 +954,7 @@ export default defineSchema({
     fileName: v.string(),
     fileType: v.string(), // MIME type
     fileSize: v.number(), // bytes
-    storageId: v.id("_storage"), // Convex storage ID
+    storageId: v.optional(v.id("_storage")), // Convex storage ID (optional for link-only)
     // Optional external link (for link-only materials)
     externalUrl: v.optional(v.string()),
     // Metadata
@@ -805,13 +968,24 @@ export default defineSchema({
       v.literal("link"),
       v.literal("other")
     )),
+    // ACCESS SCOPING - who can see this material
+    accessScope: v.union(
+      v.literal("company"),    // All members of the company can access
+      v.literal("group"),      // Only specific group(s) can access
+      v.literal("individual")  // Only specific student(s) can access
+    ),
+    // For group-scoped materials
+    accessGroupIds: v.optional(v.array(v.union(v.id("groups"), v.string()))),
+    // For individual-scoped materials
+    accessStudentIds: v.optional(v.array(v.string())),
     isActive: v.boolean(),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_company", ["companyId"])
     .index("by_scheduled_lesson", ["scheduledLessonId"])
     .index("by_virtual_lesson", ["virtualLessonId"])
-    .index("by_uploader", ["uploadedBy"]),
+    .index("by_uploader", ["uploadedBy"])
+    .index("by_access_scope", ["accessScope"]),
 
   // Scheduled lesson attendance
   lessonAttendance: defineTable({

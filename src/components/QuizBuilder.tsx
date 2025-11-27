@@ -10,12 +10,22 @@ interface QuizBuilderProps {
   onQuizCreated?: (quizId: string) => void;
 }
 
-type QuestionType = 'multiple_choice' | 'fill_in_blank' | 'true_false' | 'listening' | 'reading_comprehension';
-type Skill = 'grammar' | 'vocabulary' | 'reading' | 'listening' | 'writing' | 'speaking';
+// Extended question types
+type QuestionType =
+  | 'multiple_choice' | 'multiple_select' | 'fill_in_blank' | 'true_false'
+  | 'short_answer' | 'long_answer' | 'sentence_completion' | 'error_correction'
+  | 'word_formation' | 'sentence_reorder' | 'matching' | 'ordering' | 'categorization'
+  | 'reading_comprehension' | 'cloze_test' | 'listening' | 'audio_transcription'
+  | 'audio_multiple_choice' | 'dictation' | 'image_description' | 'image_labeling'
+  | 'image_sequence' | 'video_comprehension' | 'speaking_response' | 'pronunciation'
+  | 'read_aloud' | 'drag_and_drop' | 'hotspot' | 'conversation_completion';
+
+type Skill = 'grammar' | 'vocabulary' | 'reading' | 'listening' | 'writing' | 'speaking' | 'pronunciation';
 type Level = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 type Difficulty = 'easy' | 'medium' | 'hard';
-type QuizType = 'placement' | 'progress' | 'practice' | 'custom';
-type Category = 'grammar' | 'vocabulary' | 'reading' | 'listening' | 'writing' | 'speaking' | 'mixed';
+// Updated test purpose types
+type TestPurpose = 'placement' | 'follow_up' | 'level_assessment' | 'practice' | 'diagnostic' | 'certification';
+type SkillFocus = 'grammar' | 'vocabulary' | 'reading' | 'listening' | 'writing' | 'speaking' | 'mixed';
 
 interface QuestionData {
   id: string;
@@ -25,10 +35,31 @@ interface QuestionData {
   difficulty: Difficulty;
   questionText: string;
   options?: string[];
-  correctAnswer: string | boolean;
+  correctAnswer: string | boolean | string[];
   explanation?: string;
-  audioUrl?: string;
+  // Audio support
+  audio?: {
+    url?: string;
+    transcript?: string;
+    duration?: number;
+    maxPlays?: number;
+  };
+  audioUrl?: string; // Legacy
+  // Image support
+  image?: {
+    url?: string;
+    alt?: string;
+  };
+  imageUrl?: string; // Legacy
+  // Reading/passage support
   readingPassage?: string;
+  // For fill-in-blank / cloze
+  textWithBlanks?: string;
+  // For matching
+  matchingPairs?: Array<{ left: string; right: string }>;
+  // For ordering
+  itemsToOrder?: string[];
+  correctOrder?: number[];
   hints?: string[];
   points: number;
   timeLimit?: number;
@@ -39,9 +70,10 @@ interface QuestionData {
 interface QuizFormData {
   title: string;
   description: string;
+  instructions: string;
   level: Level;
-  quizType: QuizType;
-  category: Category;
+  testPurpose: TestPurpose;
+  skillFocus: SkillFocus;
   duration: number;
   passingScore: number;
   isCambridgeAligned: boolean;
@@ -54,6 +86,10 @@ interface QuizFormData {
     maxAttempts: number;
     requirePassingScore: boolean;
     showTimer: boolean;
+    showProgressBar: boolean;
+    allowSkip: boolean;
+    allowReview: boolean;
+    autoSubmitOnTimeout: boolean;
   };
   tags: string[];
 }
@@ -67,6 +103,10 @@ const defaultQuizSettings = {
   maxAttempts: 3,
   requirePassingScore: false,
   showTimer: true,
+  showProgressBar: true,
+  allowSkip: true,
+  allowReview: true,
+  autoSubmitOnTimeout: true,
 };
 
 const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizCreated }) => {
@@ -74,9 +114,10 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizC
   const [quizForm, setQuizForm] = useState<QuizFormData>({
     title: '',
     description: '',
+    instructions: '',
     level: 'A1',
-    quizType: 'practice',
-    category: 'mixed',
+    testPurpose: 'practice',
+    skillFocus: 'mixed',
     duration: 30,
     passingScore: 60,
     isCambridgeAligned: false,
@@ -206,14 +247,15 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizC
             },
             {
               role: 'user',
-              content: `Generate ${aiQuestionCount} ${quizForm.level} level English questions for ${quizForm.category} skill.
+              content: `Generate ${aiQuestionCount} ${quizForm.level} level English questions for ${quizForm.skillFocus} skill.
+              Test purpose: ${quizForm.testPurpose.replace('_', ' ')}
               ${aiPrompt ? `Additional context: ${aiPrompt}` : ''}
 
               Return a JSON array with this exact structure:
               [
                 {
-                  "questionType": "multiple_choice" | "fill_in_blank" | "true_false",
-                  "skill": "${quizForm.category === 'mixed' ? 'grammar' : quizForm.category}",
+                  "questionType": "multiple_choice" | "fill_in_blank" | "true_false" | "sentence_completion" | "error_correction" | "matching",
+                  "skill": "${quizForm.skillFocus === 'mixed' ? 'grammar' : quizForm.skillFocus}",
                   "questionText": "The question text",
                   "options": ["option1", "option2", "option3", "option4"], // for multiple_choice
                   "correctAnswer": "the correct answer",
@@ -230,7 +272,8 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizC
               - B1: All tenses, conditionals, abstract topics
               - B2: Complex grammar, idiomatic expressions, nuanced vocabulary
               - C1: Advanced structures, subtle distinctions, academic language
-              - C2: Near-native proficiency, literary and formal language`
+              - C2: Near-native proficiency, literary and formal language
+              - mixed: Include questions from multiple levels (A1-C2) to assess overall proficiency`
             }
           ],
           temperature: 0.7,
@@ -261,13 +304,14 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizC
       const newQuestions: QuestionData[] = generatedQuestions.map((q: any) => ({
         id: generateQuestionId(),
         questionType: q.questionType || 'multiple_choice',
-        skill: q.skill || quizForm.category,
-        level: quizForm.level,
+        skill: q.skill || quizForm.skillFocus,
+        level: q.level || quizForm.level,
         difficulty: q.difficulty || 'medium',
         questionText: q.questionText,
         options: q.options || [],
         correctAnswer: q.correctAnswer,
         explanation: q.explanation || '',
+        matchingPairs: q.matchingPairs,
         points: q.points || 1,
         timeLimit: 60,
         tags: ['ai-generated'],
@@ -345,9 +389,10 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizC
         createdBy: currentUser._id as Id<"users">,
         title: quizForm.title,
         description: quizForm.description,
+        instructions: quizForm.instructions,
         level: quizForm.level,
-        quizType: quizForm.quizType,
-        category: quizForm.category,
+        testPurpose: quizForm.testPurpose,
+        skillFocus: quizForm.skillFocus,
         duration: quizForm.duration,
         passingScore: quizForm.passingScore,
         settings: quizForm.settings,
@@ -363,9 +408,10 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizC
       setQuizForm({
         title: '',
         description: '',
+        instructions: '',
         level: 'A1',
-        quizType: 'practice',
-        category: 'mixed',
+        testPurpose: 'practice',
+        skillFocus: 'mixed',
         duration: 30,
         passingScore: 60,
         isCambridgeAligned: false,
@@ -407,7 +453,17 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizC
               value={quizForm.description}
               onChange={(e) => setQuizForm({ ...quizForm, description: e.target.value })}
               className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary focus:border-simmonds-primary h-24"
-              placeholder="Describe the quiz objectives and content..."
+              placeholder="Describe the test objectives and content..."
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-simmonds-charcoal mb-2">Instructions (shown before test)</label>
+            <textarea
+              value={quizForm.instructions}
+              onChange={(e) => setQuizForm({ ...quizForm, instructions: e.target.value })}
+              className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary focus:border-simmonds-primary h-20"
+              placeholder="e.g., Read each question carefully. You have 45 minutes to complete this test..."
             />
           </div>
 
@@ -418,6 +474,7 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizC
               onChange={(e) => setQuizForm({ ...quizForm, level: e.target.value as Level })}
               className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary focus:border-simmonds-primary"
             >
+              <option value="mixed">Mixed Levels (for placement tests)</option>
               <option value="A1">A1 - Beginner</option>
               <option value="A2">A2 - Elementary</option>
               <option value="B1">B1 - Intermediate</option>
@@ -428,24 +485,26 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizC
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-simmonds-charcoal mb-2">Quiz Type *</label>
+            <label className="block text-sm font-medium text-simmonds-charcoal mb-2">Test Purpose *</label>
             <select
-              value={quizForm.quizType}
-              onChange={(e) => setQuizForm({ ...quizForm, quizType: e.target.value as QuizType })}
+              value={quizForm.testPurpose}
+              onChange={(e) => setQuizForm({ ...quizForm, testPurpose: e.target.value as TestPurpose })}
               className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary focus:border-simmonds-primary"
             >
-              <option value="placement">Placement Test</option>
-              <option value="progress">Progress Test</option>
-              <option value="practice">Practice Quiz</option>
-              <option value="custom">Custom</option>
+              <option value="placement">Placement Test - Initial assessment</option>
+              <option value="follow_up">Follow-up Test - Progress check after lessons</option>
+              <option value="level_assessment">Level Assessment - Check readiness for next level</option>
+              <option value="practice">Practice Test - General practice</option>
+              <option value="diagnostic">Diagnostic Test - Identify skill gaps</option>
+              <option value="certification">Certification Test - Formal level certification</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-simmonds-charcoal mb-2">Skill Category *</label>
+            <label className="block text-sm font-medium text-simmonds-charcoal mb-2">Skill Focus *</label>
             <select
-              value={quizForm.category}
-              onChange={(e) => setQuizForm({ ...quizForm, category: e.target.value as Category })}
+              value={quizForm.skillFocus}
+              onChange={(e) => setQuizForm({ ...quizForm, skillFocus: e.target.value as SkillFocus })}
               className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary focus:border-simmonds-primary"
             >
               <option value="mixed">Mixed Skills</option>
@@ -801,10 +860,10 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizC
               {quizForm.level}
             </span>
             <span className="px-3 py-1 bg-simmonds-olive/10 text-simmonds-olive rounded-full text-sm">
-              {quizForm.quizType}
+              {quizForm.testPurpose.replace('_', ' ')}
             </span>
             <span className="px-3 py-1 bg-simmonds-lime/10 text-simmonds-lime-dark rounded-full text-sm">
-              {quizForm.category}
+              {quizForm.skillFocus}
             </span>
             {quizForm.isCambridgeAligned && (
               <span className="px-3 py-1 bg-simmonds-terracotta/10 text-simmonds-terracotta rounded-full text-sm">
@@ -1124,10 +1183,10 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizC
 
             <div className="bg-simmonds-cream/50 p-4 rounded-xl">
               <p className="text-sm text-simmonds-charcoal">
-                <strong>Quiz Settings:</strong>
+                <strong>Test Settings:</strong>
               </p>
               <p className="text-sm text-simmonds-stone">
-                Level: {quizForm.level} | Category: {quizForm.category}
+                Level: {quizForm.level} | Skill Focus: {quizForm.skillFocus} | Purpose: {quizForm.testPurpose.replace('_', ' ')}
               </p>
             </div>
           </div>

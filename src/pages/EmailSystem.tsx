@@ -63,12 +63,12 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
   // Form state for test invitation
   const [invitationEmail, setInvitationEmail] = useState('');
   const [invitationName, setInvitationName] = useState('');
-  const [testType, setTestType] = useState<'placement' | 'progress' | 'practice'>('placement');
+  const [testType, setTestType] = useState<'placement' | 'follow_up' | 'level_assessment' | 'practice' | 'diagnostic' | 'certification'>('placement');
   const [expiryDays, setExpiryDays] = useState(7);
 
   // Form state for bulk assessment invitations
   const [bulkAssessmentEmails, setBulkAssessmentEmails] = useState('');
-  const [bulkTestType, setBulkTestType] = useState<'placement' | 'progress' | 'practice'>('placement');
+  const [bulkTestType, setBulkTestType] = useState<'placement' | 'follow_up' | 'level_assessment' | 'practice' | 'diagnostic' | 'certification'>('placement');
 
   // Legacy form state for test invitation (keeping for backward compatibility)
   const [legacyInvitationEmail, setLegacyInvitationEmail] = useState('');
@@ -85,6 +85,19 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
   const [editingTemplate, setEditingTemplate] = useState<string | null>(null);
   const [templateSubject, setTemplateSubject] = useState('');
   const [templateBody, setTemplateBody] = useState('');
+
+  // Helper function to get test type display name
+  const getTestTypeDisplayName = (type: string) => {
+    const names: Record<string, string> = {
+      placement: 'Placement Test',
+      follow_up: 'Follow-up Test',
+      level_assessment: 'Level Assessment',
+      practice: 'Practice Quiz',
+      diagnostic: 'Diagnostic Test',
+      certification: 'Certification Test',
+    };
+    return names[type] || type;
+  };
 
   // Email sending function using Resend API
   const sendEmail = async (to: string[], subject: string, htmlContent: string) => {
@@ -161,7 +174,7 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
               <div class="info-box">
                 <strong>Assessment Details:</strong>
                 <ul style="margin: 10px 0; padding-left: 20px;">
-                  <li><strong>Type:</strong> ${testType === 'placement' ? 'Placement Test' : testType === 'progress' ? 'Progress Test' : 'Practice Quiz'}</li>
+                  <li><strong>Type:</strong> ${getTestTypeDisplayName(testType)}</li>
                   <li><strong>Duration:</strong> Approximately 30-45 minutes</li>
                   <li><strong>Questions:</strong> 20 questions across grammar, vocabulary, and reading</li>
                   <li><strong>Link expires:</strong> ${new Date(Date.now() + expiryDays * 24 * 60 * 60 * 1000).toLocaleDateString()}</li>
@@ -194,7 +207,7 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
       if (activeCompanySettings?.resendApiKey) {
         await sendEmail(
           [invitationEmail],
-          `English Assessment Invitation - ${testType === 'placement' ? 'Placement Test' : testType === 'progress' ? 'Progress Test' : 'Practice Quiz'}`,
+          `English Assessment Invitation - ${getTestTypeDisplayName(testType)}`,
           htmlContent
         );
       }
@@ -344,7 +357,7 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
             <div class="content">
               <h2>English Assessment Invitation</h2>
               <p>Hello ${targetUser.name},</p>
-              <p>You have been invited to take an English ${testType === 'placement' ? 'Placement' : testType === 'progress' ? 'Progress' : 'Practice'} Test.</p>
+              <p>You have been invited to take an English ${getTestTypeDisplayName(testType)}.</p>
               <p>This assessment will help us understand your current English level and place you in the appropriate learning group.</p>
               <p><strong>Test Details:</strong></p>
               <ul>
@@ -386,11 +399,11 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
       let recipients: string[] = [];
 
       if (bulkRecipients === 'all') {
-        recipients = employees.filter(e => e.role === 'student').map(e => e.email);
+        recipients = employees.filter(e => e.role === 'student' && e.email).map(e => e.email as string);
       } else if (bulkRecipients === 'level') {
         recipients = employees
-          .filter(e => e.role === 'student' && e.currentLevel === selectedLevel)
-          .map(e => e.email);
+          .filter(e => e.role === 'student' && e.currentLevel === selectedLevel && e.email)
+          .map(e => e.email as string);
       } else {
         recipients = customEmails.split(',').map(e => e.trim()).filter(e => e);
       }
@@ -500,7 +513,9 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
     `;
 
     try {
-      await sendEmail([user.email], 'Your English Assessment Results', htmlContent);
+      if (user.email) {
+        await sendEmail([user.email], 'Your English Assessment Results', htmlContent);
+      }
     } catch (error) {
       console.error('Failed to send results email:', error);
     }
@@ -521,7 +536,7 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
           >
             <option value="">-- Select a Company --</option>
             {allCompanies
-              .filter(c => c.subscriptionStatus === 'active')
+              .filter(c => c.isActive)
               .map((c) => (
                 <option key={c._id} value={c._id}>
                   {c.name} ({c.stats?.students || 0} students)
@@ -594,11 +609,14 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
             <select
               className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
               value={testType}
-              onChange={(e) => setTestType(e.target.value as 'placement' | 'progress' | 'practice')}
+              onChange={(e) => setTestType(e.target.value as 'placement' | 'follow_up' | 'level_assessment' | 'practice' | 'diagnostic' | 'certification')}
             >
-              <option value="placement">Placement Test (Level Assessment)</option>
-              <option value="progress">Progress Test</option>
+              <option value="placement">Placement Test</option>
+              <option value="follow_up">Follow-up Test</option>
+              <option value="level_assessment">Level Assessment</option>
               <option value="practice">Practice Quiz</option>
+              <option value="diagnostic">Diagnostic Test</option>
+              <option value="certification">Certification Test</option>
             </select>
           </div>
           <div>
@@ -660,11 +678,14 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
               <select
                 className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
                 value={bulkTestType}
-                onChange={(e) => setBulkTestType(e.target.value as 'placement' | 'progress' | 'practice')}
+                onChange={(e) => setBulkTestType(e.target.value as 'placement' | 'follow_up' | 'level_assessment' | 'practice' | 'diagnostic' | 'certification')}
               >
                 <option value="placement">Placement Test</option>
-                <option value="progress">Progress Test</option>
+                <option value="follow_up">Follow-up Test</option>
+                <option value="level_assessment">Level Assessment</option>
                 <option value="practice">Practice Quiz</option>
+                <option value="diagnostic">Diagnostic Test</option>
+                <option value="certification">Certification Test</option>
               </select>
             </div>
             <div>

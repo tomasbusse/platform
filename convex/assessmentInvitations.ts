@@ -33,12 +33,19 @@ export const createInvitation = mutation({
     name: v.string(),
     testType: v.union(
       v.literal("placement"),
-      v.literal("progress"),
-      v.literal("practice")
+      v.literal("follow_up"),
+      v.literal("level_assessment"),
+      v.literal("practice"),
+      v.literal("diagnostic"),
+      v.literal("certification")
     ),
     quizId: v.optional(v.id("quizzes")),
     createdBy: v.union(v.id("users"), v.string()),
     expiryDays: v.optional(v.number()),
+    // Link to existing user if sending to a student
+    userId: v.optional(v.id("users")),
+    // For individual lesson students
+    forIndividualLessons: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -72,6 +79,8 @@ export const createInvitation = mutation({
       testType: args.testType,
       status: "pending",
       expiresAt,
+      userId: args.userId,
+      forIndividualLessons: args.forIndividualLessons,
       createdBy: args.createdBy,
       createdAt: now,
     });
@@ -386,7 +395,6 @@ export const submitAssessment = mutation({
       await ctx.db.insert("users", {
         name: invitation.name,
         email: invitation.email,
-        passwordHash: "", // They'll need to set password later
         role: "student",
         companyId: invitation.companyId,
         isActive: true,
@@ -547,15 +555,20 @@ export const bulkCreateInvitations = mutation({
     invitations: v.array(v.object({
       email: v.string(),
       name: v.string(),
+      userId: v.optional(v.id("users")),
     })),
     testType: v.union(
       v.literal("placement"),
-      v.literal("progress"),
-      v.literal("practice")
+      v.literal("follow_up"),
+      v.literal("level_assessment"),
+      v.literal("practice"),
+      v.literal("diagnostic"),
+      v.literal("certification")
     ),
     quizId: v.optional(v.id("quizzes")),
     createdBy: v.union(v.id("users"), v.string()),
     expiryDays: v.optional(v.number()),
+    forIndividualLessons: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -589,6 +602,8 @@ export const bulkCreateInvitations = mutation({
         testType: args.testType,
         status: "pending",
         expiresAt,
+        userId: inv.userId,
+        forIndividualLessons: args.forIndividualLessons,
         createdBy: args.createdBy,
         createdAt: now,
       });

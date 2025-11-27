@@ -86,53 +86,6 @@ const GroupManagement: React.FC<GroupManagementProps> = ({ currentUser, company,
   const deleteGroup = useMutation(api.groups.deleteGroup);
   const removeStudentFromGroup = useMutation(api.groups.removeStudentFromGroup);
   const addStudentToGroup = useMutation(api.groups.addStudentToGroup);
-  const bulkAssignStudents = useMutation(api.groups.bulkAssignStudentsByLevel);
-
-  // Quick setup - create all CEFR level groups at once
-  const handleQuickSetup = async () => {
-    if (!companyId) return;
-    if (!confirm('This will create one group for each CEFR level (A1-C2) with auto-assignment enabled. Continue?')) return;
-
-    setIsProcessing(true);
-    try {
-      const levels: { level: Level; name: string; description: string }[] = [
-        { level: 'A1', name: 'Beginner Group (A1)', description: 'For absolute beginners with basic English' },
-        { level: 'A2', name: 'Elementary Group (A2)', description: 'For students with elementary English knowledge' },
-        { level: 'B1', name: 'Intermediate Group (B1)', description: 'For students who can handle everyday situations' },
-        { level: 'B2', name: 'Upper Intermediate Group (B2)', description: 'For students who can communicate fluently' },
-        { level: 'C1', name: 'Advanced Group (C1)', description: 'For advanced English speakers' },
-        { level: 'C2', name: 'Proficiency Group (C2)', description: 'For near-native English speakers' },
-      ];
-
-      let created = 0;
-      for (const levelInfo of levels) {
-        // Check if group for this level already exists
-        const existingGroup = groups?.find(g => g.level === levelInfo.level);
-        if (!existingGroup) {
-          await createGroup({
-            companyId: companyId,
-            name: levelInfo.name,
-            description: levelInfo.description,
-            level: levelInfo.level,
-            maxStudents: 25,
-            autoAssign: true,
-          });
-          created++;
-        }
-      }
-
-      if (created > 0) {
-        alert(`Created ${created} groups successfully! Students will now be auto-assigned based on their test results.`);
-      } else {
-        alert('All CEFR level groups already exist!');
-      }
-    } catch (error) {
-      console.error('Error in quick setup:', error);
-      alert(`Failed to create groups: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   const handleCreateGroup = async () => {
     if (!companyId) return;
@@ -213,24 +166,6 @@ const GroupManagement: React.FC<GroupManagementProps> = ({ currentUser, company,
     } catch (error) {
       console.error('Error removing student:', error);
       alert(`Failed to remove student: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  };
-
-  const handleBulkAssign = async () => {
-    if (!companyId) return;
-    if (!confirm('This will assign all unassigned students to groups based on their levels. Continue?')) return;
-
-    setIsProcessing(true);
-    try {
-      const result = await bulkAssignStudents({
-        companyId: companyId,
-      });
-      alert(result.message);
-    } catch (error) {
-      console.error('Error bulk assigning:', error);
-      alert(`Failed to bulk assign: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -380,23 +315,6 @@ const GroupManagement: React.FC<GroupManagementProps> = ({ currentUser, company,
           </select>
         </div>
         <div className="flex gap-2 flex-wrap">
-          {groups && groups.length < 6 && (
-            <button
-              onClick={handleQuickSetup}
-              disabled={isProcessing}
-              className="px-4 py-2 bg-simmonds-lime text-simmonds-charcoal rounded-xl font-medium hover:bg-simmonds-lime-dark disabled:opacity-50"
-              title="Create any missing CEFR level groups"
-            >
-              {isProcessing ? 'Creating...' : 'Quick Setup Missing Levels'}
-            </button>
-          )}
-          <button
-            onClick={handleBulkAssign}
-            disabled={isProcessing}
-            className="px-4 py-2 bg-simmonds-olive text-white rounded-xl font-medium hover:bg-simmonds-olive-light disabled:opacity-50"
-          >
-            {isProcessing ? 'Processing...' : 'Auto-Assign All Students'}
-          </button>
           <button
             onClick={() => setShowCreateModal(true)}
             className="px-4 py-2 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light"
@@ -422,26 +340,14 @@ const GroupManagement: React.FC<GroupManagementProps> = ({ currentUser, company,
               </div>
               <h4 className="text-lg font-semibold text-simmonds-charcoal mb-2">No groups created yet</h4>
               <p className="text-simmonds-stone mb-6">
-                Create groups to organize students by CEFR level. Students who complete assessments will be automatically assigned to the appropriate group.
+                Create groups to organize students by CEFR level. Students can be manually assigned to groups or placed based on their placement test results.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <button
-                  onClick={handleQuickSetup}
-                  disabled={isProcessing}
-                  className="px-6 py-3 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light disabled:opacity-50"
-                >
-                  {isProcessing ? 'Creating...' : 'Quick Setup (Create All Levels)'}
-                </button>
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="px-6 py-3 bg-simmonds-cream text-simmonds-charcoal rounded-xl font-medium hover:bg-simmonds-cream-light"
-                >
-                  Create Custom Group
-                </button>
-              </div>
-              <p className="text-xs text-simmonds-stone mt-4">
-                Quick Setup creates one group for each CEFR level (A1-C2) with auto-assignment enabled
-              </p>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="px-6 py-3 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light"
+              >
+                Create Your First Group
+              </button>
             </div>
           </div>
         ) : (

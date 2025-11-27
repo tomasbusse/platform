@@ -182,8 +182,6 @@ export const getBusinessIntelligenceMetrics = query({
     return {
       totalActiveStudents: activeStudents.length,
       totalStudents: allStudents.length,
-      maxStudents: company.maxStudents,
-      utilizationRate: (activeStudents.length / company.maxStudents) * 100,
       revenuePotential: totalRevenuePotential,
       completionRate,
       totalTestsSessions: testSessions.length,
@@ -192,8 +190,7 @@ export const getBusinessIntelligenceMetrics = query({
         level,
         count,
       })),
-      subscriptionPlan: company.subscriptionPlan,
-      subscriptionStatus: company.subscriptionStatus,
+      isActive: company.isActive,
     };
   },
 });
@@ -611,7 +608,7 @@ export const getTeacherPerformanceMetrics = query({
         teacherName: teacher.name,
         totalStudents: studentIds.size,
         quizzesCreated: quizzes.length,
-        publishedQuizzes: quizzes.filter((q) => q.isPublished).length,
+        publishedQuizzes: quizzes.filter((q) => q.status === "published").length,
         totalAssignments,
         completedAssignments,
         completionRate,
@@ -671,13 +668,13 @@ export const getTeacherContentEffectiveness = query({
       quizEffectiveness.push({
         quizId: quiz._id,
         quizTitle: quiz.title,
-        quizType: quiz.quizType,
-        category: quiz.category,
+        testPurpose: quiz.testPurpose,
+        skillFocus: quiz.skillFocus,
         level: quiz.level,
         totalAttempts,
         averageScore,
         averageTimeSpent, // in minutes
-        isPublished: quiz.isPublished,
+        status: quiz.status,
       });
     }
 
@@ -741,7 +738,7 @@ export const getTeacherWorkloadAnalysis = query({
       draftAssignments: draftAssignments.length,
       completedAssignments: completedAssignments.length,
       quizzesCreated: quizzes.length,
-      publishedQuizzes: quizzes.filter((q) => q.isPublished).length,
+      publishedQuizzes: quizzes.filter((q) => q.status === "published").length,
       pendingGrading,
       workloadScore: studentIds.size * 2 + activeAssignments.length + pendingGrading, // Simple workload calculation
     };
@@ -807,7 +804,7 @@ export const getQuizPerformanceAnalytics = query({
         quizId: quiz._id,
         quizTitle: quiz.title,
         level: quiz.level,
-        category: quiz.category,
+        skillFocus: quiz.skillFocus,
         totalAttempts,
         averageScore,
         averageCompletionTime, // in minutes

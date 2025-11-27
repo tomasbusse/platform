@@ -77,7 +77,7 @@ const LessonScheduler: React.FC<LessonSchedulerProps> = ({
   );
 
   const students = useQuery(
-    api.auth.getUsersByCompany,
+    api.authLegacy.getUsersByCompany,
     company?._id ? { companyId: company._id as Id<"companies"> } : 'skip'
   );
 
@@ -85,8 +85,8 @@ const LessonScheduler: React.FC<LessonSchedulerProps> = ({
   const generateUploadUrl = useMutation(api.lessons.generateUploadUrl);
   const saveLessonMaterial = useMutation(api.lessons.saveLessonMaterial);
 
-  const studentList = students?.filter((u) => u.role === 'student' && u.isActive) || [];
-  const teacherList = students?.filter((u) => (u.role === 'teacher' || u.role === 'admin' || u.role === 'corporate_admin') && u.isActive) || [];
+  const studentList = students?.filter((u: any) => u.role === 'student' && u.isActive) || [];
+  const teacherList = students?.filter((u: any) => (u.role === 'teacher' || u.role === 'admin' || u.role === 'corporate_admin') && u.isActive) || [];
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -480,7 +480,7 @@ const LessonScheduler: React.FC<LessonSchedulerProps> = ({
             }`}
           >
             <option value="">-- Select a teacher --</option>
-            {teacherList.map((teacher) => (
+            {teacherList.map((teacher: any) => (
               <option key={teacher._id} value={teacher._id}>
                 {teacher.name} ({teacher.email}) - {teacher.role}
               </option>
@@ -733,7 +733,7 @@ const LessonScheduler: React.FC<LessonSchedulerProps> = ({
               {studentList.length === 0 ? (
                 <p className="text-sm text-simmonds-stone">No students available</p>
               ) : (
-                studentList.map((student) => (
+                studentList.map((student: any) => (
                   <label
                     key={student._id}
                     className="flex items-center gap-3 p-2 hover:bg-simmonds-cream/50 rounded-lg cursor-pointer"

@@ -10,12 +10,11 @@ export const registerCompany = mutation({
     contactPhone: v.optional(v.string()),
     domain: v.optional(v.string()),
     description: v.optional(v.string()),
-    maxStudents: v.number(),
     settings: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    
+
     // Create company
     const companyId = await ctx.db.insert("companies", {
       name: args.name,
@@ -23,20 +22,17 @@ export const registerCompany = mutation({
       contactPhone: args.contactPhone,
       domain: args.domain,
       description: args.description,
-      subscriptionPlan: "trial",
-      subscriptionStatus: "active",
-      maxStudents: args.maxStudents,
+      isActive: true,
       currentStudentCount: 0,
       settings: args.settings,
       createdAt: now,
       updatedAt: now,
     });
 
-    // Create admin user
+    // Create admin user (password managed by Clerk)
     const adminUserId = await ctx.db.insert("users", {
       name: args.name + " Administrator",
       email: args.contactEmail,
-      passwordHash: "", // Admin will need to set password via password reset flow
       role: "corporate_admin",
       companyId: companyId,
       isActive: true,
@@ -70,17 +66,7 @@ export const getCompany = query({
   },
 });
 
-// Simple password hashing using Web Crypto API (server context)
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return hashHex;
-}
-
-// Add employee to company
+// Add employee to company (password managed by Clerk)
 export const addEmployee = mutation({
   args: {
     companyId: v.id("companies"),
@@ -93,7 +79,8 @@ export const addEmployee = mutation({
       v.literal("student")
     ),
     currentLevel: v.optional(v.string()),
-    password: v.optional(v.string()), // Optional password - if not provided, user must set via invitation
+    individualLessonsOnly: v.optional(v.boolean()), // For students who only do individual lessons
+    sendPlacementTest: v.optional(v.boolean()), // Whether to send placement test link
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -108,37 +95,32 @@ export const addEmployee = mutation({
       throw new Error("User with this email already exists");
     }
 
-    // Hash password if provided
-    let passwordHash = "";
-    let isActive = false;
-    if (args.password) {
-      passwordHash = await hashPassword(args.password);
-      isActive = true; // If password is set, user is active
-    }
-
-    // Create employee user
+    // Create employee user (password managed by Clerk)
     const userId = await ctx.db.insert("users", {
       name: args.name,
       email: args.email,
-      passwordHash: passwordHash,
       role: args.role,
       companyId: args.companyId,
-      isActive: isActive,
+      isActive: true, // User will be active, they authenticate via Clerk
       currentLevel: args.currentLevel,
       totalScore: 0,
       averageScore: 0,
       completedTests: 0,
+      individualLessonsOnly: args.individualLessonsOnly || false,
+      placementTestCompleted: false,
       createdAt: now,
       updatedAt: now,
     });
 
-    // Update company student count
-    const company = await ctx.db.get(args.companyId);
-    if (company) {
-      await ctx.db.patch(args.companyId, {
-        currentStudentCount: company.currentStudentCount + 1,
-        updatedAt: now,
-      });
+    // Update company student count (only for students)
+    if (args.role === "student") {
+      const company = await ctx.db.get(args.companyId);
+      if (company) {
+        await ctx.db.patch(args.companyId, {
+          currentStudentCount: company.currentStudentCount + 1,
+          updatedAt: now,
+        });
+      }
     }
 
     // Log the action
@@ -147,11 +129,11 @@ export const addEmployee = mutation({
       action: "employee_added",
       entityType: "user",
       entityId: userId,
-      newValues: { name: args.name, email: args.email, role: args.role },
+      newValues: { name: args.name, email: args.email, role: args.role, individualLessonsOnly: args.individualLessonsOnly },
       timestamp: now,
     });
 
-    return { userId };
+    return { userId, sendPlacementTest: args.sendPlacementTest };
   },
 });
 
@@ -391,6 +373,8 @@ export const createUserWithInvitation = mutation({
     ),
     currentLevel: v.optional(v.string()),
     createdBy: v.id("users"),
+    individualLessonsOnly: v.optional(v.boolean()), // For students who only do individual lessons
+    sendPlacementTest: v.optional(v.boolean()), // Whether to send placement test link
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -416,6 +400,8 @@ export const createUserWithInvitation = mutation({
       totalScore: 0,
       averageScore: 0,
       completedTests: 0,
+      individualLessonsOnly: args.individualLessonsOnly || false,
+      placementTestCompleted: false,
       createdAt: now,
       updatedAt: now,
     });
@@ -710,5 +696,136 @@ export const acceptInvitation = mutation({
 
       return { success: true, userId: invitation.userId };
     }
+  },
+});
+
+// Send a placement test link to a user
+export const sendPlacementTestToUser = mutation({
+  args: {
+    userId: v.id("users"),
+    testType: v.optional(v.union(
+      v.literal("placement"),
+      v.literal("follow_up"),
+      v.literal("level_assessment"),
+      v.literal("practice"),
+      v.literal("diagnostic"),
+      v.literal("certification")
+    )),
+    quizId: v.optional(v.id("quizzes")),
+    sentBy: v.id("users"),
+    expiryDays: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const expiresInDays = args.expiryDays || 7;
+    const expiresAt = now + (expiresInDays * 24 * 60 * 60 * 1000);
+
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (!user.email) {
+      throw new Error("User does not have an email address");
+    }
+
+    if (!user.companyId) {
+      throw new Error("User is not associated with a company");
+    }
+
+    // Generate unique token
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let token = '';
+    for (let i = 0; i < 32; i++) {
+      token += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    // Make sure token is unique
+    let existing = await ctx.db
+      .query("assessmentInvitations")
+      .withIndex("by_token", (q) => q.eq("token", token))
+      .first();
+
+    while (existing) {
+      token = '';
+      for (let i = 0; i < 32; i++) {
+        token += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      existing = await ctx.db
+        .query("assessmentInvitations")
+        .withIndex("by_token", (q) => q.eq("token", token))
+        .first();
+    }
+
+    // Create the assessment invitation
+    const invitationId = await ctx.db.insert("assessmentInvitations", {
+      companyId: user.companyId,
+      token,
+      email: user.email,
+      name: user.name || "Student",
+      quizId: args.quizId,
+      testType: args.testType || "placement",
+      status: "pending",
+      expiresAt,
+      userId: args.userId,
+      forIndividualLessons: user.individualLessonsOnly,
+      createdBy: args.sentBy,
+      createdAt: now,
+    });
+
+    // Log the action
+    await ctx.db.insert("auditLogs", {
+      companyId: user.companyId,
+      userId: args.sentBy,
+      action: "placement_test_sent",
+      entityType: "user",
+      entityId: args.userId,
+      newValues: { testType: args.testType || "placement", quizId: args.quizId },
+      timestamp: now,
+    });
+
+    return {
+      invitationId,
+      token,
+      expiresAt,
+    };
+  },
+});
+
+// Get a user's placement test status/history
+export const getUserPlacementTestStatus = query({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      return null;
+    }
+
+    // Get the user's assessment invitations
+    const invitations = await ctx.db
+      .query("assessmentInvitations")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    // Sort by creation date (most recent first)
+    invitations.sort((a, b) => b.createdAt - a.createdAt);
+
+    return {
+      placementTestCompleted: user.placementTestCompleted,
+      placementTestDate: user.placementTestDate,
+      placementTestScore: user.placementTestScore,
+      currentLevel: user.currentLevel,
+      invitations: invitations.map(inv => ({
+        _id: inv._id,
+        testType: inv.testType,
+        status: inv.status,
+        score: inv.score,
+        recommendedLevel: inv.recommendedLevel,
+        createdAt: inv.createdAt,
+        completedAt: inv.completedAt,
+      })),
+    };
   },
 });

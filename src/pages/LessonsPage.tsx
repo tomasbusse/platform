@@ -64,10 +64,10 @@ const LessonsPage: React.FC<LessonsPageProps> = ({ currentUser, company }) => {
 
   // Fetch users for teacher selection in edit modal
   const students = useQuery(
-    api.auth.getUsersByCompany,
+    api.authLegacy.getUsersByCompany,
     company?._id ? { companyId: company._id as Id<"companies"> } : 'skip'
   );
-  const teacherList = students?.filter((u) => (u.role === 'teacher' || u.role === 'admin' || u.role === 'corporate_admin') && u.isActive) || [];
+  const teacherList = students?.filter((u: any) => (u.role === 'teacher' || u.role === 'admin' || u.role === 'corporate_admin') && u.isActive) || [];
 
   // Fetch scheduled lessons
   const scheduledLessons = useQuery(
@@ -872,7 +872,7 @@ interface EditLessonModalProps {
   onSave: (data: Partial<ScheduledLesson>) => void;
   onCancel: () => void;
   isSaving: boolean;
-  teacherList: Array<{ _id: string; name: string; email: string }>;
+  teacherList: Array<{ _id: any; name?: string; email?: string }>;
   currentUser: User;
   company: Company;
 }

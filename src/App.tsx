@@ -1,43 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery, useConvexAuth } from 'convex/react';
-import { useAuthActions } from '@convex-dev/auth/react';
+import { useQuery } from 'convex/react';
+import { useAuth, useClerk, SignIn, SignUp } from '@clerk/clerk-react';
 import { api } from '../convex/_generated/api';
 import Dashboard from './pages/Dashboard';
-import LoginForm from './components/LoginForm';
 import SeedAdmin from './pages/SeedAdmin';
 import PublicAssessment from './pages/PublicAssessment';
-import SetupPassword from './pages/SetupPassword';
 
 const App: React.FC = () => {
-  const { isLoading, isAuthenticated } = useConvexAuth();
-  const { signOut } = useAuthActions();
+  const { isLoaded, isSignedIn } = useAuth();
+  const { signOut } = useClerk();
   const [showSeedPage, setShowSeedPage] = useState(false);
   const [assessmentToken, setAssessmentToken] = useState<string | null>(null);
-  const [setupPasswordToken, setSetupPasswordToken] = useState<string | null>(null);
+  const [showSignUp, setShowSignUp] = useState(false);
 
   // Get the current authenticated user (only when authenticated)
   const currentUser = useQuery(
     api.auth.currentUser,
-    isAuthenticated ? {} : "skip"
+    isSignedIn ? {} : "skip"
   );
   const company = useQuery(
     api.auth.currentUserCompany,
-    isAuthenticated ? {} : "skip"
-  );
-
-  // Debug: log identity
-  const identity = useQuery(
-    api.debug.getIdentity,
-    isAuthenticated ? {} : "skip"
+    isSignedIn ? {} : "skip"
   );
 
   useEffect(() => {
-    if (isAuthenticated) {
-      console.log("Identity:", identity);
+    if (isSignedIn) {
       console.log("Current User:", currentUser);
       console.log("Company:", company);
     }
-  }, [isAuthenticated, identity, currentUser, company]);
+  }, [isSignedIn, currentUser, company]);
 
   useEffect(() => {
     // Check if URL is for public assessment (/assessment/:token)
@@ -46,16 +37,6 @@ const App: React.FC = () => {
     if (assessmentMatch) {
       setAssessmentToken(assessmentMatch[1]);
       return;
-    }
-
-    // Check if URL is for password setup (/setup-password?token=xxx)
-    if (path === '/setup-password') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
-      if (token) {
-        setSetupPasswordToken(token);
-        return;
-      }
     }
 
     // Check if URL has ?seed=admin parameter
@@ -80,13 +61,8 @@ const App: React.FC = () => {
     return <PublicAssessment token={assessmentToken} />;
   }
 
-  // Show password setup page for invited users (no login required)
-  if (setupPasswordToken) {
-    return <SetupPassword token={setupPasswordToken} />;
-  }
-
   // Loading state
-  if (isLoading) {
+  if (!isLoaded) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-simmonds-cream to-white flex items-center justify-center">
         <div className="text-center">
@@ -97,11 +73,57 @@ const App: React.FC = () => {
     );
   }
 
-  // Not authenticated - show login
-  if (!isAuthenticated) {
+  // Not authenticated - show Clerk sign in/up
+  if (!isSignedIn) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-simmonds-cream to-white flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <LoginForm />
+        <div className="max-w-md w-full">
+          <div className="mb-8 text-center">
+            <div className="w-16 h-16 bg-simmonds-primary rounded-full mx-auto mb-4 flex items-center justify-center">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-simmonds-charcoal mb-2">
+              Simmonds Language Services
+            </h1>
+          </div>
+          {showSignUp ? (
+            <div>
+              <SignUp
+                routing="hash"
+                signInUrl="#"
+                afterSignUpUrl="/"
+              />
+              <p className="text-center mt-4 text-simmonds-stone">
+                Already have an account?{' '}
+                <button
+                  onClick={() => setShowSignUp(false)}
+                  className="text-simmonds-primary hover:text-simmonds-primary/80 font-medium"
+                >
+                  Sign in
+                </button>
+              </p>
+            </div>
+          ) : (
+            <div>
+              <SignIn
+                routing="hash"
+                signUpUrl="#"
+                afterSignInUrl="/"
+              />
+              <p className="text-center mt-4 text-simmonds-stone">
+                Don't have an account?{' '}
+                <button
+                  onClick={() => setShowSignUp(true)}
+                  className="text-simmonds-primary hover:text-simmonds-primary/80 font-medium"
+                >
+                  Sign up
+                </button>
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     );
   }

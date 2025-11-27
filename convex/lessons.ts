@@ -1197,6 +1197,7 @@ export const saveLessonMaterial = mutation({
       title: args.title || args.fileName,
       description: args.description,
       category: args.category || "other",
+      accessScope: "company", // Default to company-wide access
       isActive: true,
       createdAt: now,
       updatedAt: now,
@@ -1234,7 +1235,7 @@ export const getLessonMaterials = query({
     // Get download URLs for each material
     const materialsWithUrls = await Promise.all(
       materials.map(async (material) => {
-        const url = await ctx.storage.getUrl(material.storageId);
+        const url = material.storageId ? await ctx.storage.getUrl(material.storageId) : material.externalUrl;
         return {
           ...material,
           url,
@@ -1255,8 +1256,10 @@ export const deleteLessonMaterial = mutation({
     const material = await ctx.db.get(args.materialId);
     if (!material) throw new Error("Material not found");
 
-    // Delete from storage
-    await ctx.storage.delete(material.storageId);
+    // Delete from storage if it has a storageId
+    if (material.storageId) {
+      await ctx.storage.delete(material.storageId);
+    }
 
     // Delete record
     await ctx.db.delete(args.materialId);

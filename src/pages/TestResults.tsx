@@ -33,9 +33,9 @@ const TestResults: React.FC<PageComponentProps> = ({ currentUser, company }) => 
     const user = employees?.find(emp => emp._id === session.userId);
     const matchesStatus = filterStatus === 'all' || session.status === filterStatus;
     const matchesLevel = filterLevel === 'all' || session.recommendedLevel === filterLevel;
-    const matchesSearch = !searchQuery || 
-      user?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user?.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = !searchQuery ||
+      user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user?.email?.toLowerCase().includes(searchQuery.toLowerCase());
     
     return matchesStatus && matchesLevel && matchesSearch;
   });

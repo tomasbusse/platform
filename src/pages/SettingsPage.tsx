@@ -72,6 +72,7 @@ interface SettingsState {
     presentationFormat: string;
     homeworkFormat: string;
     defaultLanguage: 'english' | 'german';
+    explanationLanguage?: 'english' | 'german';
   };
   voiceConfig: {
     defaultEnglishVoice: string;

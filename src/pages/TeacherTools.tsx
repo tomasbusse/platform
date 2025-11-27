@@ -200,11 +200,13 @@ const TeacherTools: React.FC<PageComponentProps> = ({ currentUser, company }) =>
                     <div className="flex items-center gap-2 mb-2">
                       <h4 className="font-semibold text-simmonds-charcoal">{quiz.title}</h4>
                       <span className={`px-2 py-0.5 rounded text-xs ${
-                        quiz.isPublished
+                        quiz.status === 'published'
                           ? 'bg-simmonds-lime/20 text-simmonds-lime-dark'
+                          : quiz.status === 'archived'
+                          ? 'bg-gray-100 text-gray-600'
                           : 'bg-simmonds-cream text-simmonds-stone'
                       }`}>
-                        {quiz.isPublished ? 'Published' : 'Draft'}
+                        {quiz.status === 'published' ? 'Published' : quiz.status === 'archived' ? 'Archived' : 'Draft'}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 mb-2">
@@ -212,7 +214,7 @@ const TeacherTools: React.FC<PageComponentProps> = ({ currentUser, company }) =>
                         {quiz.level}
                       </span>
                       <span className="px-2 py-0.5 bg-simmonds-olive/10 text-simmonds-olive rounded text-xs">
-                        {quiz.quizType}
+                        {quiz.testPurpose}
                       </span>
                       <span className="px-2 py-0.5 bg-simmonds-cream text-simmonds-stone rounded text-xs">
                         {quiz.totalQuestions} questions
@@ -229,7 +231,7 @@ const TeacherTools: React.FC<PageComponentProps> = ({ currentUser, company }) =>
                     <button className="text-sm text-simmonds-primary hover:underline">
                       Edit
                     </button>
-                    {!quiz.isPublished && (
+                    {quiz.status !== 'published' && (
                       <button className="text-sm text-simmonds-lime-dark hover:underline">
                         Publish
                       </button>
@@ -419,7 +421,7 @@ const TeacherTools: React.FC<PageComponentProps> = ({ currentUser, company }) =>
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-simmonds-cream">
           <p className="text-sm text-simmonds-stone">Published</p>
           <p className="text-2xl font-bold text-simmonds-lime-dark">
-            {quizzes?.filter(q => q.isPublished).length || 0}
+            {quizzes?.filter(q => q.status === 'published').length || 0}
           </p>
         </div>
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-simmonds-cream">

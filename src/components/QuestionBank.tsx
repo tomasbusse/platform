@@ -9,8 +9,15 @@ interface QuestionBankProps {
   company: Company | null;
 }
 
-type QuestionType = 'multiple_choice' | 'fill_in_blank' | 'true_false' | 'listening' | 'reading_comprehension';
-type Skill = 'grammar' | 'vocabulary' | 'reading' | 'listening' | 'writing' | 'speaking';
+type QuestionType =
+  | 'multiple_choice' | 'multiple_select' | 'fill_in_blank' | 'true_false'
+  | 'short_answer' | 'long_answer' | 'sentence_completion' | 'error_correction'
+  | 'word_formation' | 'sentence_reorder' | 'matching' | 'ordering' | 'categorization'
+  | 'reading_comprehension' | 'cloze_test' | 'listening' | 'audio_transcription'
+  | 'audio_multiple_choice' | 'dictation' | 'image_description' | 'image_labeling'
+  | 'image_sequence' | 'video_comprehension' | 'speaking_response' | 'pronunciation'
+  | 'read_aloud' | 'drag_and_drop' | 'hotspot' | 'conversation_completion';
+type Skill = 'grammar' | 'vocabulary' | 'reading' | 'listening' | 'writing' | 'speaking' | 'pronunciation';
 type Level = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 type Difficulty = 'easy' | 'medium' | 'hard';
 
@@ -140,6 +147,7 @@ const QuestionBank: React.FC<QuestionBankProps> = ({ currentUser, company }) => 
       listening: 'bg-purple-100 text-purple-700',
       writing: 'bg-orange-100 text-orange-700',
       speaking: 'bg-pink-100 text-pink-700',
+      pronunciation: 'bg-cyan-100 text-cyan-700',
     };
     return colors[skill] || 'bg-gray-100 text-gray-700';
   };

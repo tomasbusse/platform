@@ -7,7 +7,6 @@ interface CompanyFormData {
   contactPhone: string;
   domain: string;
   description: string;
-  maxStudents: number;
   address: string;
 }
 
@@ -26,7 +25,6 @@ const CompanyRegistrationForm: React.FC<CompanyRegistrationFormProps> = ({
     contactPhone: '',
     domain: '',
     description: '',
-    maxStudents: 50,
     address: '',
   });
 
@@ -47,10 +45,6 @@ const CompanyRegistrationForm: React.FC<CompanyRegistrationFormProps> = ({
 
     if (formData.domain && !/^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/.test(formData.domain)) {
       newErrors.domain = 'Please enter a valid domain';
-    }
-
-    if (formData.maxStudents < 1) {
-      newErrors.maxStudents = 'Max students must be at least 1';
     }
 
     setErrors(newErrors);
@@ -176,30 +170,6 @@ const CompanyRegistrationForm: React.FC<CompanyRegistrationFormProps> = ({
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Brief description of your organization and training goals"
           />
-        </div>
-
-        {/* Max Students */}
-        <div>
-          <label htmlFor="maxStudents" className="block text-sm font-medium text-gray-700 mb-2">
-            Maximum Students *
-          </label>
-          <select
-            id="maxStudents"
-            name="maxStudents"
-            value={formData.maxStudents}
-            onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.maxStudents ? 'border-red-500' : 'border-gray-300'
-            }`}
-          >
-            <option value={25}>25 students</option>
-            <option value={50}>50 students</option>
-            <option value={100}>100 students</option>
-            <option value={250}>250 students</option>
-            <option value={500}>500 students</option>
-            <option value={1000}>1000+ students</option>
-          </select>
-          {errors.maxStudents && <p className="mt-1 text-sm text-red-600">{errors.maxStudents}</p>}
         </div>
 
         {/* Address */}

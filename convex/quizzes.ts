@@ -6,28 +6,32 @@ import { Id } from "./_generated/dataModel";
 // QUIZ CRUD OPERATIONS
 // ============================================================================
 
-// Create a new quiz
+// Create a new quiz/test
 export const createQuiz = mutation({
   args: {
     companyId: v.union(v.id("companies"), v.string()),
     createdBy: v.union(v.id("users"), v.string()),
     title: v.string(),
     description: v.optional(v.string()),
+    instructions: v.optional(v.string()),
     level: v.union(
       v.literal("A1"),
       v.literal("A2"),
       v.literal("B1"),
       v.literal("B2"),
       v.literal("C1"),
-      v.literal("C2")
+      v.literal("C2"),
+      v.literal("mixed")
     ),
-    quizType: v.union(
+    testPurpose: v.union(
       v.literal("placement"),
-      v.literal("progress"),
+      v.literal("follow_up"),
+      v.literal("level_assessment"),
       v.literal("practice"),
-      v.literal("custom")
+      v.literal("diagnostic"),
+      v.literal("certification")
     ),
-    category: v.union(
+    skillFocus: v.union(
       v.literal("grammar"),
       v.literal("vocabulary"),
       v.literal("reading"),
@@ -38,7 +42,7 @@ export const createQuiz = mutation({
     ),
     duration: v.number(),
     passingScore: v.number(),
-    settings: v.object({
+    settings: v.optional(v.object({
       shuffleQuestions: v.boolean(),
       shuffleOptions: v.boolean(),
       showCorrectAnswers: v.boolean(),
@@ -47,9 +51,13 @@ export const createQuiz = mutation({
       maxAttempts: v.number(),
       requirePassingScore: v.boolean(),
       showTimer: v.boolean(),
-    }),
-    tags: v.array(v.string()),
-    isCambridgeAligned: v.boolean(),
+      showProgressBar: v.optional(v.boolean()),
+      allowSkip: v.optional(v.boolean()),
+      allowReview: v.optional(v.boolean()),
+      autoSubmitOnTimeout: v.optional(v.boolean()),
+    })),
+    tags: v.optional(v.array(v.string())),
+    isCambridgeAligned: v.optional(v.boolean()),
     cambridgeLevel: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -58,8 +66,24 @@ export const createQuiz = mutation({
     // Validate that createdBy user has teacher or admin role
     const user = await ctx.db.get(args.createdBy as Id<"users">);
     if (!user || (user.role !== "teacher" && user.role !== "admin" && user.role !== "corporate_admin")) {
-      throw new Error("Only teachers and admins can create quizzes");
+      throw new Error("Only teachers and admins can create tests");
     }
+
+    // Default settings
+    const defaultSettings = {
+      shuffleQuestions: true,
+      shuffleOptions: true,
+      showCorrectAnswers: true,
+      showExplanations: true,
+      allowRetake: true,
+      maxAttempts: 3,
+      requirePassingScore: false,
+      showTimer: true,
+      showProgressBar: true,
+      allowSkip: true,
+      allowReview: true,
+      autoSubmitOnTimeout: true,
+    };
 
     // Insert quiz record
     const quizId = await ctx.db.insert("quizzes", {
@@ -67,18 +91,19 @@ export const createQuiz = mutation({
       createdBy: args.createdBy,
       title: args.title,
       description: args.description,
+      instructions: args.instructions,
       level: args.level,
-      quizType: args.quizType,
-      category: args.category,
+      testPurpose: args.testPurpose,
+      skillFocus: args.skillFocus,
       duration: args.duration,
       passingScore: args.passingScore,
       totalQuestions: 0,
       totalPoints: 0,
-      isPublished: false,
-      isCambridgeAligned: args.isCambridgeAligned,
+      status: "draft",
+      isCambridgeAligned: args.isCambridgeAligned || false,
       cambridgeLevel: args.cambridgeLevel,
-      settings: args.settings,
-      tags: args.tags,
+      settings: args.settings || defaultSettings,
+      tags: args.tags || [],
       createdAt: now,
       updatedAt: now,
     });
@@ -90,7 +115,7 @@ export const createQuiz = mutation({
       action: "quiz_created",
       entityType: "quiz",
       entityId: quizId,
-      newValues: { title: args.title, level: args.level, quizType: args.quizType },
+      newValues: { title: args.title, level: args.level, testPurpose: args.testPurpose },
       timestamp: now,
     });
 
@@ -98,19 +123,38 @@ export const createQuiz = mutation({
   },
 });
 
-// Update an existing quiz
+// Update an existing quiz/test
 export const updateQuiz = mutation({
   args: {
     quizId: v.id("quizzes"),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
+    instructions: v.optional(v.string()),
     level: v.optional(v.union(
       v.literal("A1"),
       v.literal("A2"),
       v.literal("B1"),
       v.literal("B2"),
       v.literal("C1"),
-      v.literal("C2")
+      v.literal("C2"),
+      v.literal("mixed")
+    )),
+    testPurpose: v.optional(v.union(
+      v.literal("placement"),
+      v.literal("follow_up"),
+      v.literal("level_assessment"),
+      v.literal("practice"),
+      v.literal("diagnostic"),
+      v.literal("certification")
+    )),
+    skillFocus: v.optional(v.union(
+      v.literal("grammar"),
+      v.literal("vocabulary"),
+      v.literal("reading"),
+      v.literal("listening"),
+      v.literal("writing"),
+      v.literal("speaking"),
+      v.literal("mixed")
     )),
     duration: v.optional(v.number()),
     passingScore: v.optional(v.number()),
@@ -123,6 +167,10 @@ export const updateQuiz = mutation({
       maxAttempts: v.number(),
       requirePassingScore: v.boolean(),
       showTimer: v.boolean(),
+      showProgressBar: v.optional(v.boolean()),
+      allowSkip: v.optional(v.boolean()),
+      allowReview: v.optional(v.boolean()),
+      autoSubmitOnTimeout: v.optional(v.boolean()),
     })),
     tags: v.optional(v.array(v.string())),
     isCambridgeAligned: v.optional(v.boolean()),
@@ -133,19 +181,22 @@ export const updateQuiz = mutation({
     // Validate quiz exists
     const quiz = await ctx.db.get(args.quizId);
     if (!quiz) {
-      throw new Error("Quiz not found");
+      throw new Error("Test not found");
     }
 
-    // Check if quiz is published
-    if (quiz.isPublished) {
-      throw new Error("Cannot update a published quiz");
+    // Check if quiz is published - allow edits to draft tests
+    if (quiz.status === "published") {
+      throw new Error("Cannot update a published test. Archive it first to create a new version.");
     }
 
     // Prepare update data
-    const updateData: any = { updatedAt: now };
+    const updateData: Record<string, unknown> = { updatedAt: now };
     if (args.title !== undefined) updateData.title = args.title;
     if (args.description !== undefined) updateData.description = args.description;
+    if (args.instructions !== undefined) updateData.instructions = args.instructions;
     if (args.level !== undefined) updateData.level = args.level;
+    if (args.testPurpose !== undefined) updateData.testPurpose = args.testPurpose;
+    if (args.skillFocus !== undefined) updateData.skillFocus = args.skillFocus;
     if (args.duration !== undefined) updateData.duration = args.duration;
     if (args.passingScore !== undefined) updateData.passingScore = args.passingScore;
     if (args.settings !== undefined) updateData.settings = args.settings;
@@ -214,7 +265,7 @@ export const deleteQuiz = mutation({
   },
 });
 
-// Publish a quiz
+// Publish a quiz/test
 export const publishQuiz = mutation({
   args: {
     quizId: v.id("quizzes"),
@@ -225,17 +276,17 @@ export const publishQuiz = mutation({
     // Validate quiz exists
     const quiz = await ctx.db.get(args.quizId);
     if (!quiz) {
-      throw new Error("Quiz not found");
+      throw new Error("Test not found");
     }
 
     // Validate quiz has at least one question
-    if (quiz.totalQuestions === 0) {
-      throw new Error("Cannot publish quiz without questions");
+    if (quiz.totalQuestions === 0 && (!quiz.inlineQuestions || quiz.inlineQuestions.length === 0)) {
+      throw new Error("Cannot publish test without questions");
     }
 
-    // Update isPublished to true
+    // Update status to published
     await ctx.db.patch(args.quizId, {
-      isPublished: true,
+      status: "published",
       updatedAt: now,
     });
 
@@ -253,6 +304,92 @@ export const publishQuiz = mutation({
   },
 });
 
+// Archive a quiz/test (allows editing a new version)
+export const archiveQuiz = mutation({
+  args: {
+    quizId: v.id("quizzes"),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+
+    const quiz = await ctx.db.get(args.quizId);
+    if (!quiz) {
+      throw new Error("Test not found");
+    }
+
+    await ctx.db.patch(args.quizId, {
+      status: "archived",
+      updatedAt: now,
+    });
+
+    // Create audit log entry
+    await ctx.db.insert("auditLogs", {
+      companyId: quiz.companyId,
+      userId: quiz.createdBy,
+      action: "quiz_archived",
+      entityType: "quiz",
+      entityId: args.quizId,
+      timestamp: now,
+    });
+
+    return { success: true };
+  },
+});
+
+// Duplicate a quiz/test (for creating new versions or variants)
+export const duplicateQuiz = mutation({
+  args: {
+    quizId: v.id("quizzes"),
+    newTitle: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+
+    const quiz = await ctx.db.get(args.quizId);
+    if (!quiz) {
+      throw new Error("Test not found");
+    }
+
+    // Create a copy with draft status
+    const newQuizId = await ctx.db.insert("quizzes", {
+      companyId: quiz.companyId,
+      createdBy: quiz.createdBy,
+      title: args.newTitle || `${quiz.title} (Copy)`,
+      description: quiz.description,
+      instructions: quiz.instructions,
+      level: quiz.level,
+      testPurpose: quiz.testPurpose,
+      skillFocus: quiz.skillFocus,
+      duration: quiz.duration,
+      passingScore: quiz.passingScore,
+      totalQuestions: quiz.totalQuestions,
+      totalPoints: quiz.totalPoints,
+      status: "draft",
+      isCambridgeAligned: quiz.isCambridgeAligned,
+      cambridgeLevel: quiz.cambridgeLevel,
+      settings: quiz.settings,
+      tags: quiz.tags,
+      questionIds: quiz.questionIds,
+      inlineQuestions: quiz.inlineQuestions,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    // Create audit log entry
+    await ctx.db.insert("auditLogs", {
+      companyId: quiz.companyId,
+      userId: quiz.createdBy,
+      action: "quiz_duplicated",
+      entityType: "quiz",
+      entityId: newQuizId,
+      oldValues: { originalQuizId: args.quizId },
+      timestamp: now,
+    });
+
+    return newQuizId;
+  },
+});
+
 // Get a single quiz by ID
 export const getQuiz = query({
   args: { quizId: v.id("quizzes") },
@@ -262,7 +399,7 @@ export const getQuiz = query({
   },
 });
 
-// Get all quizzes for a company with optional filters
+// Get all quizzes/tests for a company with optional filters
 export const getCompanyQuizzes = query({
   args: {
     companyId: v.union(v.id("companies"), v.string()),
@@ -272,15 +409,31 @@ export const getCompanyQuizzes = query({
       v.literal("B1"),
       v.literal("B2"),
       v.literal("C1"),
-      v.literal("C2")
+      v.literal("C2"),
+      v.literal("mixed")
     )),
-    quizType: v.optional(v.union(
+    testPurpose: v.optional(v.union(
       v.literal("placement"),
-      v.literal("progress"),
+      v.literal("follow_up"),
+      v.literal("level_assessment"),
       v.literal("practice"),
-      v.literal("custom")
+      v.literal("diagnostic"),
+      v.literal("certification")
     )),
-    isPublished: v.optional(v.boolean()),
+    status: v.optional(v.union(
+      v.literal("draft"),
+      v.literal("published"),
+      v.literal("archived")
+    )),
+    skillFocus: v.optional(v.union(
+      v.literal("grammar"),
+      v.literal("vocabulary"),
+      v.literal("reading"),
+      v.literal("listening"),
+      v.literal("writing"),
+      v.literal("speaking"),
+      v.literal("mixed")
+    )),
   },
   handler: async (ctx, args) => {
     let quizzes = await ctx.db
@@ -292,11 +445,14 @@ export const getCompanyQuizzes = query({
     if (args.level !== undefined) {
       quizzes = quizzes.filter((quiz) => quiz.level === args.level);
     }
-    if (args.quizType !== undefined) {
-      quizzes = quizzes.filter((quiz) => quiz.quizType === args.quizType);
+    if (args.testPurpose !== undefined) {
+      quizzes = quizzes.filter((quiz) => quiz.testPurpose === args.testPurpose);
     }
-    if (args.isPublished !== undefined) {
-      quizzes = quizzes.filter((quiz) => quiz.isPublished === args.isPublished);
+    if (args.status !== undefined) {
+      quizzes = quizzes.filter((quiz) => quiz.status === args.status);
+    }
+    if (args.skillFocus !== undefined) {
+      quizzes = quizzes.filter((quiz) => quiz.skillFocus === args.skillFocus);
     }
 
     // Sort by createdAt descending
@@ -323,7 +479,7 @@ export const getQuizzesByLevel = query({
     const quizzes = await ctx.db
       .query("quizzes")
       .withIndex("by_level", (q) => q.eq("level", args.level))
-      .filter((q) => q.and(q.eq(q.field("companyId"), args.companyId), q.eq(q.field("isPublished"), true)))
+      .filter((q) => q.and(q.eq(q.field("companyId"), args.companyId), q.eq(q.field("status"), "published")))
       .collect();
 
     return quizzes;
@@ -358,11 +514,43 @@ export const addQuestionToBank = mutation({
     companyId: v.union(v.id("companies"), v.string()),
     createdBy: v.union(v.id("users"), v.string()),
     questionType: v.union(
+      // Basic types
       v.literal("multiple_choice"),
+      v.literal("multiple_select"),
       v.literal("fill_in_blank"),
       v.literal("true_false"),
+      // Text-based
+      v.literal("short_answer"),
+      v.literal("long_answer"),
+      v.literal("sentence_completion"),
+      v.literal("error_correction"),
+      v.literal("word_formation"),
+      v.literal("sentence_reorder"),
+      // Matching & ordering
+      v.literal("matching"),
+      v.literal("ordering"),
+      v.literal("categorization"),
+      // Reading
+      v.literal("reading_comprehension"),
+      v.literal("cloze_test"),
+      // Listening
       v.literal("listening"),
-      v.literal("reading_comprehension")
+      v.literal("audio_transcription"),
+      v.literal("audio_multiple_choice"),
+      v.literal("dictation"),
+      // Visual
+      v.literal("image_description"),
+      v.literal("image_labeling"),
+      v.literal("image_sequence"),
+      v.literal("video_comprehension"),
+      // Speaking
+      v.literal("speaking_response"),
+      v.literal("pronunciation"),
+      v.literal("read_aloud"),
+      // Interactive
+      v.literal("drag_and_drop"),
+      v.literal("hotspot"),
+      v.literal("conversation_completion")
     ),
     skill: v.union(
       v.literal("grammar"),
@@ -370,7 +558,8 @@ export const addQuestionToBank = mutation({
       v.literal("reading"),
       v.literal("listening"),
       v.literal("writing"),
-      v.literal("speaking")
+      v.literal("speaking"),
+      v.literal("pronunciation")
     ),
     level: v.union(
       v.literal("A1"),
@@ -584,7 +773,7 @@ export const addQuestionsToQuiz = mutation({
     if (!quiz) {
       throw new Error("Quiz not found");
     }
-    if (quiz.isPublished) {
+    if (quiz.status === "published") {
       throw new Error("Cannot add questions to a published quiz");
     }
 
@@ -647,7 +836,7 @@ export const removeQuestionFromQuiz = mutation({
     if (!quiz) {
       throw new Error("Quiz not found");
     }
-    if (quiz.isPublished) {
+    if (quiz.status === "published") {
       throw new Error("Cannot remove questions from a published quiz");
     }
 
@@ -704,7 +893,7 @@ export const createQuizAssignment = mutation({
     if (!quiz) {
       throw new Error("Quiz not found");
     }
-    if (!quiz.isPublished) {
+    if (quiz.status !== "published") {
       throw new Error("Can only assign published quizzes");
     }
 
@@ -986,13 +1175,13 @@ export const generateCambridgeAlignedQuiz = mutation({
       title: `Cambridge ${args.level} Practice Test`,
       description: `Auto-generated Cambridge-aligned practice test for ${args.level} level`,
       level: args.level,
-      quizType: "practice",
-      category: "mixed",
+      testPurpose: "practice",
+      skillFocus: "mixed",
       duration: args.questionCount * 2, // 2 minutes per question
       passingScore: 60,
       totalQuestions: questions.length,
       totalPoints: totalPoints,
-      isPublished: false,
+      status: "draft",
       isCambridgeAligned: true,
       cambridgeLevel: args.level,
       settings: {

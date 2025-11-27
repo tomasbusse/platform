@@ -102,13 +102,6 @@ export const createCompany = mutation({
     contactPhone: v.optional(v.string()),
     domain: v.optional(v.string()),
     description: v.optional(v.string()),
-    maxStudents: v.number(),
-    subscriptionPlan: v.optional(v.union(
-      v.literal("trial"),
-      v.literal("basic"),
-      v.literal("professional"),
-      v.literal("enterprise")
-    )),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -129,9 +122,7 @@ export const createCompany = mutation({
       contactPhone: args.contactPhone,
       domain: args.domain,
       description: args.description,
-      subscriptionPlan: args.subscriptionPlan || "trial",
-      subscriptionStatus: "active",
-      maxStudents: args.maxStudents,
+      isActive: true,
       currentStudentCount: 0,
       createdAt: now,
       updatedAt: now,
@@ -160,18 +151,7 @@ export const updateCompany = mutation({
     contactPhone: v.optional(v.string()),
     domain: v.optional(v.string()),
     description: v.optional(v.string()),
-    maxStudents: v.optional(v.number()),
-    subscriptionPlan: v.optional(v.union(
-      v.literal("trial"),
-      v.literal("basic"),
-      v.literal("professional"),
-      v.literal("enterprise")
-    )),
-    subscriptionStatus: v.optional(v.union(
-      v.literal("active"),
-      v.literal("suspended"),
-      v.literal("cancelled")
-    )),
+    isActive: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -183,15 +163,13 @@ export const updateCompany = mutation({
 
     const oldValues = { ...company };
 
-    const updateData: any = { updatedAt: now };
+    const updateData: Record<string, unknown> = { updatedAt: now };
     if (args.name !== undefined) updateData.name = args.name;
     if (args.contactEmail !== undefined) updateData.contactEmail = args.contactEmail;
     if (args.contactPhone !== undefined) updateData.contactPhone = args.contactPhone;
     if (args.domain !== undefined) updateData.domain = args.domain;
     if (args.description !== undefined) updateData.description = args.description;
-    if (args.maxStudents !== undefined) updateData.maxStudents = args.maxStudents;
-    if (args.subscriptionPlan !== undefined) updateData.subscriptionPlan = args.subscriptionPlan;
-    if (args.subscriptionStatus !== undefined) updateData.subscriptionStatus = args.subscriptionStatus;
+    if (args.isActive !== undefined) updateData.isActive = args.isActive;
 
     await ctx.db.patch(args.companyId, updateData);
 
@@ -223,9 +201,9 @@ export const deleteCompany = mutation({
       throw new Error("Company not found");
     }
 
-    // Soft delete - set status to cancelled
+    // Soft delete - set isActive to false
     await ctx.db.patch(args.companyId, {
-      subscriptionStatus: "cancelled",
+      isActive: false,
       updatedAt: now,
     });
 
@@ -282,7 +260,7 @@ export const reactivateCompany = mutation({
     }
 
     await ctx.db.patch(args.companyId, {
-      subscriptionStatus: "active",
+      isActive: true,
       updatedAt: now,
     });
 
@@ -322,7 +300,6 @@ export const addTeacher = mutation({
     const userId = await ctx.db.insert("users", {
       name: args.name,
       email: args.email,
-      passwordHash: "", // Will need to set via password reset
       role: "teacher",
       companyId: args.companyId,
       isActive: true,

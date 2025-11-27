@@ -39,14 +39,10 @@ export const fixDuplicateUser = mutation({
 export const getAuthData = query({
   args: {},
   handler: async (ctx) => {
-    const authAccounts = await ctx.db.query("authAccounts").collect();
-    const authSessions = await ctx.db.query("authSessions").collect();
     const users = await ctx.db.query("users").collect();
 
     return {
-      authAccounts,
-      authSessions,
-      users: users.map(u => ({ _id: u._id, email: u.email, name: u.name, role: u.role, companyId: u.companyId })),
+      users: users.map(u => ({ _id: u._id, email: u.email, name: u.name, role: u.role, companyId: u.companyId, clerkId: u.clerkId })),
     };
   },
 });

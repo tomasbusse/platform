@@ -4,7 +4,6 @@ import { api } from '../../convex/_generated/api';
 import { User, Company, DashboardStats } from '../types';
 import UserManagement from '../components/UserManagement';
 import CompanyRegistrationForm from '../components/CompanyRegistrationForm';
-import LoginForm from '../components/LoginForm';
 import TestTaking from './TestTaking';
 import TestResults from './TestResults';
 import LearningManagement from './LearningManagement';
@@ -96,7 +95,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout })
 
   const stats = useQuery(
     api.dashboard.getDashboardStats,
-    company ? { companyId: company._id } : 'skip'
+    company ? { companyId: company._id as any } : 'skip'
   );
 
   const isLoading = stats === undefined;
@@ -106,7 +105,6 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout })
       await registerCompany({
         name: formData.name,
         contactEmail: formData.contactEmail,
-        maxStudents: formData.maxStudents || 100,
       });
 
       alert('Company registration successful! Please check your email for login details.');
@@ -273,7 +271,8 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout })
   };
 
   if (!currentUser) {
-    return <LoginForm onSuccess={() => {}} />;
+    // This should never happen as App.tsx handles auth state
+    return null;
   }
 
   // Rationalized navigation - grouped into logical sections

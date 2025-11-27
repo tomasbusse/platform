@@ -342,8 +342,12 @@ const PublicAssessment: React.FC<PublicAssessmentProps> = ({ token }) => {
         score: result.score,
         level: result.recommendedLevel,
         skillScores: result.skillScores,
-        groupName: result.assignedGroup,
-        groupDetails: result.assignedGroupDetails,
+        groupName: result.assignedGroup || undefined,
+        groupDetails: result.assignedGroupDetails ? {
+          ...result.assignedGroupDetails,
+          teacherName: result.assignedGroupDetails.teacherName || undefined,
+          teacherEmail: result.assignedGroupDetails.teacherEmail || undefined,
+        } : undefined,
       });
       setStep('results');
     } catch (err) {

@@ -25,8 +25,6 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ({ currentUser }) =>
     contactPhone: '',
     domain: '',
     description: '',
-    maxStudents: 100,
-    subscriptionPlan: 'trial' as 'trial' | 'basic' | 'professional' | 'enterprise',
   });
 
   const [teacherForm, setTeacherForm] = useState({
@@ -63,8 +61,6 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ({ currentUser }) =>
         contactPhone: '',
         domain: '',
         description: '',
-        maxStudents: 100,
-        subscriptionPlan: 'trial',
       });
     } catch (error: any) {
       alert(error.message || 'Failed to create company');
@@ -136,36 +132,15 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ({ currentUser }) =>
         contactPhone: companyDetails.contactPhone || '',
         domain: companyDetails.domain || '',
         description: companyDetails.description || '',
-        maxStudents: companyDetails.maxStudents,
-        subscriptionPlan: companyDetails.subscriptionPlan,
       });
       setViewMode('create'); // Reuse create form for editing
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const colors: Record<string, string> = {
-      active: 'bg-green-100 text-green-800',
-      suspended: 'bg-yellow-100 text-yellow-800',
-      cancelled: 'bg-red-100 text-red-800',
-    };
+  const getStatusBadge = (isActive: boolean) => {
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100 text-gray-800'}`}>
-        {status}
-      </span>
-    );
-  };
-
-  const getPlanBadge = (plan: string) => {
-    const colors: Record<string, string> = {
-      trial: 'bg-purple-100 text-purple-800',
-      basic: 'bg-blue-100 text-blue-800',
-      professional: 'bg-indigo-100 text-indigo-800',
-      enterprise: 'bg-gold-100 text-amber-800',
-    };
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[plan] || 'bg-gray-100 text-gray-800'}`}>
-        {plan}
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+        {isActive ? 'Active' : 'Inactive'}
       </span>
     );
   };
@@ -236,8 +211,6 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ({ currentUser }) =>
                 contactPhone: '',
                 domain: '',
                 description: '',
-                maxStudents: 100,
-                subscriptionPlan: 'trial',
               });
               setSelectedCompanyId(null);
               setViewMode('create');
@@ -272,7 +245,6 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ({ currentUser }) =>
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-simmonds-stone uppercase tracking-wider">Company</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-simmonds-stone uppercase tracking-wider">Contact</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-simmonds-stone uppercase tracking-wider">Plan</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-simmonds-stone uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-simmonds-stone uppercase tracking-wider">Stats</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-simmonds-stone uppercase tracking-wider">Actions</th>
@@ -298,10 +270,7 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ({ currentUser }) =>
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      {getPlanBadge(company.subscriptionPlan)}
-                    </td>
-                    <td className="px-6 py-4">
-                      {getStatusBadge(company.subscriptionStatus)}
+                      {getStatusBadge(company.isActive)}
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm">
@@ -321,19 +290,19 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ({ currentUser }) =>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (company.subscriptionStatus === 'cancelled') {
+                          if (!company.isActive) {
                             handleReactivateCompany(company._id);
                           } else {
                             handleDeleteCompany(company._id);
                           }
                         }}
                         className={`text-sm ${
-                          company.subscriptionStatus === 'cancelled'
+                          !company.isActive
                             ? 'text-green-600 hover:text-green-800'
                             : 'text-red-600 hover:text-red-800'
                         }`}
                       >
-                        {company.subscriptionStatus === 'cancelled' ? 'Reactivate' : 'Deactivate'}
+                        {!company.isActive ? 'Reactivate' : 'Deactivate'}
                       </button>
                     </td>
                   </tr>
@@ -425,34 +394,6 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ({ currentUser }) =>
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-simmonds-charcoal mb-1">
-                  Max Students
-                </label>
-                <input
-                  type="number"
-                  value={formData.maxStudents}
-                  onChange={(e) => setFormData({ ...formData, maxStudents: parseInt(e.target.value) || 100 })}
-                  min="1"
-                  className="w-full px-4 py-2 border border-simmonds-cream rounded-lg focus:ring-2 focus:ring-simmonds-primary focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-simmonds-charcoal mb-1">
-                  Subscription Plan
-                </label>
-                <select
-                  value={formData.subscriptionPlan}
-                  onChange={(e) => setFormData({ ...formData, subscriptionPlan: e.target.value as any })}
-                  className="w-full px-4 py-2 border border-simmonds-cream rounded-lg focus:ring-2 focus:ring-simmonds-primary focus:border-transparent"
-                >
-                  <option value="trial">Trial</option>
-                  <option value="basic">Basic</option>
-                  <option value="professional">Professional</option>
-                  <option value="enterprise">Enterprise</option>
-                </select>
-              </div>
             </div>
 
             <div>
@@ -524,8 +465,7 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ({ currentUser }) =>
                   <h1 className="text-2xl font-bold text-simmonds-charcoal">{companyDetails.name}</h1>
                   <p className="text-simmonds-stone mt-1">{companyDetails.description}</p>
                   <div className="flex gap-2 mt-3">
-                    {getPlanBadge(companyDetails.subscriptionPlan)}
-                    {getStatusBadge(companyDetails.subscriptionStatus)}
+                    {getStatusBadge(companyDetails.isActive)}
                   </div>
                 </div>
                 <button
@@ -536,7 +476,7 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ({ currentUser }) =>
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
                 <div className="p-4 bg-simmonds-cream/30 rounded-lg">
                   <p className="text-sm text-simmonds-stone">Contact Email</p>
                   <p className="font-medium text-simmonds-charcoal">{companyDetails.contactEmail}</p>
@@ -544,10 +484,6 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ({ currentUser }) =>
                 <div className="p-4 bg-simmonds-cream/30 rounded-lg">
                   <p className="text-sm text-simmonds-stone">Contact Phone</p>
                   <p className="font-medium text-simmonds-charcoal">{companyDetails.contactPhone || '-'}</p>
-                </div>
-                <div className="p-4 bg-simmonds-cream/30 rounded-lg">
-                  <p className="text-sm text-simmonds-stone">Max Students</p>
-                  <p className="font-medium text-simmonds-charcoal">{companyDetails.maxStudents}</p>
                 </div>
                 <div className="p-4 bg-simmonds-cream/30 rounded-lg">
                   <p className="text-sm text-simmonds-stone">Current Students</p>

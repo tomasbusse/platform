@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@auth/core": "^0.37.0",
+    "@clerk/clerk-react": "^5.57.0",
     "@convex-dev/auth": "^0.0.90",
     "convex": "^1.16.0",
     "jspdf": "^2.5.1",
@@ -27,6 +28,7 @@
     "@types/papaparse": "^5.3.14",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
+    "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
