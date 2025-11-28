@@ -34,8 +34,6 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
   const regenerateQuestion = useAction(api.ai.generateQuizQuestions.regenerateSingleQuestion);
   const generateAudio = useAction(api.ai.generateQuizAudio.generateAudioFromScript);
   const createQuiz = useMutation(api.quizzes.createQuiz);
-  const addQuestionToBank = useMutation(api.quizzes.addQuestionToBank);
-  const addQuestionsToQuiz = useMutation(api.quizzes.addQuestionsToQuiz);
   const updateCompanyApiSettings = useMutation(api.companies.updateCompanyApiSettings);
 
   // Get API keys from company settings
@@ -233,7 +231,18 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
     setStep('saving');
 
     try {
-      // First create the quiz
+      // Convert questions to inline format for database storage
+      const inlineQuestions = editedQuestions.map((question, index) => ({
+        id: `ai_q_${Date.now()}_${index}`,
+        questionType: mapQuestionType(question.type),
+        questionText: getQuestionText(question),
+        questionData: convertToInlineQuestionData(question),
+        points: 1,
+        skill: determineSkill(question.type),
+        level: config.targetLevel,
+      }));
+
+      // Create the quiz with inline questions
       const quizId = await createQuiz({
         companyId: company._id as Id<'companies'>,
         createdBy: currentUser._id as Id<'users'>,
@@ -261,38 +270,8 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
         },
         tags: ['ai-generated', config.topic, config.targetLevel],
         isCambridgeAligned: false,
+        inlineQuestions,
       });
-
-      // Add questions to the question bank and collect their IDs
-      const questionIds: Id<'questionBank'>[] = [];
-
-      for (const question of editedQuestions) {
-        const questionData = convertToQuestionBankFormat(question);
-
-        const questionId = await addQuestionToBank({
-          companyId: company._id as Id<'companies'>,
-          createdBy: currentUser._id as Id<'users'>,
-          questionType: mapQuestionType(question.type),
-          skill: determineSkill(question.type),
-          level: config.targetLevel,
-          difficulty: 'medium',
-          questionText: getQuestionText(question),
-          questionData: questionData,
-          points: 1,
-          tags: ['ai-generated', config.topic],
-          isCambridgeAligned: false,
-        });
-
-        questionIds.push(questionId);
-      }
-
-      // Link questions to the quiz
-      if (questionIds.length > 0) {
-        await addQuestionsToQuiz({
-          quizId: quizId as Id<'quizzes'>,
-          questionIds: questionIds,
-        });
-      }
 
       setSavedQuizId(quizId);
       setStep('done');
@@ -579,19 +558,28 @@ function determineSkill(
   return (skillMapping[type] || 'grammar') as ReturnType<typeof determineSkill>;
 }
 
-function convertToQuestionBankFormat(q: GeneratedQuestion): {
+function convertToInlineQuestionData(q: GeneratedQuestion): {
   options?: string[];
   correctAnswer: unknown;
   explanation?: string;
   audioUrl?: string;
   readingPassage?: string;
+  matchingPairs?: Array<{ left: string; right: string }>;
+  itemsToOrder?: string[];
+  correctOrder?: string[];
+  textWithBlanks?: string;
+  audioScript?: string;
 } {
   return {
     options: q.options,
-    correctAnswer: q.correctAnswer ?? q.correctAnswers,
+    correctAnswer: q.correctAnswer ?? q.correctAnswers ?? q.acceptableAnswers?.[0],
     explanation: q.explanation,
     audioUrl: q.audioUrl,
     readingPassage: q.passage,
+    matchingPairs: q.pairs,
+    itemsToOrder: q.items,
+    correctOrder: q.correctOrder,
+    audioScript: q.audioScript,
   };
 }
 
