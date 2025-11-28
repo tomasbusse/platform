@@ -47,8 +47,27 @@ export const generateQuestionsWithClaude = action({
   handler: async (ctx, args) => {
     const { apiKey, language, targetLevel, topic, numberOfQuestions, questionTypes, audioWordLimit, documentContent, modelId } = args;
 
+    console.log("generateQuestionsWithClaude called with:", {
+      hasApiKey: !!apiKey,
+      apiKeyLength: apiKey?.length || 0,
+      language,
+      targetLevel,
+      topic,
+      numberOfQuestions,
+      questionTypes,
+      modelId,
+    });
+
     if (!apiKey) {
-      throw new Error("API key is required for question generation");
+      console.error("No API key provided");
+      return {
+        success: false,
+        error: "OpenRouter API key is required. Please configure it in Settings → API Integrations.",
+        questions: [],
+        generatedAt: new Date().toISOString(),
+        model: modelId || DEFAULT_MODEL,
+        questionCount: 0,
+      };
     }
 
     // Build the prompt for Claude
