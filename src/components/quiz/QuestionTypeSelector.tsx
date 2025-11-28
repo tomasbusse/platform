@@ -168,7 +168,11 @@ const QuestionTypeSelector: React.FC<QuestionTypeSelectorProps> = ({
   onChange,
   disabled = false,
 }) => {
-  const toggleType = (type: QuestionType) => {
+  const toggleType = (type: QuestionType, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (disabled) return;
 
     if (selectedTypes.includes(type)) {
@@ -180,12 +184,20 @@ const QuestionTypeSelector: React.FC<QuestionTypeSelectorProps> = ({
     }
   };
 
-  const selectAll = () => {
+  const selectAll = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (disabled) return;
     onChange(QUESTION_TYPES.map((t) => t.id));
   };
 
-  const clearAll = () => {
+  const clearAll = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (disabled) return;
     // Keep at least one type
     onChange(['multiple-choice']);
@@ -237,7 +249,7 @@ const QuestionTypeSelector: React.FC<QuestionTypeSelectorProps> = ({
                 key={type.id}
                 type={type}
                 selected={selectedTypes.includes(type.id)}
-                onClick={() => toggleType(type.id)}
+                onClick={(e) => toggleType(type.id, e)}
                 disabled={disabled}
               />
             ))}
@@ -255,7 +267,7 @@ const QuestionTypeSelector: React.FC<QuestionTypeSelectorProps> = ({
                 key={type.id}
                 type={type}
                 selected={selectedTypes.includes(type.id)}
-                onClick={() => toggleType(type.id)}
+                onClick={(e) => toggleType(type.id, e)}
                 disabled={disabled}
               />
             ))}
@@ -273,7 +285,7 @@ const QuestionTypeSelector: React.FC<QuestionTypeSelectorProps> = ({
                 key={type.id}
                 type={type}
                 selected={selectedTypes.includes(type.id)}
-                onClick={() => toggleType(type.id)}
+                onClick={(e) => toggleType(type.id, e)}
                 disabled={disabled}
               />
             ))}
@@ -291,7 +303,7 @@ const QuestionTypeSelector: React.FC<QuestionTypeSelectorProps> = ({
                 key={type.id}
                 type={type}
                 selected={selectedTypes.includes(type.id)}
-                onClick={() => toggleType(type.id)}
+                onClick={(e) => toggleType(type.id, e)}
                 disabled={disabled}
               />
             ))}
@@ -310,7 +322,7 @@ const QuestionTypeSelector: React.FC<QuestionTypeSelectorProps> = ({
 interface TypeCardProps {
   type: QuestionTypeInfo;
   selected: boolean;
-  onClick: () => void;
+  onClick: (e: React.MouseEvent) => void;
   disabled: boolean;
 }
 
