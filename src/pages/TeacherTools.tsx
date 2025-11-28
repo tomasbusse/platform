@@ -28,6 +28,9 @@ const TeacherTools: React.FC<PageComponentProps> = ({ currentUser, company }) =>
     company?._id ? { companyId: company._id as Id<"companies"> } : 'skip'
   );
 
+  // Delete quiz mutation
+  const deleteQuizMutation = useMutation(api.quizzes.deleteQuiz);
+
   // ElevenLabs Voice options
   const voices = [
     { id: '21m00Tcm4TlvDq8ikWAM', name: 'Rachel', accent: 'American' },
@@ -199,13 +202,12 @@ const TeacherTools: React.FC<PageComponentProps> = ({ currentUser, company }) =>
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <h4 className="font-semibold text-simmonds-charcoal">{quiz.title}</h4>
-                      <span className={`px-2 py-0.5 rounded text-xs ${
-                        quiz.status === 'published'
-                          ? 'bg-simmonds-lime/20 text-simmonds-lime-dark'
-                          : quiz.status === 'archived'
+                      <span className={`px-2 py-0.5 rounded text-xs ${quiz.status === 'published'
+                        ? 'bg-simmonds-lime/20 text-simmonds-lime-dark'
+                        : quiz.status === 'archived'
                           ? 'bg-gray-100 text-gray-600'
                           : 'bg-simmonds-cream text-simmonds-stone'
-                      }`}>
+                        }`}>
                         {quiz.status === 'published' ? 'Published' : quiz.status === 'archived' ? 'Archived' : 'Draft'}
                       </span>
                     </div>
@@ -238,6 +240,21 @@ const TeacherTools: React.FC<PageComponentProps> = ({ currentUser, company }) =>
                     )}
                     <button className="text-sm text-simmonds-olive hover:underline">
                       Assign
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (confirm(`Are you sure you want to delete "${quiz.title}"?`)) {
+                          try {
+                            await deleteQuizMutation({ quizId: quiz._id });
+                          } catch (error) {
+                            console.error('Delete failed:', error);
+                            alert('Failed to delete quiz');
+                          }
+                        }
+                      }}
+                      className="text-sm text-simmonds-terracotta hover:underline"
+                    >
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -483,11 +500,10 @@ const TeacherTools: React.FC<PageComponentProps> = ({ currentUser, company }) =>
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors ${
-                activeTab === tab.id
-                  ? 'bg-simmonds-primary text-white'
-                  : 'bg-simmonds-cream text-simmonds-charcoal hover:bg-simmonds-cream-light'
-              }`}
+              className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors ${activeTab === tab.id
+                ? 'bg-simmonds-primary text-white'
+                : 'bg-simmonds-cream text-simmonds-charcoal hover:bg-simmonds-cream-light'
+                }`}
             >
               {tab.name}
             </button>

@@ -270,6 +270,7 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
         },
         tags: ['ai-generated', config.topic, config.targetLevel],
         isCambridgeAligned: false,
+        status: 'published',
         inlineQuestions,
       });
 

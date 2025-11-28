@@ -59,6 +59,11 @@ export const createQuiz = mutation({
     tags: v.optional(v.array(v.string())),
     isCambridgeAligned: v.optional(v.boolean()),
     cambridgeLevel: v.optional(v.string()),
+    status: v.optional(v.union(
+      v.literal("draft"),
+      v.literal("published"),
+      v.literal("archived")
+    )),
     // Inline questions for quiz content
     inlineQuestions: v.optional(v.array(v.object({
       id: v.string(),
@@ -130,7 +135,7 @@ export const createQuiz = mutation({
         passingScore: args.passingScore,
         totalQuestions,
         totalPoints,
-        status: "draft",
+        status: args.status || "draft",
         isCambridgeAligned: args.isCambridgeAligned || false,
         cambridgeLevel: args.cambridgeLevel,
         settings: args.settings || defaultSettings,
