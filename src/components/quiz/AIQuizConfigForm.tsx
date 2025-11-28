@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import QuestionTypeSelector, { QuestionType } from './QuestionTypeSelector';
 import VoiceSelector from './VoiceSelector';
+
+// LocalStorage keys for persisting API keys
+const STORAGE_KEY_OPENROUTER = 'simmonds_openrouter_api_key';
+const STORAGE_KEY_ELEVENLABS = 'simmonds_elevenlabs_api_key';
 
 // Simple text extraction from PDF (client-side, basic)
 async function extractTextFromPDF(file: File): Promise<string> {
@@ -146,6 +150,40 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
   const [errors, setErrors] = useState<Partial<Record<keyof QuizGenerationConfig, string>>>({});
   const [isProcessingDocument, setIsProcessingDocument] = useState(false);
 
+  // Load API keys from localStorage on mount
+  useEffect(() => {
+    const savedOpenRouterKey = localStorage.getItem(STORAGE_KEY_OPENROUTER);
+    const savedElevenLabsKey = localStorage.getItem(STORAGE_KEY_ELEVENLABS);
+
+    if (savedOpenRouterKey || savedElevenLabsKey) {
+      setConfig(prev => ({
+        ...prev,
+        openRouterApiKey: savedOpenRouterKey || prev.openRouterApiKey,
+        elevenLabsApiKeyOverride: savedElevenLabsKey || prev.elevenLabsApiKeyOverride,
+      }));
+    }
+  }, []);
+
+  // Save API keys to localStorage when they change
+  const handleApiKeyChange = (key: 'openRouterApiKey' | 'elevenLabsApiKeyOverride', value: string) => {
+    setConfig(prev => ({ ...prev, [key]: value }));
+
+    // Save to localStorage
+    if (key === 'openRouterApiKey') {
+      if (value) {
+        localStorage.setItem(STORAGE_KEY_OPENROUTER, value);
+      } else {
+        localStorage.removeItem(STORAGE_KEY_OPENROUTER);
+      }
+    } else if (key === 'elevenLabsApiKeyOverride') {
+      if (value) {
+        localStorage.setItem(STORAGE_KEY_ELEVENLABS, value);
+      } else {
+        localStorage.removeItem(STORAGE_KEY_ELEVENLABS);
+      }
+    }
+  };
+
   const hasListeningType = config.questionTypes.includes('listening');
   const hasDocument = !!config.documentContent;
 
@@ -172,8 +210,9 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
       if (config.audioWordLimit < 20 || config.audioWordLimit > 150) {
         newErrors.audioWordLimit = 'Audio word limit must be between 20 and 150';
       }
-      if (!elevenLabsApiKey) {
-        newErrors.selectedVoiceId = 'ElevenLabs API key required for listening questions';
+      // Check both the prop and the form field for ElevenLabs API key
+      if (!elevenLabsApiKey && !config.elevenLabsApiKeyOverride) {
+        newErrors.elevenLabsApiKeyOverride = 'ElevenLabs API key required for listening questions';
       }
     }
 
@@ -632,13 +671,14 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
             <input
               type="password"
               value={config.openRouterApiKey || ''}
-              onChange={(e) => updateConfig('openRouterApiKey', e.target.value)}
+              onChange={(e) => handleApiKeyChange('openRouterApiKey', e.target.value)}
               className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary font-mono text-sm"
               placeholder="sk-or-v1-..."
               disabled={isLoading}
             />
             <p className="text-xs text-simmonds-stone mt-1">
               Get your API key from <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer" className="text-simmonds-primary hover:underline">openrouter.ai</a>
+              {config.openRouterApiKey && <span className="ml-2 text-simmonds-lime">(saved locally)</span>}
             </p>
           </div>
 
@@ -646,18 +686,24 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
           {hasListeningType && (
             <div>
               <label className="block text-sm font-medium text-simmonds-charcoal mb-2">
-                ElevenLabs API Key (for audio)
+                ElevenLabs API Key (for audio) *
               </label>
               <input
                 type="password"
                 value={config.elevenLabsApiKeyOverride || ''}
-                onChange={(e) => updateConfig('elevenLabsApiKeyOverride', e.target.value)}
-                className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary font-mono text-sm"
+                onChange={(e) => handleApiKeyChange('elevenLabsApiKeyOverride', e.target.value)}
+                className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary font-mono text-sm ${
+                  errors.elevenLabsApiKeyOverride ? 'border-simmonds-terracotta' : 'border-simmonds-cream'
+                }`}
                 placeholder="sk_..."
                 disabled={isLoading}
               />
+              {errors.elevenLabsApiKeyOverride && (
+                <p className="text-xs text-simmonds-terracotta mt-1">{errors.elevenLabsApiKeyOverride}</p>
+              )}
               <p className="text-xs text-simmonds-stone mt-1">
                 Get your API key from <a href="https://elevenlabs.io" target="_blank" rel="noopener noreferrer" className="text-simmonds-primary hover:underline">elevenlabs.io</a>
+                {config.elevenLabsApiKeyOverride && <span className="ml-2 text-simmonds-lime">(saved locally)</span>}
               </p>
             </div>
           )}

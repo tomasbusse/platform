@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as ai_generateQuizAudio from "../ai/generateQuizAudio.js";
+import type * as ai_generateQuizQuestions from "../ai/generateQuizQuestions.js";
 import type * as aiContent from "../aiContent.js";
 import type * as analytics from "../analytics.js";
 import type * as apiIntegrations from "../apiIntegrations.js";
@@ -44,6 +46,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "ai/generateQuizAudio": typeof ai_generateQuizAudio;
+  "ai/generateQuizQuestions": typeof ai_generateQuizQuestions;
   aiContent: typeof aiContent;
   analytics: typeof analytics;
   apiIntegrations: typeof apiIntegrations;
