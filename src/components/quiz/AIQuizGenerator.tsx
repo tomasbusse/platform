@@ -44,6 +44,11 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
     availableAIModels?: AvailableAIModel[];
   } | undefined;
 
+  // Debug: Log what we're receiving
+  console.log('AIQuizGenerator - company:', company);
+  console.log('AIQuizGenerator - company.settings:', company?.settings);
+  console.log('AIQuizGenerator - availableAIModels:', companySettings?.availableAIModels);
+
   const anthropicApiKey = companySettings?.openRouterApiKey || '';
   const elevenLabsApiKey = companySettings?.elevenLabsApiKey || '';
   const availableModels = companySettings?.availableAIModels || [];
