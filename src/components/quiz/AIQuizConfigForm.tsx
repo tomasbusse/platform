@@ -223,7 +223,7 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
   const hasListeningType = config.questionTypes.includes('listening');
   const hasDocument = !!config.documentContent;
 
-  const validateForm = (): boolean => {
+  const validateForm = (): { valid: boolean; errors: Partial<Record<keyof QuizGenerationConfig, string>> } => {
     const newErrors: Partial<Record<keyof QuizGenerationConfig, string>> = {};
 
     if (!config.title.trim()) {
@@ -253,13 +253,24 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return { valid: Object.keys(newErrors).length === 0, errors: newErrors };
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
+    console.log('Form submit clicked');
+    console.log('Config:', config);
+    console.log('hasListeningType:', hasListeningType);
+    console.log('elevenLabsApiKey prop:', elevenLabsApiKey ? 'present' : 'empty');
+    console.log('config.elevenLabsApiKeyOverride:', config.elevenLabsApiKeyOverride ? 'present' : 'empty');
+
+    const { valid, errors: validationErrors } = validateForm();
+    console.log('Form valid:', valid);
+    if (valid) {
+      console.log('Calling onSubmit...');
       onSubmit(config);
+    } else {
+      console.log('Validation errors:', validationErrors);
     }
   };
 
