@@ -657,7 +657,7 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
                 updateConfig('selectedVoiceId', voiceId);
                 updateConfig('selectedVoiceName', voiceName);
               }}
-              apiKey={elevenLabsApiKey}
+              apiKey={config.elevenLabsApiKeyOverride || elevenLabsApiKey}
             />
             {errors.selectedVoiceId && (
               <p className="mt-1 text-sm text-simmonds-terracotta">{errors.selectedVoiceId}</p>
