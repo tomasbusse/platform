@@ -103,7 +103,7 @@ export interface QuizGenerationConfig {
   selectedModelName?: string;
 }
 
-// Available AI model for quiz generation (from company settings)
+// Available AI model for quiz generation (kept for backwards compatibility)
 export interface AvailableAIModel {
   id: string;
   name: string;
@@ -115,7 +115,7 @@ interface AIQuizConfigFormProps {
   onSubmit: (config: QuizGenerationConfig) => void;
   isLoading?: boolean;
   elevenLabsApiKey?: string;
-  availableModels?: AvailableAIModel[];
+  availableModels?: AvailableAIModel[]; // Optional - dropdown now has built-in models
 }
 
 const defaultConfig: QuizGenerationConfig = {
@@ -130,38 +130,18 @@ const defaultConfig: QuizGenerationConfig = {
   selectedVoiceName: 'Emma',
   replaysAllowed: 3,
   timeLimitMinutes: 30,
+  selectedModelId: 'anthropic/claude-sonnet-4', // Default model
+  selectedModelName: 'Claude Sonnet 4 (Recommended)',
 };
 
 const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
   onSubmit,
   isLoading = false,
   elevenLabsApiKey = '',
-  availableModels = [],
 }) => {
-  // Find default model from available models
-  const defaultModel = availableModels.find(m => m.isDefault) || availableModels[0];
-
-  const [config, setConfig] = useState<QuizGenerationConfig>(() => ({
-    ...defaultConfig,
-    selectedModelId: defaultModel?.id,
-    selectedModelName: defaultModel?.name,
-  }));
+  const [config, setConfig] = useState<QuizGenerationConfig>(defaultConfig);
   const [errors, setErrors] = useState<Partial<Record<keyof QuizGenerationConfig, string>>>({});
   const [isProcessingDocument, setIsProcessingDocument] = useState(false);
-
-  // Update selected model when availableModels changes (e.g., on initial load)
-  React.useEffect(() => {
-    if (availableModels.length > 0 && !config.selectedModelId) {
-      const defaultM = availableModels.find(m => m.isDefault) || availableModels[0];
-      if (defaultM) {
-        setConfig(prev => ({
-          ...prev,
-          selectedModelId: defaultM.id,
-          selectedModelName: defaultM.name,
-        }));
-      }
-    }
-  }, [availableModels, config.selectedModelId]);
 
   const hasListeningType = config.questionTypes.includes('listening');
   const hasDocument = !!config.documentContent;
@@ -390,30 +370,36 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
             <label className="block text-sm font-medium text-simmonds-charcoal mb-2">
               AI Model
             </label>
-            {availableModels.length > 0 ? (
-              <select
-                value={config.selectedModelId || ''}
-                onChange={(e) => {
-                  const selectedModel = availableModels.find(m => m.id === e.target.value);
-                  if (selectedModel) {
-                    updateConfig('selectedModelId', selectedModel.id);
-                    updateConfig('selectedModelName', selectedModel.name);
-                  }
-                }}
-                className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
-                disabled={isLoading}
-              >
-                {availableModels.map((model) => (
-                  <option key={model.id} value={model.id}>
-                    {model.name}{model.isDefault ? ' (Default)' : ''}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <p className="text-sm text-simmonds-stone px-4 py-2 bg-simmonds-cream/30 rounded-xl">
-                Using default AI model. Configure available models in Settings.
-              </p>
-            )}
+            <select
+              value={config.selectedModelId || 'anthropic/claude-sonnet-4'}
+              onChange={(e) => {
+                const selectedOption = e.target.options[e.target.selectedIndex];
+                updateConfig('selectedModelId', e.target.value);
+                updateConfig('selectedModelName', selectedOption.text);
+              }}
+              className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
+              disabled={isLoading}
+            >
+              <optgroup label="Claude (Anthropic)">
+                <option value="anthropic/claude-sonnet-4">Claude Sonnet 4 (Recommended)</option>
+                <option value="anthropic/claude-opus-4">Claude Opus 4</option>
+                <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+                <option value="anthropic/claude-3-haiku">Claude 3 Haiku (Fast)</option>
+              </optgroup>
+              <optgroup label="GPT (OpenAI)">
+                <option value="openai/gpt-4o">GPT-4o</option>
+                <option value="openai/gpt-4o-mini">GPT-4o Mini (Fast)</option>
+                <option value="openai/gpt-4-turbo">GPT-4 Turbo</option>
+              </optgroup>
+              <optgroup label="Gemini (Google)">
+                <option value="google/gemini-pro-1.5">Gemini Pro 1.5</option>
+                <option value="google/gemini-flash-1.5">Gemini Flash 1.5 (Fast)</option>
+              </optgroup>
+              <optgroup label="Open Source">
+                <option value="meta-llama/llama-3.1-70b-instruct">Llama 3.1 70B</option>
+                <option value="mistralai/mixtral-8x22b-instruct">Mixtral 8x22B</option>
+              </optgroup>
+            </select>
           </div>
 
           {/* Document Upload */}

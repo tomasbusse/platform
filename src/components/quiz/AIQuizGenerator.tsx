@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAction, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { Id } from '../../../convex/_generated/dataModel';
-import AIQuizConfigForm, { QuizGenerationConfig, AvailableAIModel } from './AIQuizConfigForm';
+import AIQuizConfigForm, { QuizGenerationConfig } from './AIQuizConfigForm';
 import QuizReviewPanel from './QuizReviewPanel';
 import { GeneratedQuestion } from './QuestionEditor';
 import { User, Company } from '../../types';
@@ -36,22 +36,14 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
   const createQuiz = useMutation(api.quizzes.createQuiz);
   const addQuestionToBank = useMutation(api.quizzes.addQuestionToBank);
 
-  // Get API keys and available models from company settings
-  // Settings are stored in flat structure on company.settings (e.g., elevenLabsApiKey)
+  // Get API keys from company settings
   const companySettings = company?.settings as {
     openRouterApiKey?: string;
     elevenLabsApiKey?: string;
-    availableAIModels?: AvailableAIModel[];
   } | undefined;
 
-  // Debug: Log what we're receiving
-  console.log('AIQuizGenerator - company:', company);
-  console.log('AIQuizGenerator - company.settings:', company?.settings);
-  console.log('AIQuizGenerator - availableAIModels:', companySettings?.availableAIModels);
-
-  const anthropicApiKey = companySettings?.openRouterApiKey || '';
+  const openRouterApiKey = companySettings?.openRouterApiKey || '';
   const elevenLabsApiKey = companySettings?.elevenLabsApiKey || '';
-  const availableModels = companySettings?.availableAIModels || [];
 
   // STEP 1: User submits config form
   const handleConfigSubmit = async (formData: QuizGenerationConfig) => {
@@ -64,7 +56,7 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
       console.log('Generating questions with Claude...');
 
       const result = await generateQuestions({
-        apiKey: anthropicApiKey,
+        apiKey: openRouterApiKey,
         language: formData.language,
         targetLevel: formData.targetLevel,
         topic: formData.topic,
@@ -134,7 +126,7 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
 
     try {
       const result = await regenerateQuestion({
-        apiKey: anthropicApiKey,
+        apiKey: openRouterApiKey,
         language: config.language,
         targetLevel: config.targetLevel,
         topic: config.topic,
@@ -370,7 +362,6 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
             onSubmit={handleConfigSubmit}
             isLoading={step === 'generating'}
             elevenLabsApiKey={elevenLabsApiKey}
-            availableModels={availableModels}
           />
         </div>
       )}
