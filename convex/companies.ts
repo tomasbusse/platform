@@ -430,3 +430,34 @@ export const getCompaniesForDropdown = query({
     }));
   },
 });
+
+// Update company API settings (for storing API keys)
+export const updateCompanyApiSettings = mutation({
+  args: {
+    companyId: v.id("companies"),
+    openRouterApiKey: v.optional(v.string()),
+    elevenLabsApiKey: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const company = await ctx.db.get(args.companyId);
+
+    if (!company) {
+      throw new Error("Company not found");
+    }
+
+    // Merge with existing settings or create new settings object
+    const existingSettings = company.settings || {};
+    const newSettings = {
+      ...existingSettings,
+      ...(args.openRouterApiKey !== undefined && { openRouterApiKey: args.openRouterApiKey }),
+      ...(args.elevenLabsApiKey !== undefined && { elevenLabsApiKey: args.elevenLabsApiKey }),
+    };
+
+    await ctx.db.patch(args.companyId, {
+      settings: newSettings,
+      updatedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});

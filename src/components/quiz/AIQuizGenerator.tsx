@@ -36,6 +36,7 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
   const createQuiz = useMutation(api.quizzes.createQuiz);
   const addQuestionToBank = useMutation(api.quizzes.addQuestionToBank);
   const addQuestionsToQuiz = useMutation(api.quizzes.addQuestionsToQuiz);
+  const updateCompanyApiSettings = useMutation(api.companies.updateCompanyApiSettings);
 
   // Get API keys from company settings
   const companySettings = company?.settings as {
@@ -95,6 +96,9 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
         (q) => q.type === 'listening' && q.audioScript
       );
 
+      console.log('Listening questions found:', listeningQuestions.length);
+      console.log('ElevenLabs key present:', !!elevenLabsKeyToUse, 'length:', elevenLabsKeyToUse?.length || 0);
+
       if (listeningQuestions.length > 0 && elevenLabsKeyToUse) {
         setStep('audio');
         setAudioProgress({ current: 0, total: listeningQuestions.length });
@@ -103,12 +107,21 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
           const q = generatedQuestions[i];
 
           if (q.type === 'listening' && q.audioScript) {
-            console.log(`Generating audio ${i + 1}...`);
+            console.log(`Generating audio ${i + 1}...`, {
+              scriptLength: q.audioScript.length,
+              voiceId: formData.selectedVoiceId,
+            });
 
             const audioResult = await generateAudio({
               apiKey: elevenLabsKeyToUse,
               script: q.audioScript,
               voiceId: formData.selectedVoiceId,
+            });
+
+            console.log(`Audio result for question ${i + 1}:`, {
+              success: audioResult.success,
+              hasUrl: !!audioResult.audioUrl,
+              error: audioResult.error || null,
             });
 
             if (audioResult.success && audioResult.audioUrl) {
@@ -118,6 +131,8 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
                 audioUrl: audioResult.audioUrl,
                 audioStorageId: audioResult.storageId || undefined,
               };
+            } else if (!audioResult.success) {
+              console.error(`Audio generation failed for question ${i + 1}:`, audioResult.error);
             }
 
             setAudioProgress((prev) => ({ ...prev, current: prev.current + 1 }));
@@ -391,6 +406,14 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
             onSubmit={handleConfigSubmit}
             isLoading={step === 'generating'}
             elevenLabsApiKey={elevenLabsApiKey}
+            openRouterApiKey={openRouterApiKey}
+            onSaveApiKeys={company ? async (openRouterKey, elevenLabsKey) => {
+              await updateCompanyApiSettings({
+                companyId: company._id as Id<'companies'>,
+                openRouterApiKey: openRouterKey || undefined,
+                elevenLabsApiKey: elevenLabsKey || undefined,
+              });
+            } : undefined}
           />
         </div>
       )}
