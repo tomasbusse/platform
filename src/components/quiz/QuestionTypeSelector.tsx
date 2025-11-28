@@ -206,6 +206,7 @@ const QuestionTypeSelector: React.FC<QuestionTypeSelectorProps> = ({
         </label>
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={selectAll}
             disabled={disabled}
             className="text-xs text-simmonds-primary hover:underline disabled:opacity-50"
@@ -214,6 +215,7 @@ const QuestionTypeSelector: React.FC<QuestionTypeSelectorProps> = ({
           </button>
           <span className="text-simmonds-stone">|</span>
           <button
+            type="button"
             onClick={clearAll}
             disabled={disabled}
             className="text-xs text-simmonds-stone hover:underline disabled:opacity-50"
@@ -315,6 +317,7 @@ interface TypeCardProps {
 const TypeCard: React.FC<TypeCardProps> = ({ type, selected, onClick, disabled }) => {
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
       className={`
