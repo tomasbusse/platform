@@ -47,6 +47,18 @@ export const generateQuestionsWithClaude = action({
   handler: async (ctx, args) => {
     const { apiKey, language, targetLevel, topic, numberOfQuestions, questionTypes, audioWordLimit, documentContent, modelId } = args;
 
+    // Debug logging
+    console.log("generateQuestionsWithClaude called with:", {
+      hasApiKey: !!apiKey,
+      apiKeyLength: apiKey?.length || 0,
+      language,
+      targetLevel,
+      topic,
+      numberOfQuestions,
+      questionTypes,
+      modelId,
+    });
+
     // Determine which model to use (declare before try block so it's accessible in catch)
     const selectedModel = modelId || DEFAULT_MODEL;
 
@@ -55,7 +67,7 @@ export const generateQuestionsWithClaude = action({
       console.error("Question generation error: API key is required");
       return {
         success: false,
-        error: "API key is required for question generation. Please configure your OpenRouter API key in company settings.",
+        error: "API key is required for question generation. Please configure your OpenRouter API key in company settings or enter it in the form.",
         questions: [],
         generatedAt: new Date().toISOString(),
         model: selectedModel,
