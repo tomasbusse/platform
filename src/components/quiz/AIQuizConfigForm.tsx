@@ -130,8 +130,8 @@ const defaultConfig: QuizGenerationConfig = {
   selectedVoiceName: 'Emma',
   replaysAllowed: 3,
   timeLimitMinutes: 30,
-  selectedModelId: 'anthropic/claude-sonnet-4', // Default model
-  selectedModelName: 'Claude Sonnet 4 (Recommended)',
+  selectedModelId: 'anthropic/claude-opus-4', // Default model
+  selectedModelName: 'Claude Opus 4.5',
 };
 
 const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
@@ -371,7 +371,7 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
               AI Model
             </label>
             <select
-              value={config.selectedModelId || 'anthropic/claude-sonnet-4'}
+              value={config.selectedModelId || 'anthropic/claude-opus-4'}
               onChange={(e) => {
                 const selectedOption = e.target.options[e.target.selectedIndex];
                 updateConfig('selectedModelId', e.target.value);
@@ -380,25 +380,9 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
               className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
               disabled={isLoading}
             >
-              <optgroup label="Claude (Anthropic)">
-                <option value="anthropic/claude-sonnet-4">Claude Sonnet 4 (Recommended)</option>
-                <option value="anthropic/claude-opus-4">Claude Opus 4</option>
-                <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
-                <option value="anthropic/claude-3-haiku">Claude 3 Haiku (Fast)</option>
-              </optgroup>
-              <optgroup label="GPT (OpenAI)">
-                <option value="openai/gpt-4o">GPT-4o</option>
-                <option value="openai/gpt-4o-mini">GPT-4o Mini (Fast)</option>
-                <option value="openai/gpt-4-turbo">GPT-4 Turbo</option>
-              </optgroup>
-              <optgroup label="Gemini (Google)">
-                <option value="google/gemini-pro-1.5">Gemini Pro 1.5</option>
-                <option value="google/gemini-flash-1.5">Gemini Flash 1.5 (Fast)</option>
-              </optgroup>
-              <optgroup label="Open Source">
-                <option value="meta-llama/llama-3.1-70b-instruct">Llama 3.1 70B</option>
-                <option value="mistralai/mixtral-8x22b-instruct">Mixtral 8x22B</option>
-              </optgroup>
+              <option value="anthropic/claude-opus-4">Claude Opus 4.5</option>
+              <option value="google/gemini-2.5-pro-preview">Gemini 2.5 Pro</option>
+              <option value="anthropic/claude-3-haiku">Claude 3 Haiku (Fast)</option>
             </select>
           </div>
 
