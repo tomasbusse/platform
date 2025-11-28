@@ -29,6 +29,9 @@ export type QuestionType = (typeof QUESTION_TYPES)[number];
  * This action calls the Anthropic API directly to generate quiz questions
  * based on the provided configuration.
  */
+// Default model to use if none specified
+const DEFAULT_MODEL = "anthropic/claude-sonnet-4";
+
 export const generateQuestionsWithClaude = action({
   args: {
     apiKey: v.string(),
@@ -39,9 +42,10 @@ export const generateQuestionsWithClaude = action({
     questionTypes: v.array(v.string()),
     audioWordLimit: v.number(),
     documentContent: v.optional(v.string()),
+    modelId: v.optional(v.string()), // Optional model ID from OpenRouter
   },
   handler: async (ctx, args) => {
-    const { apiKey, language, targetLevel, topic, numberOfQuestions, questionTypes, audioWordLimit, documentContent } = args;
+    const { apiKey, language, targetLevel, topic, numberOfQuestions, questionTypes, audioWordLimit, documentContent, modelId } = args;
 
     if (!apiKey) {
       throw new Error("API key is required for question generation");
@@ -58,17 +62,21 @@ export const generateQuestionsWithClaude = action({
       documentContent,
     });
 
+    // Determine which model to use
+    const selectedModel = modelId || DEFAULT_MODEL;
+
     try {
-      // Call Anthropic API directly
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      // Call OpenRouter API which supports multiple models
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": "https://simmonds-platform.vercel.app",
+          "X-Title": "Simmonds LMS Quiz Generator",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
+          model: selectedModel,
           max_tokens: 8000,
           messages: [
             {
@@ -82,31 +90,31 @@ export const generateQuestionsWithClaude = action({
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          `Anthropic API error: ${errorData.error?.message || response.statusText}`
+          `OpenRouter API error: ${errorData.error?.message || response.statusText}`
         );
       }
 
       const data = await response.json();
 
-      // Extract text from response
-      const content = data.content?.[0];
-      if (!content || content.type !== "text") {
-        throw new Error("Unexpected response format from Claude");
+      // Extract text from OpenRouter response format
+      const content = data.choices?.[0]?.message?.content;
+      if (!content) {
+        throw new Error("Unexpected response format from AI model");
       }
 
-      // Parse JSON from Claude's response
-      const jsonText = extractJSON(content.text);
+      // Parse JSON from response
+      const jsonText = extractJSON(content);
       const questions = JSON.parse(jsonText);
 
       if (!Array.isArray(questions)) {
-        throw new Error("Expected an array of questions from Claude");
+        throw new Error("Expected an array of questions from AI");
       }
 
       return {
         success: true,
         questions,
         generatedAt: new Date().toISOString(),
-        model: "claude-sonnet-4-20250514",
+        model: selectedModel,
         questionCount: questions.length,
       };
     } catch (error: unknown) {
@@ -117,7 +125,7 @@ export const generateQuestionsWithClaude = action({
         error: errorMessage,
         questions: [],
         generatedAt: new Date().toISOString(),
-        model: "claude-sonnet-4-20250514",
+        model: selectedModel,
         questionCount: 0,
       };
     }
@@ -135,9 +143,10 @@ export const regenerateSingleQuestion = action({
     topic: v.string(),
     questionType: v.string(),
     audioWordLimit: v.number(),
+    modelId: v.optional(v.string()), // Optional model ID from OpenRouter
   },
   handler: async (ctx, args) => {
-    const { apiKey, language, targetLevel, topic, questionType, audioWordLimit } = args;
+    const { apiKey, language, targetLevel, topic, questionType, audioWordLimit, modelId } = args;
 
     if (!apiKey) {
       throw new Error("API key is required for question generation");
@@ -151,16 +160,21 @@ export const regenerateSingleQuestion = action({
       audioWordLimit,
     });
 
+    // Determine which model to use
+    const selectedModel = modelId || DEFAULT_MODEL;
+
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      // Call OpenRouter API which supports multiple models
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": "https://simmonds-platform.vercel.app",
+          "X-Title": "Simmonds LMS Quiz Generator",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
+          model: selectedModel,
           max_tokens: 2000,
           messages: [
             {
@@ -174,18 +188,18 @@ export const regenerateSingleQuestion = action({
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          `Anthropic API error: ${errorData.error?.message || response.statusText}`
+          `OpenRouter API error: ${errorData.error?.message || response.statusText}`
         );
       }
 
       const data = await response.json();
-      const content = data.content?.[0];
+      const content = data.choices?.[0]?.message?.content;
 
-      if (!content || content.type !== "text") {
-        throw new Error("Unexpected response format from Claude");
+      if (!content) {
+        throw new Error("Unexpected response format from AI model");
       }
 
-      const jsonText = extractJSON(content.text);
+      const jsonText = extractJSON(content);
       const question = JSON.parse(jsonText);
 
       return {

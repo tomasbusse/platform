@@ -106,6 +106,13 @@ interface SettingsState {
     passwordChange: number;
     loginNotifications: boolean;
   };
+  // AI Models available for quiz generation
+  availableAIModels: Array<{
+    id: string;
+    name: string;
+    provider: string;
+    isDefault?: boolean;
+  }>;
 }
 
 interface OpenRouterModel {
@@ -333,6 +340,8 @@ Keep it achievable and focused.`,
       passwordChange: 90, // days
       loginNotifications: true,
     },
+    // AI Models for quiz generation
+    availableAIModels: [],
   });
 
   // Load settings from localStorage on mount (immediate)
@@ -358,6 +367,7 @@ Keep it achievable and focused.`,
         notifications: { ...prev.notifications, ...localSettings.notifications },
         learning: { ...prev.learning, ...localSettings.learning },
         security: { ...prev.security, ...localSettings.security },
+        availableAIModels: localSettings.availableAIModels || prev.availableAIModels,
       }));
     }
     fetchOpenRouterModels();
@@ -400,6 +410,7 @@ Keep it achievable and focused.`,
           },
           aiPrompts: { ...prev.aiPrompts, ...(convexCompanySettings as any).aiPrompts },
           voiceConfig: { ...prev.voiceConfig, ...(convexCompanySettings as any).voiceConfig },
+          availableAIModels: (convexCompanySettings as any).availableAIModels || prev.availableAIModels,
         };
         // Also save to localStorage to keep them in sync
         saveToLocalStorage(updated);
@@ -421,6 +432,8 @@ Keep it achievable and focused.`,
       }));
     }
     if (company) {
+      // Get availableAIModels from company.settings (flat structure)
+      const companySettings = company.settings as { availableAIModels?: Array<{ id: string; name: string; provider: string; isDefault?: boolean }> } | undefined;
       setSettings(prev => ({
         ...prev,
         company: {
@@ -428,7 +441,9 @@ Keep it achievable and focused.`,
           name: company.name || prev.company.name,
           contactEmail: company.contactEmail || prev.company.contactEmail,
           subscriptionPlan: (company.subscriptionPlan as 'trial' | 'basic' | 'professional' | 'enterprise') || prev.company.subscriptionPlan,
-        }
+        },
+        // Load availableAIModels from company.settings if present
+        availableAIModels: companySettings?.availableAIModels || prev.availableAIModels,
       }));
     }
   }, [currentUser, company]);
@@ -856,6 +871,7 @@ Keep it achievable and focused.`,
               apis: settings.apis,
               aiPrompts: settings.aiPrompts,
               voiceConfig: settings.voiceConfig,
+              availableAIModels: settings.availableAIModels,
             },
           });
         } catch (convexError) {
@@ -2125,6 +2141,159 @@ Keep it achievable and focused.`,
         )}
         <p className="text-xs text-simmonds-stone mt-3">
           Voice IDs can be found in your ElevenLabs dashboard under Voice Lab. Custom cloned voices provide a personalized learning experience.
+        </p>
+      </div>
+
+      {/* AI Models for Quiz Generation */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-simmonds-cream">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
+              <span className="text-white text-lg">🧠</span>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-simmonds-charcoal">AI Models for Quiz Generation</h3>
+              <p className="text-sm text-simmonds-stone">Select which models teachers can use to generate quizzes</p>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-sm text-simmonds-stone mb-4">
+          Choose from available OpenRouter models. Teachers will be able to select from these models when creating AI-generated quizzes.
+        </p>
+
+        {/* Available models from OpenRouter */}
+        <div className="space-y-3 mb-4">
+          <label className="block text-sm font-medium text-simmonds-charcoal">Available Models</label>
+          {openRouterModels.length === 0 ? (
+            <div className="text-center py-6 bg-simmonds-cream/20 rounded-xl">
+              <p className="text-simmonds-stone">
+                {settings.apis.openrouter.apiKey
+                  ? 'Loading models from OpenRouter...'
+                  : 'Configure your OpenRouter API key in API Integrations to see available models.'}
+              </p>
+            </div>
+          ) : (
+            <div className="max-h-64 overflow-y-auto border border-simmonds-cream rounded-xl divide-y divide-simmonds-cream">
+              {openRouterModels
+                .filter(model =>
+                  model.id.includes('claude') ||
+                  model.id.includes('gpt') ||
+                  model.id.includes('gemini') ||
+                  model.id.includes('llama') ||
+                  model.id.includes('mixtral')
+                )
+                .slice(0, 20)
+                .map((model) => {
+                  const isSelected = settings.availableAIModels.some(m => m.id === model.id);
+                  const isDefault = settings.availableAIModels.find(m => m.id === model.id)?.isDefault;
+
+                  return (
+                    <div
+                      key={model.id}
+                      className={`p-3 flex items-center justify-between hover:bg-simmonds-cream/30 cursor-pointer transition-colors ${
+                        isSelected ? 'bg-simmonds-primary/5' : ''
+                      }`}
+                      onClick={() => {
+                        if (isSelected) {
+                          // Remove model
+                          setSettings(prev => ({
+                            ...prev,
+                            availableAIModels: prev.availableAIModels.filter(m => m.id !== model.id),
+                          }));
+                        } else {
+                          // Add model
+                          const provider = model.id.split('/')[0] || 'openrouter';
+                          setSettings(prev => ({
+                            ...prev,
+                            availableAIModels: [
+                              ...prev.availableAIModels,
+                              {
+                                id: model.id,
+                                name: model.name,
+                                provider,
+                                isDefault: prev.availableAIModels.length === 0, // First one is default
+                              },
+                            ],
+                          }));
+                        }
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                            isSelected
+                              ? 'bg-simmonds-primary border-simmonds-primary'
+                              : 'border-simmonds-stone/30'
+                          }`}
+                        >
+                          {isSelected && (
+                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium text-simmonds-charcoal text-sm">{model.name}</p>
+                          <p className="text-xs text-simmonds-stone">{model.id}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isDefault && (
+                          <span className="px-2 py-0.5 bg-simmonds-lime/20 text-simmonds-lime-dark text-xs rounded-full">
+                            Default
+                          </span>
+                        )}
+                        {isSelected && !isDefault && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSettings(prev => ({
+                                ...prev,
+                                availableAIModels: prev.availableAIModels.map(m => ({
+                                  ...m,
+                                  isDefault: m.id === model.id,
+                                })),
+                              }));
+                            }}
+                            className="px-2 py-0.5 text-xs text-simmonds-primary hover:bg-simmonds-primary/10 rounded-full transition-colors"
+                          >
+                            Set Default
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+        </div>
+
+        {/* Selected Models Summary */}
+        {settings.availableAIModels.length > 0 && (
+          <div className="p-4 bg-simmonds-olive/10 rounded-xl">
+            <p className="text-sm font-medium text-simmonds-charcoal mb-2">
+              {settings.availableAIModels.length} model{settings.availableAIModels.length !== 1 ? 's' : ''} selected for quiz generation:
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {settings.availableAIModels.map(model => (
+                <span
+                  key={model.id}
+                  className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    model.isDefault
+                      ? 'bg-simmonds-lime text-white'
+                      : 'bg-white text-simmonds-charcoal border border-simmonds-cream'
+                  }`}
+                >
+                  {model.name} {model.isDefault && '(Default)'}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <p className="text-xs text-simmonds-stone mt-3">
+          Teachers will see these models when creating quizzes. The default model will be pre-selected.
         </p>
       </div>
     </div>
