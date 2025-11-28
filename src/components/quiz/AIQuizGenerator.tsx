@@ -37,16 +37,14 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
   const addQuestionToBank = useMutation(api.quizzes.addQuestionToBank);
 
   // Get API keys from company settings
-  // Settings are stored in nested structure: company.settings.apis.{service}.apiKey
+  // Settings are stored in flat structure on company.settings (e.g., elevenLabsApiKey)
   const companySettings = company?.settings as {
-    apis?: {
-      openrouter?: { apiKey?: string };
-      elevenlabs?: { apiKey?: string };
-    };
+    openRouterApiKey?: string;
+    elevenLabsApiKey?: string;
   } | undefined;
 
-  const anthropicApiKey = companySettings?.apis?.openrouter?.apiKey || '';
-  const elevenLabsApiKey = companySettings?.apis?.elevenlabs?.apiKey || '';
+  const anthropicApiKey = companySettings?.openRouterApiKey || '';
+  const elevenLabsApiKey = companySettings?.elevenLabsApiKey || '';
 
   // STEP 1: User submits config form
   const handleConfigSubmit = async (formData: QuizGenerationConfig) => {
@@ -66,6 +64,7 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
         numberOfQuestions: formData.numberOfQuestions,
         questionTypes: formData.questionTypes,
         audioWordLimit: formData.audioWordLimit,
+        documentContent: formData.documentContent,
       });
 
       if (!result.success) {
