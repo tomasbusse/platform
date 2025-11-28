@@ -30,6 +30,9 @@ const GroupManagement: React.FC<GroupManagementProps> = ({ currentUser, company,
   const [showEditModal, setShowEditModal] = useState(false);
   const [showStudentsModal, setShowStudentsModal] = useState(false);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [showAssignUnallocatedModal, setShowAssignUnallocatedModal] = useState(false);
+  const [selectedUnallocatedStudent, setSelectedUnallocatedStudent] = useState<any>(null);
+  const [selectedGroupIdForAssignment, setSelectedGroupIdForAssignment] = useState<string>('');
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
   const [filterLevel, setFilterLevel] = useState<Level | 'all'>('all');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -79,6 +82,12 @@ const GroupManagement: React.FC<GroupManagementProps> = ({ currentUser, company,
     companyId ? { companyId: companyId } : 'skip'
   );
   const studentsList = allStudents?.filter(u => u.role === 'student') || [];
+
+  // Get unallocated students (students not in any group)
+  const unallocatedStudents = useQuery(
+    api.userManagement.getUnallocatedStudents,
+    companyId ? { companyId: companyId } : 'skip'
+  );
 
   // Mutations
   const createGroup = useMutation(api.groups.createGroup);
@@ -225,6 +234,44 @@ const GroupManagement: React.FC<GroupManagementProps> = ({ currentUser, company,
   const openStudentsModal = (group: any) => {
     setSelectedGroup(group);
     setShowStudentsModal(true);
+  };
+
+  // Open the assign modal for an unallocated student
+  const openAssignUnallocatedModal = (student: any) => {
+    setSelectedUnallocatedStudent(student);
+    setSelectedGroupIdForAssignment('');
+    setShowAssignUnallocatedModal(true);
+  };
+
+  // Assign an unallocated student to a selected group
+  const handleAssignUnallocatedStudent = async () => {
+    if (!selectedUnallocatedStudent || !selectedGroupIdForAssignment) return;
+
+    setIsProcessing(true);
+    try {
+      await addStudentToGroup({
+        groupId: selectedGroupIdForAssignment as Id<"groups">,
+        userId: selectedUnallocatedStudent._id,
+      });
+      setShowAssignUnallocatedModal(false);
+      setSelectedUnallocatedStudent(null);
+      setSelectedGroupIdForAssignment('');
+      alert('Student assigned to group successfully!');
+    } catch (error) {
+      console.error('Error assigning student:', error);
+      alert(`Failed to assign student: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Get groups that the student could be assigned to (based on level match or any group with capacity)
+  const getAvailableGroupsForStudent = (student: any) => {
+    if (!groups) return [];
+    return groups.filter(g =>
+      g.isActive &&
+      g.currentStudentCount < g.maxStudents
+    );
   };
 
   const getLevelColor = (level: Level) => {
@@ -446,6 +493,141 @@ const GroupManagement: React.FC<GroupManagementProps> = ({ currentUser, company,
           </div>
         )}
       </div>
+
+      {/* Unallocated Students Section */}
+      <div className="bg-white rounded-2xl shadow-sm border border-simmonds-cream overflow-hidden">
+        <div className="p-4 border-b border-simmonds-cream flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-semibold text-simmonds-charcoal">Unallocated Students</h3>
+            <p className="text-sm text-simmonds-stone">
+              Students in this company not yet assigned to any group
+            </p>
+          </div>
+          <span className="px-3 py-1 bg-simmonds-cream text-simmonds-charcoal rounded-full text-sm font-medium">
+            {unallocatedStudents?.length || 0} students
+          </span>
+        </div>
+
+        {!unallocatedStudents || unallocatedStudents.length === 0 ? (
+          <div className="p-8 text-center">
+            <div className="w-12 h-12 bg-simmonds-lime/20 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6 text-simmonds-lime-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p className="text-simmonds-stone">All students are assigned to groups</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-simmonds-cream">
+            {unallocatedStudents.map((student: any) => (
+              <div
+                key={student._id}
+                className="p-4 hover:bg-simmonds-cream-light/50 transition-colors flex items-center justify-between"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-simmonds-primary/10 rounded-full flex items-center justify-center">
+                    <span className="text-simmonds-primary font-semibold">
+                      {student.name?.charAt(0)?.toUpperCase() || '?'}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-simmonds-charcoal">{student.name || 'Unknown'}</p>
+                    <p className="text-sm text-simmonds-stone">{student.email}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <span className={`px-2 py-0.5 rounded text-xs font-semibold ${getLevelColor((student.currentLevel as Level) || 'A1')}`}>
+                      {student.currentLevel || 'No level'}
+                    </span>
+                    {student.takesIndividualLessons && (
+                      <span className="ml-2 px-2 py-0.5 bg-simmonds-olive/20 text-simmonds-olive rounded text-xs">
+                        Individual
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => openAssignUnallocatedModal(student)}
+                    className="px-4 py-2 bg-simmonds-primary text-white rounded-xl text-sm font-medium hover:bg-simmonds-primary-light"
+                  >
+                    Assign to Group
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Assign Unallocated Student Modal */}
+      {showAssignUnallocatedModal && selectedUnallocatedStudent && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full">
+            <div className="p-6 border-b border-simmonds-cream">
+              <h3 className="text-lg font-semibold text-simmonds-charcoal">
+                Assign Student to Group
+              </h3>
+              <p className="text-sm text-simmonds-stone mt-1">
+                Assign <span className="font-medium">{selectedUnallocatedStudent.name}</span> to a group
+              </p>
+            </div>
+
+            <div className="p-6">
+              {getAvailableGroupsForStudent(selectedUnallocatedStudent).length === 0 ? (
+                <div className="text-center py-4">
+                  <p className="text-simmonds-stone">No groups available with capacity</p>
+                  <p className="text-sm text-simmonds-stone mt-2">
+                    Create a new group or increase capacity in existing groups
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-simmonds-charcoal mb-2">
+                    Select Group
+                  </label>
+                  <select
+                    value={selectedGroupIdForAssignment}
+                    onChange={(e) => setSelectedGroupIdForAssignment(e.target.value)}
+                    className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
+                  >
+                    <option value="">Choose a group...</option>
+                    {getAvailableGroupsForStudent(selectedUnallocatedStudent).map((group) => (
+                      <option key={group._id} value={group._id}>
+                        {group.name} ({group.level}) - {group.currentStudentCount}/{group.maxStudents} students
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-2 text-xs text-simmonds-stone">
+                    Student's level: <span className="font-medium">{selectedUnallocatedStudent.currentLevel || 'Not set'}</span>.
+                    Assigning to a group will update their level to match.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-simmonds-cream flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowAssignUnallocatedModal(false);
+                  setSelectedUnallocatedStudent(null);
+                  setSelectedGroupIdForAssignment('');
+                }}
+                className="px-6 py-2 border border-simmonds-cream text-simmonds-charcoal rounded-xl font-medium hover:bg-simmonds-cream-light"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAssignUnallocatedStudent}
+                disabled={isProcessing || !selectedGroupIdForAssignment}
+                className="px-6 py-2 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light disabled:opacity-50"
+              >
+                {isProcessing ? 'Assigning...' : 'Assign to Group'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Create/Edit Modal */}
       {(showCreateModal || showEditModal) && (

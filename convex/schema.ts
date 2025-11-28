@@ -26,8 +26,10 @@ export default defineSchema({
     lastLogin: v.optional(v.number()),
     createdAt: v.optional(v.number()),
     updatedAt: v.optional(v.number()),
-    // Student-specific: individual lessons only (not in any group)
+    // Student-specific: individual lessons only (not in any group) - DEPRECATED, use takesIndividualLessons
     individualLessonsOnly: v.optional(v.boolean()),
+    // Student-specific: whether student takes individual lessons (can be in addition to group lessons)
+    takesIndividualLessons: v.optional(v.boolean()),
     // Placement test status
     placementTestCompleted: v.optional(v.boolean()),
     placementTestDate: v.optional(v.number()),
