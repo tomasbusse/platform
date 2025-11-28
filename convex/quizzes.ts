@@ -74,9 +74,20 @@ export const createQuiz = mutation({
     const now = Date.now();
 
     // Validate that createdBy user has teacher or admin role
-    const user = await ctx.db.get(args.createdBy as Id<"users">);
-    if (!user || (user.role !== "teacher" && user.role !== "admin" && user.role !== "corporate_admin")) {
-      throw new Error("Only teachers and admins can create tests");
+    let user;
+    try {
+      user = await ctx.db.get(args.createdBy as Id<"users">);
+    } catch (e) {
+      console.error("Failed to get user:", args.createdBy, e);
+      throw new Error("Invalid user ID format");
+    }
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (user.role !== "teacher" && user.role !== "admin" && user.role !== "corporate_admin") {
+      throw new Error("Only teachers and admins can create tests. Your role: " + user.role);
     }
 
     // Default settings
@@ -123,16 +134,20 @@ export const createQuiz = mutation({
       updatedAt: now,
     });
 
-    // Create audit log entry
-    await ctx.db.insert("auditLogs", {
-      companyId: args.companyId,
-      userId: args.createdBy,
-      action: "quiz_created",
-      entityType: "quiz",
-      entityId: quizId,
-      newValues: { title: args.title, level: args.level, testPurpose: args.testPurpose },
-      timestamp: now,
-    });
+    // Create audit log entry (don't fail quiz creation if audit log fails)
+    try {
+      await ctx.db.insert("auditLogs", {
+        companyId: args.companyId,
+        userId: args.createdBy,
+        action: "quiz_created",
+        entityType: "quiz",
+        entityId: String(quizId),
+        newValues: { title: args.title, level: args.level, testPurpose: args.testPurpose },
+        timestamp: now,
+      });
+    } catch (e) {
+      console.error("Failed to create audit log:", e);
+    }
 
     return quizId;
   },
