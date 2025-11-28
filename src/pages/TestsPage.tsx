@@ -356,30 +356,26 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
                   <EyeIcon />
                   Preview
                 </button>
-                {quiz.status !== 'published' && (
-                  <button
-                    onClick={() => handleEditTest(quiz._id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-simmonds-primary hover:bg-simmonds-primary/10 rounded-lg text-sm font-medium transition-colors"
-                    title="Edit quiz"
-                  >
-                    <EditIcon />
-                    Edit
-                  </button>
-                )}
-                {quiz.status !== 'published' && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteQuiz(quiz._id);
-                    }}
-                    disabled={isDeleting}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-simmonds-terracotta hover:bg-simmonds-terracotta/10 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                    title="Delete quiz"
-                  >
-                    <TrashIcon />
-                    Delete
-                  </button>
-                )}
+                <button
+                  onClick={() => handleEditTest(quiz._id)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-simmonds-primary hover:bg-simmonds-primary/10 rounded-lg text-sm font-medium transition-colors"
+                  title="Edit quiz"
+                >
+                  <EditIcon />
+                  Edit
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteQuiz(quiz._id);
+                  }}
+                  disabled={isDeleting}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-simmonds-terracotta hover:bg-simmonds-terracotta/10 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                  title="Delete quiz"
+                >
+                  <TrashIcon />
+                  Delete
+                </button>
                 {quiz.status === 'published' && (
                   <button
                     onClick={() => handleTakeTest(quiz._id)}
@@ -627,48 +623,6 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
       );
     }
 
-    if (selectedQuiz.status === 'published') {
-      return (
-        <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleBackToList}
-              className="flex items-center gap-2 text-simmonds-primary hover:text-simmonds-primary-dark"
-            >
-              <BackIcon />
-              Back to Tests
-            </button>
-            <h2 className="text-xl font-semibold text-simmonds-charcoal">Edit Test</h2>
-          </div>
-          <div className="bg-white rounded-2xl shadow-sm border border-simmonds-cream p-8 text-center max-w-lg mx-auto">
-            <div className="w-16 h-16 bg-simmonds-terracotta/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-simmonds-terracotta" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-simmonds-charcoal mb-2">Cannot Edit Published Test</h3>
-            <p className="text-simmonds-stone mb-6">
-              Published tests cannot be edited directly. You can archive this test and create a new version, or duplicate it to make changes.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                onClick={handleBackToList}
-                className="px-6 py-2 border border-simmonds-cream text-simmonds-charcoal rounded-xl font-medium hover:bg-simmonds-cream-light transition-colors"
-              >
-                Back to List
-              </button>
-              <button
-                onClick={() => handlePreviewTest(selectedQuiz._id)}
-                className="px-6 py-2 bg-simmonds-olive text-white rounded-xl font-medium hover:bg-simmonds-olive-light transition-colors"
-              >
-                Preview Instead
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
@@ -844,24 +798,20 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
               <h2 className="text-xl font-semibold text-simmonds-charcoal">Preview: {selectedQuiz.title}</h2>
             </div>
             <div className="flex items-center gap-2">
-              {selectedQuiz.status !== 'published' && (
-                <button
-                  onClick={() => handleDeleteQuiz(selectedQuiz._id)}
-                  disabled={isDeleting}
-                  className="flex items-center gap-1.5 px-4 py-2 text-simmonds-terracotta hover:bg-simmonds-terracotta/10 rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
-                >
-                  {isDeleting ? 'Deleting...' : 'Delete'}
-                </button>
-              )}
-              {selectedQuiz.status !== 'published' && (
-                <button
-                  onClick={() => handleEditTest(selectedQuiz._id)}
-                  className="flex items-center gap-1.5 px-4 py-2 text-simmonds-primary hover:bg-simmonds-primary/10 rounded-xl text-sm font-medium transition-colors"
-                >
-                  <EditIcon />
-                  Edit
-                </button>
-              )}
+              <button
+                onClick={() => handleEditTest(selectedQuiz._id)}
+                className="flex items-center gap-1.5 px-4 py-2 text-simmonds-primary hover:bg-simmonds-primary/10 rounded-xl text-sm font-medium transition-colors"
+              >
+                <EditIcon />
+                Edit
+              </button>
+              <button
+                onClick={() => handleDeleteQuiz(selectedQuiz._id)}
+                disabled={isDeleting}
+                className="flex items-center gap-1.5 px-4 py-2 text-simmonds-terracotta hover:bg-simmonds-terracotta/10 rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
             </div>
           </div>
 
@@ -871,14 +821,12 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
             </div>
             <h3 className="text-lg font-semibold text-simmonds-charcoal mb-2">No Questions Yet</h3>
             <p className="text-simmonds-stone mb-6">Add some questions to preview this quiz</p>
-            {selectedQuiz.status !== 'published' && (
-              <button
-                onClick={() => handleEditTest(selectedQuiz._id)}
-                className="px-6 py-2 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light transition-colors"
-              >
-                Add Questions
-              </button>
-            )}
+            <button
+              onClick={() => handleEditTest(selectedQuiz._id)}
+              className="px-6 py-2 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light transition-colors"
+            >
+              Add Questions
+            </button>
           </div>
         </div>
       );
@@ -907,15 +855,20 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
             }`}>
               {selectedQuiz.status === 'published' ? 'Published' : 'Draft'} - Preview Mode
             </span>
-            {selectedQuiz.status !== 'published' && (
-              <button
-                onClick={() => handleDeleteQuiz(selectedQuiz._id)}
-                disabled={isDeleting}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-simmonds-terracotta hover:bg-simmonds-terracotta/10 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-              >
-                {isDeleting ? 'Deleting...' : 'Delete'}
-              </button>
-            )}
+            <button
+              onClick={() => handleEditTest(selectedQuiz._id)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-simmonds-primary hover:bg-simmonds-primary/10 rounded-lg text-sm font-medium transition-colors"
+            >
+              <EditIcon />
+              Edit
+            </button>
+            <button
+              onClick={() => handleDeleteQuiz(selectedQuiz._id)}
+              disabled={isDeleting}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-simmonds-terracotta hover:bg-simmonds-terracotta/10 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </button>
           </div>
         </div>
 
