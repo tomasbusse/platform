@@ -147,6 +147,18 @@ const TrashIcon = () => (
   </svg>
 );
 
+const PublishIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+  </svg>
+);
+
+const UnpublishIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+  </svg>
+);
+
 const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchQuery, setSearchQuery] = useState('');
@@ -158,6 +170,7 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
   const [previewAnswers, setPreviewAnswers] = useState<Record<string, string>>({});
   const [showPreviewResults, setShowPreviewResults] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   // Determine user role
   const isTeacher = currentUser?.role === 'teacher' || currentUser?.role === 'admin' || currentUser?.role === 'corporate_admin';
@@ -165,6 +178,8 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
 
   // Mutations
   const deleteQuizMutation = useMutation(api.quizzes.deleteQuiz);
+  const publishQuizMutation = useMutation(api.quizzes.publishQuiz);
+  const archiveQuizMutation = useMutation(api.quizzes.archiveQuiz);
 
   // Fetch quizzes based on role
   const quizzes = useQuery(
@@ -254,6 +269,35 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
   const handleBackToList = () => {
     setViewMode('list');
     setSelectedTestId(null);
+  };
+
+  const handlePublishQuiz = async (quizId: Id<"quizzes">) => {
+    setIsPublishing(true);
+    try {
+      await publishQuizMutation({ quizId });
+      alert('Quiz published successfully! Students can now take this test.');
+    } catch (error) {
+      console.error('Error publishing quiz:', error);
+      alert(`Failed to publish quiz: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const handleUnpublishQuiz = async (quizId: Id<"quizzes">) => {
+    if (!confirm('Are you sure you want to unpublish this quiz? Students will no longer be able to take it.')) {
+      return;
+    }
+    setIsPublishing(true);
+    try {
+      await archiveQuizMutation({ quizId });
+      alert('Quiz unpublished (archived). You can now edit it again.');
+    } catch (error) {
+      console.error('Error unpublishing quiz:', error);
+      alert(`Failed to unpublish quiz: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   // Render test card component
@@ -359,45 +403,74 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-simmonds-cream">
-              <button
-                onClick={() => handlePreviewTest(quiz._id)}
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-simmonds-olive/10 text-simmonds-olive rounded-xl font-medium hover:bg-simmonds-olive/20 transition-colors"
-              >
-                <EyeIcon />
-                <span>Preview</span>
-              </button>
-              <button
-                onClick={() => handleEditTest(quiz._id)}
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-simmonds-primary/10 text-simmonds-primary rounded-xl font-medium hover:bg-simmonds-primary/20 transition-colors"
-              >
-                <EditIcon />
-                <span>Edit</span>
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteQuiz(quiz._id);
-                }}
-                disabled={isDeleting}
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 transition-colors disabled:opacity-50"
-              >
-                <TrashIcon />
-                <span>{isDeleting ? 'Deleting...' : 'Delete'}</span>
-              </button>
-              {quiz.status === 'published' ? (
+            <div className="space-y-3 pt-4 border-t border-simmonds-cream">
+              {/* Primary Actions Row */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <button
-                  onClick={() => handleTakeTest(quiz._id)}
-                  className="flex items-center justify-center gap-2 px-4 py-3 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light transition-colors"
+                  onClick={() => handlePreviewTest(quiz._id)}
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-simmonds-olive/10 text-simmonds-olive rounded-xl font-medium hover:bg-simmonds-olive/20 transition-colors"
                 >
-                  <PlayIcon />
-                  <span>Take Test</span>
+                  <EyeIcon />
+                  <span>Preview</span>
                 </button>
-              ) : (
-                <div className="flex items-center justify-center px-4 py-3 bg-gray-50 text-gray-400 rounded-xl font-medium">
-                  <span>Draft Mode</span>
-                </div>
-              )}
+                <button
+                  onClick={() => handleEditTest(quiz._id)}
+                  disabled={quiz.status === 'published'}
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-simmonds-primary/10 text-simmonds-primary rounded-xl font-medium hover:bg-simmonds-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={quiz.status === 'published' ? 'Unpublish to edit' : 'Edit quiz'}
+                >
+                  <EditIcon />
+                  <span>Edit</span>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteQuiz(quiz._id);
+                  }}
+                  disabled={isDeleting}
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 transition-colors disabled:opacity-50"
+                >
+                  <TrashIcon />
+                  <span>{isDeleting ? 'Deleting...' : 'Delete'}</span>
+                </button>
+                {quiz.status === 'published' ? (
+                  <button
+                    onClick={() => handleTakeTest(quiz._id)}
+                    className="flex items-center justify-center gap-2 px-4 py-3 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light transition-colors"
+                  >
+                    <PlayIcon />
+                    <span>Take Test</span>
+                  </button>
+                ) : (
+                  <div className="flex items-center justify-center px-4 py-3 bg-gray-50 text-gray-400 rounded-xl font-medium">
+                    <span>Draft Mode</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Publish/Unpublish Row */}
+              <div className="flex justify-center">
+                {quiz.status === 'published' ? (
+                  <button
+                    onClick={() => handleUnpublishQuiz(quiz._id)}
+                    disabled={isPublishing}
+                    className="flex items-center justify-center gap-2 px-6 py-2.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl font-medium hover:bg-amber-100 transition-colors disabled:opacity-50 w-full sm:w-auto"
+                  >
+                    <UnpublishIcon />
+                    <span>{isPublishing ? 'Processing...' : 'Unpublish (Archive)'}</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handlePublishQuiz(quiz._id)}
+                    disabled={isPublishing || quiz.totalQuestions === 0}
+                    className="flex items-center justify-center gap-2 px-6 py-2.5 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+                    title={quiz.totalQuestions === 0 ? 'Add questions before publishing' : 'Publish quiz for students'}
+                  >
+                    <PublishIcon />
+                    <span>{isPublishing ? 'Publishing...' : 'Publish for Students'}</span>
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
