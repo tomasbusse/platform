@@ -79,7 +79,9 @@ export const addEmployee = mutation({
       v.literal("student")
     ),
     currentLevel: v.optional(v.string()),
-    individualLessonsOnly: v.optional(v.boolean()), // For students who only do individual lessons
+    individualLessonsOnly: v.optional(v.boolean()), // DEPRECATED: use takesIndividualLessons
+    takesIndividualLessons: v.optional(v.boolean()), // For students who take individual lessons
+    groupId: v.optional(v.id("groups")), // Optional group assignment for students
     sendPlacementTest: v.optional(v.boolean()), // Whether to send placement test link
   },
   handler: async (ctx, args) => {
@@ -95,18 +97,48 @@ export const addEmployee = mutation({
       throw new Error("User with this email already exists");
     }
 
+    // If groupId is provided, validate it belongs to the same company
+    if (args.groupId) {
+      const group = await ctx.db.get(args.groupId);
+      if (!group) {
+        throw new Error("Group not found");
+      }
+      if (String(group.companyId) !== String(args.companyId)) {
+        throw new Error("Group does not belong to this company");
+      }
+      if (!group.isActive) {
+        throw new Error("Cannot assign to an inactive group");
+      }
+      if (group.currentStudentCount >= group.maxStudents) {
+        throw new Error("Group is at maximum capacity");
+      }
+    }
+
+    // Determine the student's level - use group level if assigned to a group
+    let studentLevel = args.currentLevel;
+    if (args.groupId && args.role === "student") {
+      const group = await ctx.db.get(args.groupId);
+      if (group) {
+        studentLevel = group.level;
+      }
+    }
+
     // Create employee user (password managed by Clerk)
+    // Support both old and new field names for backwards compatibility
+    const takesIndividual = args.takesIndividualLessons ?? args.individualLessonsOnly ?? false;
+
     const userId = await ctx.db.insert("users", {
       name: args.name,
       email: args.email,
       role: args.role,
       companyId: args.companyId,
       isActive: true, // User will be active, they authenticate via Clerk
-      currentLevel: args.currentLevel,
+      currentLevel: studentLevel,
       totalScore: 0,
       averageScore: 0,
       completedTests: 0,
-      individualLessonsOnly: args.individualLessonsOnly || false,
+      individualLessonsOnly: takesIndividual, // Keep for backwards compatibility
+      takesIndividualLessons: takesIndividual,
       placementTestCompleted: false,
       createdAt: now,
       updatedAt: now,
@@ -123,17 +155,49 @@ export const addEmployee = mutation({
       }
     }
 
+    // If groupId is provided and role is student, add to group
+    if (args.groupId && args.role === "student") {
+      const group = await ctx.db.get(args.groupId);
+      if (group) {
+        await ctx.db.patch(args.groupId, {
+          studentIds: [...group.studentIds, userId],
+          currentStudentCount: group.currentStudentCount + 1,
+          updatedAt: now,
+        });
+
+        // Create notification for group assignment
+        await ctx.db.insert("notifications", {
+          userId: userId,
+          companyId: args.companyId,
+          title: "Group Assignment",
+          message: `You have been assigned to ${group.name} (${group.level} level)`,
+          type: "info",
+          isEmailSent: false,
+          isRead: false,
+          relatedEntityId: args.groupId,
+          relatedEntityType: "group",
+          createdAt: now,
+        });
+      }
+    }
+
     // Log the action
     await ctx.db.insert("auditLogs", {
       companyId: args.companyId,
       action: "employee_added",
       entityType: "user",
       entityId: userId,
-      newValues: { name: args.name, email: args.email, role: args.role, individualLessonsOnly: args.individualLessonsOnly },
+      newValues: {
+        name: args.name,
+        email: args.email,
+        role: args.role,
+        takesIndividualLessons: takesIndividual,
+        groupId: args.groupId,
+      },
       timestamp: now,
     });
 
-    return { userId, sendPlacementTest: args.sendPlacementTest };
+    return { userId, sendPlacementTest: args.sendPlacementTest, groupId: args.groupId };
   },
 });
 
@@ -240,6 +304,42 @@ export const getAllUsers = query({
   handler: async (ctx) => {
     const users = await ctx.db.query("users").collect();
     return users;
+  },
+});
+
+// Get students in a company who are NOT assigned to any group
+export const getUnallocatedStudents = query({
+  args: { companyId: v.union(v.id("companies"), v.string()) },
+  handler: async (ctx, args) => {
+    // Get all students in the company
+    const allUsers = await ctx.db.query("users").collect();
+    const students = allUsers.filter(user => {
+      const userCompanyId = String(user.companyId);
+      const targetCompanyId = String(args.companyId);
+      return userCompanyId === targetCompanyId && user.role === "student";
+    });
+
+    // Get all active groups for this company
+    const groups = await ctx.db
+      .query("groups")
+      .withIndex("by_company", (q) => q.eq("companyId", args.companyId))
+      .filter((q) => q.eq(q.field("isActive"), true))
+      .collect();
+
+    // Collect all student IDs that are in any group
+    const studentsInGroups = new Set<string>();
+    for (const group of groups) {
+      for (const studentId of group.studentIds) {
+        studentsInGroups.add(studentId);
+      }
+    }
+
+    // Filter to students NOT in any group
+    const unallocatedStudents = students.filter(
+      student => !studentsInGroups.has(student._id)
+    );
+
+    return unallocatedStudents;
   },
 });
 
@@ -373,7 +473,9 @@ export const createUserWithInvitation = mutation({
     ),
     currentLevel: v.optional(v.string()),
     createdBy: v.id("users"),
-    individualLessonsOnly: v.optional(v.boolean()), // For students who only do individual lessons
+    individualLessonsOnly: v.optional(v.boolean()), // DEPRECATED: use takesIndividualLessons
+    takesIndividualLessons: v.optional(v.boolean()), // For students who take individual lessons
+    groupId: v.optional(v.id("groups")), // Optional group assignment for students
     sendPlacementTest: v.optional(v.boolean()), // Whether to send placement test link
   },
   handler: async (ctx, args) => {
@@ -389,6 +491,35 @@ export const createUserWithInvitation = mutation({
       throw new Error("User with this email already exists");
     }
 
+    // If groupId is provided, validate it belongs to the same company
+    if (args.groupId) {
+      const group = await ctx.db.get(args.groupId);
+      if (!group) {
+        throw new Error("Group not found");
+      }
+      if (String(group.companyId) !== String(args.companyId)) {
+        throw new Error("Group does not belong to this company");
+      }
+      if (!group.isActive) {
+        throw new Error("Cannot assign to an inactive group");
+      }
+      if (group.currentStudentCount >= group.maxStudents) {
+        throw new Error("Group is at maximum capacity");
+      }
+    }
+
+    // Determine the student's level - use group level if assigned to a group
+    let studentLevel = args.currentLevel;
+    if (args.groupId && args.role === "student") {
+      const group = await ctx.db.get(args.groupId);
+      if (group) {
+        studentLevel = group.level;
+      }
+    }
+
+    // Support both old and new field names for backwards compatibility
+    const takesIndividual = args.takesIndividualLessons ?? args.individualLessonsOnly ?? false;
+
     // Create the user (inactive until they set password)
     const userId = await ctx.db.insert("users", {
       name: args.name,
@@ -396,11 +527,12 @@ export const createUserWithInvitation = mutation({
       role: args.role,
       companyId: args.companyId,
       isActive: false, // Will be activated when they set password
-      currentLevel: args.currentLevel,
+      currentLevel: studentLevel,
       totalScore: 0,
       averageScore: 0,
       completedTests: 0,
-      individualLessonsOnly: args.individualLessonsOnly || false,
+      individualLessonsOnly: takesIndividual, // Keep for backwards compatibility
+      takesIndividualLessons: takesIndividual,
       placementTestCompleted: false,
       createdAt: now,
       updatedAt: now,
@@ -422,13 +554,41 @@ export const createUserWithInvitation = mutation({
       createdAt: now,
     });
 
-    // Update company student count
-    const company = await ctx.db.get(args.companyId);
-    if (company) {
-      await ctx.db.patch(args.companyId, {
-        currentStudentCount: company.currentStudentCount + 1,
-        updatedAt: now,
-      });
+    // Update company student count (only for students)
+    if (args.role === "student") {
+      const company = await ctx.db.get(args.companyId);
+      if (company) {
+        await ctx.db.patch(args.companyId, {
+          currentStudentCount: company.currentStudentCount + 1,
+          updatedAt: now,
+        });
+      }
+    }
+
+    // If groupId is provided and role is student, add to group
+    if (args.groupId && args.role === "student") {
+      const group = await ctx.db.get(args.groupId);
+      if (group) {
+        await ctx.db.patch(args.groupId, {
+          studentIds: [...group.studentIds, userId],
+          currentStudentCount: group.currentStudentCount + 1,
+          updatedAt: now,
+        });
+
+        // Create notification for group assignment
+        await ctx.db.insert("notifications", {
+          userId: userId,
+          companyId: args.companyId,
+          title: "Group Assignment",
+          message: `You have been assigned to ${group.name} (${group.level} level)`,
+          type: "info",
+          isEmailSent: false,
+          isRead: false,
+          relatedEntityId: args.groupId,
+          relatedEntityType: "group",
+          createdAt: now,
+        });
+      }
     }
 
     // Log the action
@@ -438,7 +598,13 @@ export const createUserWithInvitation = mutation({
       action: "user_invited",
       entityType: "user",
       entityId: userId,
-      newValues: { name: args.name, email: args.email, role: args.role },
+      newValues: {
+        name: args.name,
+        email: args.email,
+        role: args.role,
+        takesIndividualLessons: takesIndividual,
+        groupId: args.groupId,
+      },
       timestamp: now,
     });
 
@@ -447,6 +613,7 @@ export const createUserWithInvitation = mutation({
       invitationId,
       token,
       expiresAt,
+      groupId: args.groupId,
     };
   },
 });

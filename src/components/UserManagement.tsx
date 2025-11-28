@@ -24,6 +24,9 @@ interface UserFormData {
   password: string;
   sendInvite: boolean;
   quizId?: string;
+  // Student-specific fields
+  groupId?: string;
+  takesIndividualLessons: boolean;
 }
 
 interface UserManagementProps {
@@ -51,6 +54,11 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
   const quizzes = useQuery(api.quizzes.getCompanyQuizzes, {
     companyId: companyId as Id<"companies">
   });
+  // Get groups for this company (for student assignment)
+  const companyGroups = useQuery(api.groups.getCompanyGroups, {
+    companyId: companyId as Id<"companies">,
+    isActive: true,
+  });
   const addEmployee = useMutation(api.userManagement.addEmployee);
   const createCompanyInvitationLink = useMutation(api.companyInvitations.createCompanyInvitationLink);
   const createUserWithInvitation = useMutation(api.userManagement.createUserWithInvitation);
@@ -67,6 +75,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
     currentLevel: 'A1',
     password: '',
     sendInvite: true,
+    groupId: undefined,
+    takesIndividualLessons: false,
   });
 
   const [errors, setErrors] = useState<Partial<UserFormData>>({});
@@ -132,10 +142,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
         setInviteLink(linkResult.url);
 
         // Try to send email automatically if Resend is configured
-        console.log('Company data:', company);
-        console.log('Company settings:', company?.settings);
         const resendApiKey = company?.settings?.resendApiKey;
-        console.log('Resend API key found:', !!resendApiKey, resendApiKey ? `(${resendApiKey.substring(0, 8)}...)` : '');
         if (resendApiKey) {
           try {
             const emailResult = await sendInvitationEmail({
@@ -148,7 +155,6 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
               role: formData.role,
             });
 
-            console.log('Email result:', emailResult);
             if (emailResult.success) {
               setEmailSent(true);
             } else {
@@ -158,8 +164,6 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
             console.error('Error sending invitation email:', emailErr);
             setEmailError('Failed to send email. You can still share the link manually.');
           }
-        } else {
-          console.log('No Resend API key configured, skipping email');
         }
 
         setShowInviteModal(true);
@@ -170,11 +174,17 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
           name: formData.name,
           email: formData.email,
           role: formData.role,
-          ...(formData.role === 'student' && { currentLevel: formData.currentLevel }),
+          ...(formData.role === 'student' && {
+            currentLevel: formData.currentLevel,
+            takesIndividualLessons: formData.takesIndividualLessons,
+            ...(formData.groupId && { groupId: formData.groupId as Id<"groups"> }),
+          }),
         });
+
         alert('User added successfully! They can now log in.');
       }
 
+      // Reset form
       setFormData({
         name: '',
         email: '',
@@ -182,6 +192,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
         currentLevel: 'A1',
         password: '',
         sendInvite: true,
+        groupId: undefined,
+        takesIndividualLessons: false,
       });
       setShowAddForm(false);
       setErrors({});
@@ -274,6 +286,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
       currentLevel: user.currentLevel || 'A1',
       password: '',
       sendInvite: false,
+      groupId: undefined, // Note: Edit doesn't change group assignment
+      takesIndividualLessons: false,
     });
     setShowEditModal(true);
   };
@@ -305,6 +319,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
         currentLevel: 'A1',
         password: '',
         sendInvite: true,
+        groupId: undefined,
+        takesIndividualLessons: false,
       });
       setErrors({});
     } catch (error) {
@@ -500,6 +516,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
                     value={formData.currentLevel}
                     onChange={(e) => setFormData(prev => ({ ...prev, currentLevel: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
+                    disabled={!!formData.groupId} // Disable if group is selected (level comes from group)
                   >
                     <option value="A1">A1 - Beginner</option>
                     <option value="A2">A2 - Elementary</option>
@@ -508,9 +525,76 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
                     <option value="C1">C1 - Advanced</option>
                     <option value="C2">C2 - Proficient</option>
                   </select>
+                  {formData.groupId && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      Level is set by the selected group
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Group assignment for students */}
+              {formData.role === 'student' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Assign to Group (Optional)</label>
+                  <select
+                    value={formData.groupId || ''}
+                    onChange={(e) => {
+                      const selectedGroupId = e.target.value || undefined;
+                      // If a group is selected, update the level to match the group's level
+                      if (selectedGroupId && companyGroups) {
+                        const selectedGroup = companyGroups.find(g => g._id === selectedGroupId);
+                        if (selectedGroup) {
+                          setFormData(prev => ({
+                            ...prev,
+                            groupId: selectedGroupId,
+                            currentLevel: selectedGroup.level,
+                          }));
+                          return;
+                        }
+                      }
+                      setFormData(prev => ({ ...prev, groupId: selectedGroupId }));
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
+                  >
+                    <option value="">No group (unallocated)</option>
+                    {companyGroups?.map((group) => (
+                      <option
+                        key={group._id}
+                        value={group._id}
+                        disabled={group.currentStudentCount >= group.maxStudents}
+                      >
+                        {group.name} ({group.level}) - {group.currentStudentCount}/{group.maxStudents} students
+                        {group.currentStudentCount >= group.maxStudents ? ' (Full)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Leave empty to add as unallocated student. You can assign to a group later.
+                  </p>
                 </div>
               )}
             </div>
+
+            {/* Student lesson type options */}
+            {formData.role === 'student' && (
+              <div className="border-t pt-4">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.takesIndividualLessons}
+                    onChange={(e) => setFormData(prev => ({ ...prev, takesIndividualLessons: e.target.checked }))}
+                    className="h-4 w-4 text-simmonds-primary focus:ring-simmonds-primary border-gray-300 rounded"
+                  />
+                  <span className="ml-2 block text-sm text-gray-700">
+                    Takes individual lessons
+                  </span>
+                </label>
+                <p className="mt-1 text-xs text-gray-500 ml-6">
+                  Enable if this student receives one-on-one lessons (can be in addition to group lessons)
+                </p>
+              </div>
+            )}
 
             {/* Invitation Option */}
             <div className="border-t pt-4">
@@ -575,6 +659,16 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
                 onClick={() => {
                   setShowAddForm(false);
                   setErrors({});
+                  setFormData({
+                    name: '',
+                    email: '',
+                    role: 'student',
+                    currentLevel: 'A1',
+                    password: '',
+                    sendInvite: true,
+                    groupId: undefined,
+                    takesIndividualLessons: false,
+                  });
                 }}
                 className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
               >
@@ -855,6 +949,16 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
                     setShowEditModal(false);
                     setEditingUser(null);
                     setErrors({});
+                    setFormData({
+                      name: '',
+                      email: '',
+                      role: 'student',
+                      currentLevel: 'A1',
+                      password: '',
+                      sendInvite: true,
+                      groupId: undefined,
+                      takesIndividualLessons: false,
+                    });
                   }}
                   className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                 >

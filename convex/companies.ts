@@ -413,3 +413,20 @@ export const getCompanyTeachers = query({
     }));
   },
 });
+
+// Get active companies for dropdown selection (lightweight query)
+export const getCompaniesForDropdown = query({
+  args: {},
+  handler: async (ctx) => {
+    const companies = await ctx.db
+      .query("companies")
+      .withIndex("by_active", (q) => q.eq("isActive", true))
+      .collect();
+
+    // Return only essential fields for dropdown
+    return companies.map(company => ({
+      _id: company._id,
+      name: company.name,
+    }));
+  },
+});
