@@ -265,28 +265,29 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
     return (
       <div
         key={quiz._id}
-        className="bg-white rounded-2xl shadow-sm border border-simmonds-cream hover:shadow-md hover:border-simmonds-primary/30 transition-all duration-200 overflow-hidden group"
+        className="bg-white rounded-2xl shadow-sm border border-simmonds-cream hover:shadow-lg hover:border-simmonds-primary/40 transition-all duration-200 overflow-hidden"
       >
-        {/* Card Header with Status Badge */}
-        <div className="p-5 pb-4">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-simmonds-charcoal text-lg truncate group-hover:text-simmonds-primary transition-colors">
+        {/* Card Header */}
+        <div className="p-6">
+          {/* Status Badge - Top Right */}
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex-1">
+              <h3 className="font-bold text-simmonds-charcoal text-xl mb-2">
                 {quiz.title}
               </h3>
               {quiz.description && (
-                <p className="text-sm text-simmonds-stone mt-1 line-clamp-2">
+                <p className="text-sm text-simmonds-stone line-clamp-2">
                   {quiz.description}
                 </p>
               )}
             </div>
             {isTeacher && (
-              <span className={`ml-2 px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+              <span className={`ml-3 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap ${
                 quiz.status === 'published'
-                  ? 'bg-simmonds-lime/20 text-simmonds-lime-dark'
+                  ? 'bg-green-100 text-green-700'
                   : quiz.status === 'archived'
                   ? 'bg-gray-100 text-gray-600'
-                  : 'bg-simmonds-cream text-simmonds-stone'
+                  : 'bg-amber-100 text-amber-700'
               }`}>
                 {quiz.status === 'published' ? 'Published' : quiz.status === 'archived' ? 'Archived' : 'Draft'}
               </span>
@@ -294,100 +295,110 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
           </div>
 
           {/* Tags/Badges */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            <span className="px-2.5 py-1 bg-simmonds-primary/10 text-simmonds-primary rounded-lg text-xs font-medium">
+          <div className="flex flex-wrap gap-2 mb-5">
+            <span className="px-3 py-1.5 bg-simmonds-primary/10 text-simmonds-primary rounded-lg text-sm font-semibold">
               {quiz.level}
             </span>
-            <span className="px-2.5 py-1 bg-simmonds-olive/10 text-simmonds-olive rounded-lg text-xs font-medium capitalize">
+            <span className="px-3 py-1.5 bg-simmonds-olive/10 text-simmonds-olive rounded-lg text-sm font-medium capitalize">
               {quiz.skillFocus}
             </span>
+            <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium capitalize">
+              {quiz.testPurpose.replace('_', ' ')}
+            </span>
             {quiz.isCambridgeAligned && (
-              <span className="px-2.5 py-1 bg-simmonds-terracotta/10 text-simmonds-terracotta rounded-lg text-xs font-medium">
+              <span className="px-3 py-1.5 bg-simmonds-terracotta/10 text-simmonds-terracotta rounded-lg text-sm font-medium">
                 Cambridge
               </span>
             )}
           </div>
 
           {/* Stats Row */}
-          <div className="flex items-center gap-4 text-sm text-simmonds-stone">
-            <div className="flex items-center gap-1.5">
-              <QuestionIcon />
-              <span>{quiz.totalQuestions} questions</span>
+          <div className="flex items-center gap-6 text-sm text-simmonds-stone mb-6">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-simmonds-primary/10 flex items-center justify-center">
+                <QuestionIcon />
+              </div>
+              <span className="font-medium">{quiz.totalQuestions} questions</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <ClockIcon />
-              <span>{quiz.duration} min</span>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-simmonds-olive/10 flex items-center justify-center">
+                <ClockIcon />
+              </div>
+              <span className="font-medium">{quiz.duration} min</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-simmonds-lime/10 flex items-center justify-center">
+                <CheckCircleIcon />
+              </div>
+              <span className="font-medium">{quiz.passingScore}% to pass</span>
             </div>
           </div>
-        </div>
 
-        {/* Card Footer with Actions */}
-        <div className="px-5 py-3 bg-simmonds-cream/30 border-t border-simmonds-cream flex items-center justify-between">
+          {/* Action Buttons */}
           {isStudent ? (
-            <>
+            <div className="flex items-center justify-between pt-4 border-t border-simmonds-cream">
               {completedSession ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-simmonds-lime-dark font-medium">
-                    Score: {completedSession.totalScore ?? 0}%
-                  </span>
+                  <div className="w-10 h-10 rounded-full bg-simmonds-lime/20 flex items-center justify-center">
+                    <CheckCircleIcon />
+                  </div>
+                  <div>
+                    <p className="text-xs text-simmonds-stone">Your Score</p>
+                    <p className="text-lg font-bold text-simmonds-lime-dark">{completedSession.totalScore ?? 0}%</p>
+                  </div>
                 </div>
               ) : (
-                <span className="text-sm text-simmonds-stone">Not attempted</span>
+                <span className="text-sm text-simmonds-stone">Not attempted yet</span>
               )}
               <button
                 onClick={() => handleTakeTest(quiz._id)}
-                className="flex items-center gap-2 px-4 py-2 bg-simmonds-primary text-white rounded-xl text-sm font-medium hover:bg-simmonds-primary-light transition-colors"
+                className="flex items-center gap-2 px-6 py-3 bg-simmonds-primary text-white rounded-xl font-semibold hover:bg-simmonds-primary-light transition-colors shadow-sm"
               >
                 <PlayIcon />
-                {completedSession ? 'Retake' : 'Start Test'}
+                {completedSession ? 'Retake Test' : 'Start Test'}
               </button>
-            </>
+            </div>
           ) : (
-            <>
-              <span className="text-xs text-simmonds-stone">
-                {quiz.testPurpose.replace('_', ' ')}
-              </span>
-              <div className="flex items-center gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-simmonds-cream">
+              <button
+                onClick={() => handlePreviewTest(quiz._id)}
+                className="flex items-center justify-center gap-2 px-4 py-3 bg-simmonds-olive/10 text-simmonds-olive rounded-xl font-medium hover:bg-simmonds-olive/20 transition-colors"
+              >
+                <EyeIcon />
+                <span>Preview</span>
+              </button>
+              <button
+                onClick={() => handleEditTest(quiz._id)}
+                className="flex items-center justify-center gap-2 px-4 py-3 bg-simmonds-primary/10 text-simmonds-primary rounded-xl font-medium hover:bg-simmonds-primary/20 transition-colors"
+              >
+                <EditIcon />
+                <span>Edit</span>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteQuiz(quiz._id);
+                }}
+                disabled={isDeleting}
+                className="flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 transition-colors disabled:opacity-50"
+              >
+                <TrashIcon />
+                <span>{isDeleting ? 'Deleting...' : 'Delete'}</span>
+              </button>
+              {quiz.status === 'published' ? (
                 <button
-                  onClick={() => handlePreviewTest(quiz._id)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-simmonds-olive hover:bg-simmonds-olive/10 rounded-lg text-sm font-medium transition-colors"
-                  title="Preview quiz"
+                  onClick={() => handleTakeTest(quiz._id)}
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light transition-colors"
                 >
-                  <EyeIcon />
-                  Preview
+                  <PlayIcon />
+                  <span>Take Test</span>
                 </button>
-                <button
-                  onClick={() => handleEditTest(quiz._id)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-simmonds-primary hover:bg-simmonds-primary/10 rounded-lg text-sm font-medium transition-colors"
-                  title="Edit quiz"
-                >
-                  <EditIcon />
-                  Edit
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteQuiz(quiz._id);
-                  }}
-                  disabled={isDeleting}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-simmonds-terracotta hover:bg-simmonds-terracotta/10 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                  title="Delete quiz"
-                >
-                  <TrashIcon />
-                  Delete
-                </button>
-                {quiz.status === 'published' && (
-                  <button
-                    onClick={() => handleTakeTest(quiz._id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-simmonds-primary text-white rounded-lg text-sm font-medium hover:bg-simmonds-primary-light transition-colors"
-                    title="Take quiz as student would"
-                  >
-                    <PlayIcon />
-                    Take
-                  </button>
-                )}
-              </div>
-            </>
+              ) : (
+                <div className="flex items-center justify-center px-4 py-3 bg-gray-50 text-gray-400 rounded-xl font-medium">
+                  <span>Draft Mode</span>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -1128,7 +1139,7 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredQuizzes.map(quiz => renderTestCard(quiz as unknown as QuizData))}
         </div>
       )}
