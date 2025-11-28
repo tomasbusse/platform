@@ -48,6 +48,7 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ({ currentUser }) =>
   const updateCompany = useMutation(api.companies.updateCompany);
   const deleteCompany = useMutation(api.companies.deleteCompany);
   const reactivateCompany = useMutation(api.companies.reactivateCompany);
+  const permanentlyDeleteCompany = useMutation(api.companies.permanentlyDeleteCompany);
   const addTeacher = useMutation(api.companies.addTeacher);
 
   const handleCreateCompany = async (e: React.FormEvent) => {
@@ -99,6 +100,28 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ({ currentUser }) =>
       await reactivateCompany({ companyId });
     } catch (error: any) {
       alert(error.message || 'Failed to reactivate company');
+    }
+  };
+
+  const handlePermanentlyDeleteCompany = async (companyId: Id<"companies">, companyName: string) => {
+    const confirmText = prompt(
+      `This will PERMANENTLY DELETE "${companyName}" and ALL its data (users, groups, quizzes).\n\nType the company name to confirm:`
+    );
+
+    if (confirmText !== companyName) {
+      if (confirmText !== null) {
+        alert('Company name did not match. Deletion cancelled.');
+      }
+      return;
+    }
+
+    try {
+      const result = await permanentlyDeleteCompany({ companyId });
+      alert(`Company deleted. Removed ${result.deletedUsers} users and ${result.deletedGroups} groups.`);
+      setSelectedCompanyId(null);
+      setViewMode('list');
+    } catch (error: any) {
+      alert(error.message || 'Failed to permanently delete company');
     }
   };
 
@@ -681,6 +704,53 @@ const CompanyManagement: React.FC<CompanyManagementProps> = ({ currentUser }) =>
                   })}
                 </div>
               )}
+            </div>
+
+            {/* Danger Zone */}
+            <div className="bg-white rounded-xl shadow-sm border border-red-200 p-6">
+              <h2 className="text-lg font-bold text-red-600 mb-4">Danger Zone</h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg">
+                  <div>
+                    <p className="font-medium text-simmonds-charcoal">
+                      {companyDetails.isActive ? 'Deactivate Company' : 'Reactivate Company'}
+                    </p>
+                    <p className="text-sm text-simmonds-stone">
+                      {companyDetails.isActive
+                        ? 'Deactivate this company. All users and groups will be deactivated but data will be preserved.'
+                        : 'Reactivate this company. Users and groups will need to be manually reactivated.'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => companyDetails.isActive
+                      ? handleDeleteCompany(selectedCompanyId!)
+                      : handleReactivateCompany(selectedCompanyId!)
+                    }
+                    className={`px-4 py-2 rounded-lg ${
+                      companyDetails.isActive
+                        ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                        : 'bg-green-100 text-green-600 hover:bg-green-200'
+                    }`}
+                  >
+                    {companyDetails.isActive ? 'Deactivate' : 'Reactivate'}
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50">
+                  <div>
+                    <p className="font-medium text-red-600">Permanently Delete Company</p>
+                    <p className="text-sm text-red-500">
+                      This will permanently delete the company and ALL associated data (users, groups, quizzes). This action cannot be undone.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handlePermanentlyDeleteCompany(selectedCompanyId!, companyDetails.name)}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                  >
+                    Delete Forever
+                  </button>
+                </div>
+              </div>
             </div>
           </>
         )}
