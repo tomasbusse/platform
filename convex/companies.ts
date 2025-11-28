@@ -445,16 +445,45 @@ export const updateCompanyApiSettings = mutation({
       throw new Error("Company not found");
     }
 
-    // Merge with existing settings or create new settings object
-    const existingSettings = company.settings || {};
-    const newSettings = {
-      ...existingSettings,
-      ...(args.openRouterApiKey !== undefined && { openRouterApiKey: args.openRouterApiKey }),
-      ...(args.elevenLabsApiKey !== undefined && { elevenLabsApiKey: args.elevenLabsApiKey }),
+    // Get existing settings or create empty object with proper typing
+    const existingSettings = (company.settings || {}) as {
+      openRouterApiKey?: string;
+      elevenLabsApiKey?: string;
+      resendApiKey?: string;
+      cambridgeApiKey?: string;
+      geminiApiKey?: string;
+      testFrequency?: number;
+      emailNotifications?: boolean;
+      autoGrouping?: boolean;
+      availableAIModels?: Array<{
+        id: string;
+        name: string;
+        provider: string;
+        isDefault?: boolean;
+      }>;
     };
 
+    // Build new settings object explicitly to match schema
+    const newSettings = {
+      // Preserve existing settings
+      openRouterApiKey: args.openRouterApiKey !== undefined ? args.openRouterApiKey : existingSettings.openRouterApiKey,
+      elevenLabsApiKey: args.elevenLabsApiKey !== undefined ? args.elevenLabsApiKey : existingSettings.elevenLabsApiKey,
+      resendApiKey: existingSettings.resendApiKey,
+      cambridgeApiKey: existingSettings.cambridgeApiKey,
+      geminiApiKey: existingSettings.geminiApiKey,
+      testFrequency: existingSettings.testFrequency,
+      emailNotifications: existingSettings.emailNotifications,
+      autoGrouping: existingSettings.autoGrouping,
+      availableAIModels: existingSettings.availableAIModels,
+    };
+
+    // Remove undefined values
+    const cleanSettings = Object.fromEntries(
+      Object.entries(newSettings).filter(([, v]) => v !== undefined)
+    );
+
     await ctx.db.patch(args.companyId, {
-      settings: newSettings,
+      settings: cleanSettings,
       updatedAt: Date.now(),
     });
 
