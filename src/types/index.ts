@@ -14,6 +14,7 @@ export interface User {
   lastLogin?: number;
   createdAt: number;
   updatedAt: number;
+  groupIds?: string[];
 }
 
 export interface Company {

@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 
@@ -398,17 +398,17 @@ export const generateDownloadUrl = query({
 // INTERNAL: NOTIFY MATERIAL REMOVED
 // ============================================================================
 
-export const notifyMaterialRemoved = mutation({
+export const notifyMaterialRemoved = internalMutation({
   args: {
     materialId: v.id("lessonMaterials"),
-    companyId: v.union(v.id("companies"), v.string()),
+    companyId: v.id("companies"),
   },
   handler: async (ctx, args) => {
     const material = await ctx.db.get(args.materialId);
     if (!material) return;
 
     // Get all users who had access to this material
-    const usersToNotify = new Set<string>();
+    const usersToNotify = new Set<Id<"users">>();
 
     if (material.accessScope === "company") {
       // Notify all company users
@@ -420,14 +420,25 @@ export const notifyMaterialRemoved = mutation({
     } else if (material.accessScope === "group" && material.accessGroupIds) {
       // Notify users in specified groups
       for (const groupId of material.accessGroupIds) {
-        const group = await ctx.db.get(groupId as Id<"groups">);
+        const group = await ctx.db.get(groupId);
         if (group?.studentIds) {
-          group.studentIds.forEach((id) => usersToNotify.add(id));
+          // Get actual user records for the student IDs
+          for (const studentId of group.studentIds) {
+            const user = await ctx.db.get(studentId as Id<"users">);
+            if (user) {
+              usersToNotify.add(user._id);
+            }
+          }
         }
       }
     } else if (material.accessScope === "individual" && material.accessStudentIds) {
       // Notify specified students
-      material.accessStudentIds.forEach((id) => usersToNotify.add(id));
+      for (const studentId of material.accessStudentIds) {
+        const user = await ctx.db.get(studentId as Id<"users">);
+        if (user) {
+          usersToNotify.add(user._id);
+        }
+      }
     }
 
     // Create notifications
