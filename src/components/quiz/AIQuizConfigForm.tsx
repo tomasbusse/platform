@@ -122,6 +122,9 @@ interface AIQuizConfigFormProps {
   onSubmit: (config: QuizGenerationConfig) => void;
   isLoading?: boolean;
   elevenLabsApiKey?: string;
+  openRouterApiKey?: string;
+  companyId?: string;
+  onSaveApiKeys?: (openRouterKey: string, elevenLabsKey: string) => Promise<void>;
   availableModels?: AvailableAIModel[]; // Optional - dropdown now has built-in models
 }
 
@@ -145,30 +148,45 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
   onSubmit,
   isLoading = false,
   elevenLabsApiKey = '',
+  openRouterApiKey = '',
+  onSaveApiKeys,
 }) => {
   const [config, setConfig] = useState<QuizGenerationConfig>(defaultConfig);
   const [errors, setErrors] = useState<Partial<Record<keyof QuizGenerationConfig, string>>>({});
   const [isProcessingDocument, setIsProcessingDocument] = useState(false);
+  const [isSavingKeys, setIsSavingKeys] = useState(false);
+  const [keysSaved, setKeysSaved] = useState(false);
 
-  // Load API keys from localStorage on mount
+  // Load API keys from props (company settings) or localStorage on mount
   useEffect(() => {
-    const savedOpenRouterKey = localStorage.getItem(STORAGE_KEY_OPENROUTER);
-    const savedElevenLabsKey = localStorage.getItem(STORAGE_KEY_ELEVENLABS);
-
-    if (savedOpenRouterKey || savedElevenLabsKey) {
+    // First check props (from company settings in database)
+    if (openRouterApiKey || elevenLabsApiKey) {
       setConfig(prev => ({
         ...prev,
-        openRouterApiKey: savedOpenRouterKey || prev.openRouterApiKey,
-        elevenLabsApiKeyOverride: savedElevenLabsKey || prev.elevenLabsApiKeyOverride,
+        openRouterApiKey: openRouterApiKey || prev.openRouterApiKey,
+        elevenLabsApiKeyOverride: elevenLabsApiKey || prev.elevenLabsApiKeyOverride,
       }));
-    }
-  }, []);
+    } else {
+      // Fallback to localStorage
+      const savedOpenRouterKey = localStorage.getItem(STORAGE_KEY_OPENROUTER);
+      const savedElevenLabsKey = localStorage.getItem(STORAGE_KEY_ELEVENLABS);
 
-  // Save API keys to localStorage when they change
+      if (savedOpenRouterKey || savedElevenLabsKey) {
+        setConfig(prev => ({
+          ...prev,
+          openRouterApiKey: savedOpenRouterKey || prev.openRouterApiKey,
+          elevenLabsApiKeyOverride: savedElevenLabsKey || prev.elevenLabsApiKeyOverride,
+        }));
+      }
+    }
+  }, [openRouterApiKey, elevenLabsApiKey]);
+
+  // Save API keys to database (via callback) and localStorage
   const handleApiKeyChange = (key: 'openRouterApiKey' | 'elevenLabsApiKeyOverride', value: string) => {
     setConfig(prev => ({ ...prev, [key]: value }));
+    setKeysSaved(false); // Reset saved status when keys change
 
-    // Save to localStorage
+    // Save to localStorage as backup
     if (key === 'openRouterApiKey') {
       if (value) {
         localStorage.setItem(STORAGE_KEY_OPENROUTER, value);
@@ -181,6 +199,24 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
       } else {
         localStorage.removeItem(STORAGE_KEY_ELEVENLABS);
       }
+    }
+  };
+
+  // Save API keys to database
+  const handleSaveApiKeys = async () => {
+    if (!onSaveApiKeys) return;
+
+    setIsSavingKeys(true);
+    try {
+      await onSaveApiKeys(
+        config.openRouterApiKey || '',
+        config.elevenLabsApiKeyOverride || ''
+      );
+      setKeysSaved(true);
+    } catch (error) {
+      console.error('Failed to save API keys:', error);
+    } finally {
+      setIsSavingKeys(false);
     }
   };
 
@@ -704,6 +740,53 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
               <p className="text-xs text-simmonds-stone mt-1">
                 Get your API key from <a href="https://elevenlabs.io" target="_blank" rel="noopener noreferrer" className="text-simmonds-primary hover:underline">elevenlabs.io</a>
                 {config.elevenLabsApiKeyOverride && <span className="ml-2 text-simmonds-lime">(saved locally)</span>}
+              </p>
+            </div>
+          )}
+
+          {/* Save API Keys Button */}
+          {onSaveApiKeys && (config.openRouterApiKey || config.elevenLabsApiKeyOverride) && (
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={handleSaveApiKeys}
+                disabled={isSavingKeys || keysSaved}
+                className={`
+                  px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all
+                  ${keysSaved
+                    ? 'bg-simmonds-lime/20 text-simmonds-lime cursor-default'
+                    : isSavingKeys
+                    ? 'bg-simmonds-cream text-simmonds-stone cursor-wait'
+                    : 'bg-simmonds-primary/10 text-simmonds-primary hover:bg-simmonds-primary/20'
+                  }
+                `}
+              >
+                {isSavingKeys ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Saving...
+                  </>
+                ) : keysSaved ? (
+                  <>
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Saved to Company Settings
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                    Save API Keys to Database
+                  </>
+                )}
+              </button>
+              <p className="text-xs text-simmonds-stone mt-1">
+                Save keys permanently so they persist across sessions and devices
               </p>
             </div>
           )}

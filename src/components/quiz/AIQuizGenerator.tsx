@@ -36,6 +36,7 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
   const createQuiz = useMutation(api.quizzes.createQuiz);
   const addQuestionToBank = useMutation(api.quizzes.addQuestionToBank);
   const addQuestionsToQuiz = useMutation(api.quizzes.addQuestionsToQuiz);
+  const updateCompanyApiSettings = useMutation(api.companies.updateCompanyApiSettings);
 
   // Get API keys from company settings
   const companySettings = company?.settings as {
@@ -405,6 +406,14 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
             onSubmit={handleConfigSubmit}
             isLoading={step === 'generating'}
             elevenLabsApiKey={elevenLabsApiKey}
+            openRouterApiKey={openRouterApiKey}
+            onSaveApiKeys={company ? async (openRouterKey, elevenLabsKey) => {
+              await updateCompanyApiSettings({
+                companyId: company._id as Id<'companies'>,
+                openRouterApiKey: openRouterKey || undefined,
+                elevenLabsApiKey: elevenLabsKey || undefined,
+              });
+            } : undefined}
           />
         </div>
       )}
