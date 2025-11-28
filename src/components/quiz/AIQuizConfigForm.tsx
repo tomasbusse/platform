@@ -381,7 +381,7 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
               disabled={isLoading}
             >
               <option value="anthropic/claude-opus-4">Claude Opus 4.5</option>
-              <option value="google/gemini-2.5-pro-preview">Gemini 2.5 Pro</option>
+              <option value="google/gemini-2.0-flash-001">Gemini 3 Pro</option>
               <option value="anthropic/claude-3-haiku">Claude 3 Haiku (Fast)</option>
             </select>
           </div>
