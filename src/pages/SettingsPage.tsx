@@ -451,14 +451,18 @@ Keep it achievable and focused.`,
   const fetchOpenRouterModels = async () => {
     setIsLoadingModels(true);
     try {
+      console.log('Fetching OpenRouter models...');
       const response = await fetch('https://openrouter.ai/api/v1/models');
       if (response.ok) {
         const data = await response.json();
+        console.log(`Loaded ${data.data?.length || 0} models from OpenRouter`);
         // Sort models by name for easier browsing
         const sortedModels = (data.data || []).sort((a: OpenRouterModel, b: OpenRouterModel) =>
           a.name.localeCompare(b.name)
         );
         setOpenRouterModels(sortedModels);
+      } else {
+        console.error('OpenRouter API returned status:', response.status);
       }
     } catch (error) {
       console.error('Error fetching OpenRouter models:', error);
@@ -2168,10 +2172,18 @@ Keep it achievable and focused.`,
           {openRouterModels.length === 0 ? (
             <div className="text-center py-6 bg-simmonds-cream/20 rounded-xl">
               <p className="text-simmonds-stone">
-                {settings.apis.openrouter.apiKey
+                {isLoadingModels
                   ? 'Loading models from OpenRouter...'
-                  : 'Configure your OpenRouter API key in API Integrations to see available models.'}
+                  : 'No models available. Check your internet connection and refresh the page.'}
               </p>
+              {!isLoadingModels && (
+                <button
+                  onClick={() => fetchOpenRouterModels()}
+                  className="mt-3 px-4 py-2 text-sm text-simmonds-primary hover:bg-simmonds-primary/10 rounded-lg transition-colors"
+                >
+                  Retry Loading Models
+                </button>
+              )}
             </div>
           ) : (
             <>
