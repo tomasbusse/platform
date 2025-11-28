@@ -328,7 +328,7 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
               {completedSession ? (
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-simmonds-lime-dark font-medium">
-                    Score: {completedSession.score}%
+                    Score: {completedSession.totalScore ?? 0}%
                   </span>
                 </div>
               ) : (

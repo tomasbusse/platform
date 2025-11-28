@@ -157,6 +157,11 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, editing
   // Initialize form with editing quiz data if available
   const [quizForm, setQuizForm] = useState<QuizFormData>(() => {
     if (editingQuiz) {
+      // Merge with defaults to ensure all settings fields are defined
+      const mergedSettings = {
+        ...defaultQuizSettings,
+        ...(editingQuiz.settings || {}),
+      };
       return {
         title: editingQuiz.title,
         description: editingQuiz.description || '',
@@ -167,7 +172,7 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, editing
         duration: editingQuiz.duration || 30,
         passingScore: editingQuiz.passingScore || 60,
         isCambridgeAligned: editingQuiz.isCambridgeAligned || false,
-        settings: editingQuiz.settings || defaultQuizSettings,
+        settings: mergedSettings,
         tags: editingQuiz.tags || [],
       };
     }
