@@ -103,7 +103,7 @@ export const saveCompanySettings = mutation({
     if (company) {
       // Convert nested settings to flat format for company record
       const apis = args.settings.apis || {};
-      const flatSettings = {
+      const flatSettings: Record<string, unknown> = {
         openRouterApiKey: apis.openrouter?.apiKey || '',
         elevenLabsApiKey: apis.elevenlabs?.apiKey || '',
         geminiApiKey: apis.gemini?.apiKey || '',
@@ -113,6 +113,11 @@ export const saveCompanySettings = mutation({
         autoGrouping: args.settings.company?.autoGrouping !== undefined ? args.settings.company.autoGrouping : true,
         emailNotifications: args.settings.company?.emailNotifications !== undefined ? args.settings.company.emailNotifications : true,
       };
+
+      // Include available AI models if provided
+      if (args.settings.availableAIModels) {
+        flatSettings.availableAIModels = args.settings.availableAIModels;
+      }
 
       // Build AI prompt templates if provided
       const aiPrompts = args.settings.aiPrompts;

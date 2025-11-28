@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAction, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { Id } from '../../../convex/_generated/dataModel';
-import AIQuizConfigForm, { QuizGenerationConfig } from './AIQuizConfigForm';
+import AIQuizConfigForm, { QuizGenerationConfig, AvailableAIModel } from './AIQuizConfigForm';
 import QuizReviewPanel from './QuizReviewPanel';
 import { GeneratedQuestion } from './QuestionEditor';
 import { User, Company } from '../../types';
@@ -36,15 +36,17 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
   const createQuiz = useMutation(api.quizzes.createQuiz);
   const addQuestionToBank = useMutation(api.quizzes.addQuestionToBank);
 
-  // Get API keys from company settings
+  // Get API keys and available models from company settings
   // Settings are stored in flat structure on company.settings (e.g., elevenLabsApiKey)
   const companySettings = company?.settings as {
     openRouterApiKey?: string;
     elevenLabsApiKey?: string;
+    availableAIModels?: AvailableAIModel[];
   } | undefined;
 
   const anthropicApiKey = companySettings?.openRouterApiKey || '';
   const elevenLabsApiKey = companySettings?.elevenLabsApiKey || '';
+  const availableModels = companySettings?.availableAIModels || [];
 
   // STEP 1: User submits config form
   const handleConfigSubmit = async (formData: QuizGenerationConfig) => {
@@ -65,6 +67,7 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
         questionTypes: formData.questionTypes,
         audioWordLimit: formData.audioWordLimit,
         documentContent: formData.documentContent,
+        modelId: formData.selectedModelId, // Pass selected model ID
       });
 
       if (!result.success) {
@@ -132,6 +135,7 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
         topic: config.topic,
         questionType: currentQuestion.type,
         audioWordLimit: config.audioWordLimit,
+        modelId: config.selectedModelId, // Pass selected model ID
       });
 
       if (!result.success || !result.question) {
@@ -361,6 +365,7 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
             onSubmit={handleConfigSubmit}
             isLoading={step === 'generating'}
             elevenLabsApiKey={elevenLabsApiKey}
+            availableModels={availableModels}
           />
         </div>
       )}

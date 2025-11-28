@@ -56,6 +56,13 @@ export default defineSchema({
       geminiApiKey: v.optional(v.string()),
       testFrequency: v.optional(v.number()),
       emailNotifications: v.optional(v.boolean()),
+      // AI Models available for quiz generation (selected by admin)
+      availableAIModels: v.optional(v.array(v.object({
+        id: v.string(),           // e.g., "anthropic/claude-3.5-sonnet"
+        name: v.string(),         // Display name e.g., "Claude 3.5 Sonnet"
+        provider: v.string(),     // "openrouter", "anthropic", "openai"
+        isDefault: v.optional(v.boolean()),
+      }))),
     })),
     // AI Prompt Templates for Virtual Lesson Generation
     aiPromptTemplates: v.optional(v.object({
