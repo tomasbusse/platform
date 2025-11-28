@@ -34,6 +34,8 @@ export default defineSchema({
     placementTestCompleted: v.optional(v.boolean()),
     placementTestDate: v.optional(v.number()),
     placementTestScore: v.optional(v.number()),
+    // Legacy field for password authentication
+    passwordHash: v.optional(v.string()),
   }).index("by_email", ["email"])
     .index("by_clerk_id", ["clerkId"])
     .index("by_company", ["companyId"])
@@ -47,9 +49,13 @@ export default defineSchema({
     domain: v.optional(v.string()),
     description: v.optional(v.string()),
     // Status - simple active/inactive without subscription tiers
-    isActive: v.boolean(),
+    isActive: v.optional(v.boolean()),
     // Student tracking (for analytics, not limits)
     currentStudentCount: v.number(),
+    maxStudents: v.optional(v.number()),
+    // Subscription info (legacy fields)
+    subscriptionPlan: v.optional(v.string()),
+    subscriptionStatus: v.optional(v.string()),
     settings: v.optional(v.object({
       openRouterApiKey: v.optional(v.string()),
       elevenLabsApiKey: v.optional(v.string()),
@@ -58,6 +64,7 @@ export default defineSchema({
       geminiApiKey: v.optional(v.string()),
       testFrequency: v.optional(v.number()),
       emailNotifications: v.optional(v.boolean()),
+      autoGrouping: v.optional(v.boolean()),
       // AI Models available for quiz generation (selected by admin)
       availableAIModels: v.optional(v.array(v.object({
         id: v.string(),           // e.g., "anthropic/claude-3.5-sonnet"

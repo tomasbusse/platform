@@ -35,6 +35,7 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
   const generateAudio = useAction(api.ai.generateQuizAudio.generateAudioFromScript);
   const createQuiz = useMutation(api.quizzes.createQuiz);
   const addQuestionToBank = useMutation(api.quizzes.addQuestionToBank);
+  const addQuestionsToQuiz = useMutation(api.quizzes.addQuestionsToQuiz);
 
   // Get API keys from company settings
   const companySettings = company?.settings as {
@@ -45,10 +46,26 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
   const openRouterApiKey = companySettings?.openRouterApiKey || '';
   const elevenLabsApiKey = companySettings?.elevenLabsApiKey || '';
 
+  // Debug: Log company and settings to console
+  console.log('AIQuizGenerator - company:', company);
+  console.log('AIQuizGenerator - company.settings:', company?.settings);
+  console.log('AIQuizGenerator - openRouterApiKey present:', !!openRouterApiKey);
+
   // STEP 1: User submits config form
   const handleConfigSubmit = async (formData: QuizGenerationConfig) => {
     setConfig(formData);
     setError(null);
+
+    // Use API key from form if provided, otherwise from company settings
+    const apiKeyToUse = formData.openRouterApiKey || openRouterApiKey;
+    const elevenLabsKeyToUse = formData.elevenLabsApiKeyOverride || elevenLabsApiKey;
+
+    // Check for API key before proceeding
+    if (!apiKeyToUse) {
+      setError('OpenRouter API key is required. Please enter your API key in the form below, or configure it in Company Settings.');
+      return;
+    }
+
     setStep('generating');
 
     try {
@@ -56,7 +73,7 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
       console.log('Generating questions with Claude...');
 
       const result = await generateQuestions({
-        apiKey: openRouterApiKey,
+        apiKey: apiKeyToUse,
         language: formData.language,
         targetLevel: formData.targetLevel,
         topic: formData.topic,
@@ -78,7 +95,7 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
         (q) => q.type === 'listening' && q.audioScript
       );
 
-      if (listeningQuestions.length > 0 && elevenLabsApiKey) {
+      if (listeningQuestions.length > 0 && elevenLabsKeyToUse) {
         setStep('audio');
         setAudioProgress({ current: 0, total: listeningQuestions.length });
 
@@ -89,7 +106,7 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
             console.log(`Generating audio ${i + 1}...`);
 
             const audioResult = await generateAudio({
-              apiKey: elevenLabsApiKey,
+              apiKey: elevenLabsKeyToUse,
               script: q.audioScript,
               voiceId: formData.selectedVoiceId,
             });
@@ -231,11 +248,13 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
         isCambridgeAligned: false,
       });
 
-      // Then add questions to the question bank
+      // Add questions to the question bank and collect their IDs
+      const questionIds: Id<'questionBank'>[] = [];
+
       for (const question of editedQuestions) {
         const questionData = convertToQuestionBankFormat(question);
 
-        await addQuestionToBank({
+        const questionId = await addQuestionToBank({
           companyId: company._id as Id<'companies'>,
           createdBy: currentUser._id as Id<'users'>,
           questionType: mapQuestionType(question.type),
@@ -247,6 +266,16 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
           points: 1,
           tags: ['ai-generated', config.topic],
           isCambridgeAligned: false,
+        });
+
+        questionIds.push(questionId);
+      }
+
+      // Link questions to the quiz
+      if (questionIds.length > 0) {
+        await addQuestionsToQuiz({
+          quizId: quizId as Id<'quizzes'>,
+          questionIds: questionIds,
         });
       }
 
