@@ -123,7 +123,16 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
 
     try {
       if (formData.sendInvite) {
-        // Create a company invitation link
+        // First, create the user record in the database
+        await addEmployee({
+          companyId: companyId as Id<"companies">,
+          name: formData.name,
+          email: formData.email,
+          role: formData.role,
+          ...(formData.role === 'student' && { currentLevel: formData.currentLevel }),
+        });
+
+        // Then create a company invitation link for sign-up
         const linkResult = await createCompanyInvitationLink({
           companyId: companyId as Id<"companies">,
           role: formData.role,
@@ -159,7 +168,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
 
         setShowInviteModal(true);
       } else {
-        // Direct user creation with addEmployee
+        // Direct user creation without invitation link
         await addEmployee({
           companyId: companyId as Id<"companies">,
           name: formData.name,
@@ -172,7 +181,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
           }),
         });
 
-        alert('User added successfully!');
+        alert('User added successfully! They can now log in.');
       }
 
       // Reset form

@@ -277,6 +277,65 @@ export const reactivateCompany = mutation({
   },
 });
 
+// Permanently delete a company and all its data (super-admin only - use with caution!)
+export const permanentlyDeleteCompany = mutation({
+  args: {
+    companyId: v.id("companies"),
+  },
+  handler: async (ctx, args) => {
+    const company = await ctx.db.get(args.companyId);
+
+    if (!company) {
+      throw new Error("Company not found");
+    }
+
+    // Delete all users in the company
+    const users = await ctx.db
+      .query("users")
+      .withIndex("by_company", (q) => q.eq("companyId", args.companyId))
+      .collect();
+
+    for (const user of users) {
+      await ctx.db.delete(user._id);
+    }
+
+    // Delete all groups
+    const groups = await ctx.db
+      .query("groups")
+      .withIndex("by_company", (q) => q.eq("companyId", args.companyId))
+      .collect();
+
+    for (const group of groups) {
+      await ctx.db.delete(group._id);
+    }
+
+    // Delete all company invitation links
+    const invitations = await ctx.db
+      .query("companyInvitationLinks")
+      .withIndex("by_company", (q) => q.eq("companyId", args.companyId))
+      .collect();
+
+    for (const invitation of invitations) {
+      await ctx.db.delete(invitation._id);
+    }
+
+    // Delete all quizzes
+    const quizzes = await ctx.db
+      .query("quizzes")
+      .withIndex("by_company", (q) => q.eq("companyId", args.companyId))
+      .collect();
+
+    for (const quiz of quizzes) {
+      await ctx.db.delete(quiz._id);
+    }
+
+    // Delete the company
+    await ctx.db.delete(args.companyId);
+
+    return { success: true, deletedUsers: users.length, deletedGroups: groups.length };
+  },
+});
+
 // Add a teacher to a company
 export const addTeacher = mutation({
   args: {

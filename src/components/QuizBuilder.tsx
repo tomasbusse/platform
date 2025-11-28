@@ -3,6 +3,7 @@ import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
 import { User, Company } from '../types';
+import { AIQuizGenerator } from './quiz';
 
 interface QuizBuilderProps {
   currentUser: User | null;
@@ -110,6 +111,8 @@ const defaultQuizSettings = {
 };
 
 const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizCreated }) => {
+  // Creation mode: 'select' for mode selection, 'manual' for manual creation, 'ai' for AI generation
+  const [creationMode, setCreationMode] = useState<'select' | 'manual' | 'ai'>('select');
   const [step, setStep] = useState<'details' | 'questions' | 'preview'>('details');
   const [quizForm, setQuizForm] = useState<QuizFormData>({
     title: '',
@@ -1221,8 +1224,124 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizC
     );
   };
 
+  // Mode Selection Screen
+  const renderModeSelection = () => (
+    <div className="max-w-3xl mx-auto">
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-bold text-simmonds-charcoal mb-2">Create New Quiz</h2>
+        <p className="text-simmonds-stone">Choose how you want to create your quiz</p>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Manual Creation Card */}
+        <button
+          onClick={() => setCreationMode('manual')}
+          className="group p-8 bg-white rounded-2xl border-2 border-simmonds-cream hover:border-simmonds-primary transition-all duration-200 text-left"
+        >
+          <div className="w-14 h-14 bg-simmonds-primary/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-simmonds-primary/20 transition-colors">
+            <svg className="w-7 h-7 text-simmonds-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold text-simmonds-charcoal mb-2">Manual Creation</h3>
+          <p className="text-simmonds-stone text-sm mb-4">
+            Create each question by hand. Best for specific content or when you want full control.
+          </p>
+          <ul className="text-sm text-simmonds-stone space-y-1">
+            <li className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-simmonds-lime" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              Full control over every question
+            </li>
+            <li className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-simmonds-lime" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              Add from question bank
+            </li>
+            <li className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-simmonds-lime" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              Cambridge-aligned options
+            </li>
+          </ul>
+        </button>
+
+        {/* AI-Assisted Card */}
+        <button
+          onClick={() => setCreationMode('ai')}
+          className="group p-8 bg-gradient-to-br from-simmonds-primary/5 to-simmonds-olive/5 rounded-2xl border-2 border-simmonds-cream hover:border-simmonds-olive transition-all duration-200 text-left relative overflow-hidden"
+        >
+          <div className="absolute top-4 right-4 px-2 py-0.5 bg-simmonds-olive/10 text-simmonds-olive text-xs font-medium rounded-full">
+            AI-Powered
+          </div>
+          <div className="w-14 h-14 bg-simmonds-olive/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-simmonds-olive/20 transition-colors">
+            <svg className="w-7 h-7 text-simmonds-olive" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold text-simmonds-charcoal mb-2">AI-Assisted Creation</h3>
+          <p className="text-simmonds-stone text-sm mb-4">
+            Tell AI what you want, and it generates questions for you. Review and edit before saving.
+          </p>
+          <ul className="text-sm text-simmonds-stone space-y-1">
+            <li className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-simmonds-olive" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              12 question types supported
+            </li>
+            <li className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-simmonds-olive" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              Auto-generate audio for listening
+            </li>
+            <li className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-simmonds-olive" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              CEFR level appropriate
+            </li>
+          </ul>
+        </button>
+      </div>
+    </div>
+  );
+
+  // If in AI mode, render the AI Generator component
+  if (creationMode === 'ai') {
+    return (
+      <AIQuizGenerator
+        currentUser={currentUser}
+        company={company}
+        onQuizCreated={onQuizCreated}
+        onCancel={() => setCreationMode('select')}
+      />
+    );
+  }
+
+  // If in select mode, render mode selection
+  if (creationMode === 'select') {
+    return renderModeSelection();
+  }
+
+  // Manual creation mode - original QuizBuilder UI
   return (
     <div className="space-y-6">
+      {/* Back to mode selection */}
+      <button
+        onClick={() => setCreationMode('select')}
+        className="text-sm text-simmonds-stone hover:text-simmonds-charcoal flex items-center gap-1"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        Back to Creation Options
+      </button>
+
       {/* Progress Steps */}
       <div className="flex items-center justify-center mb-8">
         <div className="flex items-center">
