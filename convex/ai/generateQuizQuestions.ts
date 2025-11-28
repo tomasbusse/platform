@@ -47,25 +47,33 @@ export const generateQuestionsWithClaude = action({
   handler: async (ctx, args) => {
     const { apiKey, language, targetLevel, topic, numberOfQuestions, questionTypes, audioWordLimit, documentContent, modelId } = args;
 
-    if (!apiKey) {
-      throw new Error("API key is required for question generation");
-    }
-
-    // Build the prompt for Claude
-    const prompt = buildQuestionGenerationPrompt({
-      language,
-      targetLevel,
-      topic,
-      numberOfQuestions,
-      questionTypes,
-      audioWordLimit,
-      documentContent,
-    });
-
-    // Determine which model to use
+    // Determine which model to use (declare before try block so it's accessible in catch)
     const selectedModel = modelId || DEFAULT_MODEL;
 
+    // Validate API key early but return error object instead of throwing
+    if (!apiKey) {
+      console.error("Question generation error: API key is required");
+      return {
+        success: false,
+        error: "API key is required for question generation. Please configure your OpenRouter API key in company settings.",
+        questions: [],
+        generatedAt: new Date().toISOString(),
+        model: selectedModel,
+        questionCount: 0,
+      };
+    }
+
     try {
+      // Build the prompt for Claude
+      const prompt = buildQuestionGenerationPrompt({
+        language,
+        targetLevel,
+        topic,
+        numberOfQuestions,
+        questionTypes,
+        audioWordLimit,
+        documentContent,
+      });
       // Call OpenRouter API which supports multiple models
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
@@ -89,22 +97,32 @@ export const generateQuestionsWithClaude = action({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.error?.message || response.statusText;
+        console.error("OpenRouter API error response:", JSON.stringify(errorData));
         throw new Error(
-          `OpenRouter API error: ${errorData.error?.message || response.statusText}`
+          `OpenRouter API error (${response.status}): ${errorMsg}`
         );
       }
 
       const data = await response.json();
+      console.log("OpenRouter response received, model:", data.model);
 
       // Extract text from OpenRouter response format
       const content = data.choices?.[0]?.message?.content;
       if (!content) {
-        throw new Error("Unexpected response format from AI model");
+        console.error("Unexpected response format:", JSON.stringify(data).substring(0, 500));
+        throw new Error("Unexpected response format from AI model - no content in response");
       }
 
       // Parse JSON from response
       const jsonText = extractJSON(content);
-      const questions = JSON.parse(jsonText);
+      let questions;
+      try {
+        questions = JSON.parse(jsonText);
+      } catch (parseError) {
+        console.error("JSON parse error. Raw content:", content.substring(0, 500));
+        throw new Error("Failed to parse AI response as JSON. The AI may have returned invalid JSON.");
+      }
 
       if (!Array.isArray(questions)) {
         throw new Error("Expected an array of questions from AI");
@@ -148,22 +166,27 @@ export const regenerateSingleQuestion = action({
   handler: async (ctx, args) => {
     const { apiKey, language, targetLevel, topic, questionType, audioWordLimit, modelId } = args;
 
-    if (!apiKey) {
-      throw new Error("API key is required for question generation");
-    }
-
-    const prompt = buildSingleQuestionPrompt({
-      language,
-      targetLevel,
-      topic,
-      questionType,
-      audioWordLimit,
-    });
-
-    // Determine which model to use
+    // Determine which model to use (declare before try block so it's accessible in catch)
     const selectedModel = modelId || DEFAULT_MODEL;
 
+    // Validate API key early but return error object instead of throwing
+    if (!apiKey) {
+      console.error("Question regeneration error: API key is required");
+      return {
+        success: false,
+        error: "API key is required for question generation. Please configure your OpenRouter API key in company settings.",
+        question: null,
+      };
+    }
+
     try {
+      const prompt = buildSingleQuestionPrompt({
+        language,
+        targetLevel,
+        topic,
+        questionType,
+        audioWordLimit,
+      });
       // Call OpenRouter API which supports multiple models
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",

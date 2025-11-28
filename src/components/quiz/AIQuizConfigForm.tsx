@@ -101,6 +101,9 @@ export interface QuizGenerationConfig {
   // AI Model selection
   selectedModelId?: string;
   selectedModelName?: string;
+  // API Keys (for manual override/testing)
+  openRouterApiKey?: string;
+  elevenLabsApiKeyOverride?: string;
 }
 
 // Available AI model for quiz generation (from company settings)
@@ -702,6 +705,59 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
           </div>
         </div>
       )}
+
+      {/* API Keys Configuration (for testing/override) */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-simmonds-cream">
+        <h3 className="text-lg font-semibold text-simmonds-charcoal mb-4 flex items-center gap-2">
+          <svg className="w-5 h-5 text-simmonds-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+          </svg>
+          API Keys (Testing)
+        </h3>
+        <p className="text-xs text-simmonds-stone mb-4">
+          Enter API keys here for testing. In production, these should be configured in Company Settings.
+        </p>
+
+        <div className="grid grid-cols-1 gap-4">
+          {/* OpenRouter API Key */}
+          <div>
+            <label className="block text-sm font-medium text-simmonds-charcoal mb-2">
+              OpenRouter API Key *
+            </label>
+            <input
+              type="password"
+              value={config.openRouterApiKey || ''}
+              onChange={(e) => updateConfig('openRouterApiKey', e.target.value)}
+              className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary font-mono text-sm"
+              placeholder="sk-or-v1-..."
+              disabled={isLoading}
+            />
+            <p className="text-xs text-simmonds-stone mt-1">
+              Get your API key from <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer" className="text-simmonds-primary hover:underline">openrouter.ai</a>
+            </p>
+          </div>
+
+          {/* ElevenLabs API Key (only shown if listening questions selected) */}
+          {hasListeningType && (
+            <div>
+              <label className="block text-sm font-medium text-simmonds-charcoal mb-2">
+                ElevenLabs API Key (for audio)
+              </label>
+              <input
+                type="password"
+                value={config.elevenLabsApiKeyOverride || ''}
+                onChange={(e) => updateConfig('elevenLabsApiKeyOverride', e.target.value)}
+                className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary font-mono text-sm"
+                placeholder="sk_..."
+                disabled={isLoading}
+              />
+              <p className="text-xs text-simmonds-stone mt-1">
+                Get your API key from <a href="https://elevenlabs.io" target="_blank" rel="noopener noreferrer" className="text-simmonds-primary hover:underline">elevenlabs.io</a>
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Submit Button */}
       <div className="flex justify-end">
