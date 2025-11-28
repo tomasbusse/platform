@@ -49,11 +49,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId: propCompanyI
   // Determine the effective company ID (from props or selection)
   const effectiveCompanyId = propCompanyId || selectedCompanyId;
 
-  // Get all companies for the dropdown (only when companyId is not provided as prop)
-  const allCompanies = useQuery(
-    api.companies.getCompaniesForDropdown,
-    propCompanyId ? "skip" : {}
-  );
+  // Get all companies for the dropdown (always query so we can show company selector)
+  const allCompanies = useQuery(api.companies.getCompaniesForDropdown, {});
 
   // Convex queries and mutations (only run when we have an effective company ID)
   const employees = useQuery(
@@ -523,34 +520,32 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId: propCompanyI
                 {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
               </div>
 
-              {/* Company selector - only show when companyId is not provided as prop */}
-              {!propCompanyId && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
-                  <select
-                    value={formData.companyId || ''}
-                    onChange={(e) => {
-                      const newCompanyId = e.target.value || undefined;
-                      // Reset group when company changes
-                      setFormData(prev => ({
-                        ...prev,
-                        companyId: newCompanyId,
-                        groupId: undefined,
-                      }));
-                      // Update the selected company to load groups
-                      setSelectedCompanyId(newCompanyId);
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
-                  >
-                    <option value="">Select a company...</option>
-                    {allCompanies?.map((company) => (
-                      <option key={company._id} value={company._id}>
-                        {company.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              {/* Company selector - always show so user can assign to any company */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
+                <select
+                  value={formData.companyId || ''}
+                  onChange={(e) => {
+                    const newCompanyId = e.target.value || undefined;
+                    // Reset group when company changes
+                    setFormData(prev => ({
+                      ...prev,
+                      companyId: newCompanyId,
+                      groupId: undefined,
+                    }));
+                    // Update the selected company to load groups
+                    setSelectedCompanyId(newCompanyId);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
+                >
+                  <option value="">Select a company...</option>
+                  {allCompanies?.map((comp) => (
+                    <option key={comp._id} value={comp._id}>
+                      {comp.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
