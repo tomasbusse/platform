@@ -445,45 +445,23 @@ export const updateCompanyApiSettings = mutation({
       throw new Error("Company not found");
     }
 
-    // Get existing settings or create empty object with proper typing
-    const existingSettings = (company.settings || {}) as {
-      openRouterApiKey?: string;
-      elevenLabsApiKey?: string;
-      resendApiKey?: string;
-      cambridgeApiKey?: string;
-      geminiApiKey?: string;
-      testFrequency?: number;
-      emailNotifications?: boolean;
-      autoGrouping?: boolean;
-      availableAIModels?: Array<{
-        id: string;
-        name: string;
-        provider: string;
-        isDefault?: boolean;
-      }>;
-    };
+    // Get existing settings or empty object
+    const existingSettings = company.settings || {};
 
-    // Build new settings object explicitly to match schema
-    const newSettings = {
-      // Preserve existing settings
-      openRouterApiKey: args.openRouterApiKey !== undefined ? args.openRouterApiKey : existingSettings.openRouterApiKey,
-      elevenLabsApiKey: args.elevenLabsApiKey !== undefined ? args.elevenLabsApiKey : existingSettings.elevenLabsApiKey,
-      resendApiKey: existingSettings.resendApiKey,
-      cambridgeApiKey: existingSettings.cambridgeApiKey,
-      geminiApiKey: existingSettings.geminiApiKey,
-      testFrequency: existingSettings.testFrequency,
-      emailNotifications: existingSettings.emailNotifications,
-      autoGrouping: existingSettings.autoGrouping,
-      availableAIModels: existingSettings.availableAIModels,
-    };
+    // Build settings object - only include defined values
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const newSettings: Record<string, any> = { ...existingSettings };
 
-    // Remove undefined values
-    const cleanSettings = Object.fromEntries(
-      Object.entries(newSettings).filter(([, v]) => v !== undefined)
-    );
+    // Update API keys if provided
+    if (args.openRouterApiKey !== undefined) {
+      newSettings.openRouterApiKey = args.openRouterApiKey;
+    }
+    if (args.elevenLabsApiKey !== undefined) {
+      newSettings.elevenLabsApiKey = args.elevenLabsApiKey;
+    }
 
     await ctx.db.patch(args.companyId, {
-      settings: cleanSettings,
+      settings: newSettings,
       updatedAt: Date.now(),
     });
 

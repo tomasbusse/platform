@@ -71,22 +71,26 @@ export const createQuiz = mutation({
     }))),
   },
   handler: async (ctx, args) => {
+    console.log("createQuiz called with args:", JSON.stringify(args, null, 2));
     const now = Date.now();
 
     // Validate that createdBy user has teacher or admin role
-    let user;
+    let user = null;
     try {
       user = await ctx.db.get(args.createdBy as Id<"users">);
     } catch (e) {
       console.error("Failed to get user:", args.createdBy, e);
-      throw new Error("Invalid user ID format");
+      // If ID is invalid, user remains null
     }
 
+    console.log("User found:", user ? user._id : "null", "Role:", user?.role);
+
     if (!user) {
-      throw new Error("User not found");
+      throw new Error("User not found or invalid ID");
     }
 
     if (user.role !== "teacher" && user.role !== "admin" && user.role !== "corporate_admin") {
+      console.error("User validation failed for ID:", args.createdBy);
       throw new Error("Only teachers and admins can create tests. Your role: " + user.role);
     }
 
@@ -110,46 +114,54 @@ export const createQuiz = mutation({
     const totalQuestions = args.inlineQuestions?.length || 0;
     const totalPoints = args.inlineQuestions?.reduce((sum, q) => sum + q.points, 0) || 0;
 
-    // Insert quiz record
-    const quizId = await ctx.db.insert("quizzes", {
-      companyId: args.companyId,
-      createdBy: args.createdBy,
-      title: args.title,
-      description: args.description,
-      instructions: args.instructions,
-      level: args.level,
-      testPurpose: args.testPurpose,
-      skillFocus: args.skillFocus,
-      duration: args.duration,
-      passingScore: args.passingScore,
-      totalQuestions,
-      totalPoints,
-      status: "draft",
-      isCambridgeAligned: args.isCambridgeAligned || false,
-      cambridgeLevel: args.cambridgeLevel,
-      settings: args.settings || defaultSettings,
-      tags: args.tags || [],
-      inlineQuestions: args.inlineQuestions,
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    // Create audit log entry (don't fail quiz creation if audit log fails)
+    console.log("Inserting quiz...");
     try {
-      await ctx.db.insert("auditLogs", {
+      // Insert quiz record
+      const quizId = await ctx.db.insert("quizzes", {
         companyId: args.companyId,
-        userId: args.createdBy,
-        action: "quiz_created",
-        entityType: "quiz",
-        entityId: String(quizId),
-        newValues: { title: args.title, level: args.level, testPurpose: args.testPurpose },
-        timestamp: now,
+        createdBy: args.createdBy,
+        title: args.title,
+        description: args.description,
+        instructions: args.instructions,
+        level: args.level,
+        testPurpose: args.testPurpose,
+        skillFocus: args.skillFocus,
+        duration: args.duration,
+        passingScore: args.passingScore,
+        totalQuestions,
+        totalPoints,
+        status: "draft",
+        isCambridgeAligned: args.isCambridgeAligned || false,
+        cambridgeLevel: args.cambridgeLevel,
+        settings: args.settings || defaultSettings,
+        tags: args.tags || [],
+        inlineQuestions: args.inlineQuestions,
+        createdAt: now,
+        updatedAt: now,
       });
-    } catch (e) {
-      console.error("Failed to create audit log:", e);
-    }
+      console.log("Quiz inserted with ID:", quizId);
 
-    return quizId;
+      // Create audit log entry (don't fail quiz creation if audit log fails)
+      try {
+        await ctx.db.insert("auditLogs", {
+          companyId: args.companyId,
+          userId: args.createdBy,
+          action: "quiz_created",
+          entityType: "quiz",
+          entityId: String(quizId),
+          newValues: { title: args.title, level: args.level, testPurpose: args.testPurpose },
+          timestamp: now,
+        });
+        console.log("Audit log created");
+      } catch (e) {
+        console.error("Failed to create audit log:", e);
+      }
+
+      return quizId;
+    } catch (error) {
+      console.error("Error in createQuiz:", error);
+      throw error;
+    }
   },
 });
 
