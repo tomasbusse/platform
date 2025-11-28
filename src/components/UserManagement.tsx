@@ -25,16 +25,17 @@ interface UserFormData {
   sendInvite: boolean;
   quizId?: string;
   // Student-specific fields
+  companyId?: string;
   groupId?: string;
   takesIndividualLessons: boolean;
 }
 
 interface UserManagementProps {
-  companyId: string;
+  companyId?: string; // Optional - if not provided, shows company selector
   currentUserId?: string;
 }
 
-const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserId }) => {
+const UserManagement: React.FC<UserManagementProps> = ({ companyId: propCompanyId, currentUserId }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -43,22 +44,32 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | undefined>(propCompanyId);
 
-  // Convex queries and mutations
-  const employees = useQuery(api.userManagement.getCompanyEmployees, {
-    companyId: companyId as Id<"companies">
-  });
-  const company = useQuery(api.userManagement.getCompany, {
-    companyId: companyId as Id<"companies">
-  });
-  const quizzes = useQuery(api.quizzes.getCompanyQuizzes, {
-    companyId: companyId as Id<"companies">
-  });
+  // Determine the effective company ID (from props or selection)
+  const effectiveCompanyId = propCompanyId || selectedCompanyId;
+
+  // Get all companies for the dropdown (always query so we can show company selector)
+  const allCompanies = useQuery(api.companies.getCompaniesForDropdown, {});
+
+  // Convex queries and mutations (only run when we have an effective company ID)
+  const employees = useQuery(
+    api.userManagement.getCompanyEmployees,
+    effectiveCompanyId ? { companyId: effectiveCompanyId as Id<"companies"> } : "skip"
+  );
+  const company = useQuery(
+    api.userManagement.getCompany,
+    effectiveCompanyId ? { companyId: effectiveCompanyId as Id<"companies"> } : "skip"
+  );
+  const quizzes = useQuery(
+    api.quizzes.getCompanyQuizzes,
+    effectiveCompanyId ? { companyId: effectiveCompanyId as Id<"companies"> } : "skip"
+  );
   // Get groups for this company (for student assignment)
-  const companyGroups = useQuery(api.groups.getCompanyGroups, {
-    companyId: companyId as Id<"companies">,
-    isActive: true,
-  });
+  const companyGroups = useQuery(
+    api.groups.getCompanyGroups,
+    effectiveCompanyId ? { companyId: effectiveCompanyId as Id<"companies">, isActive: true } : "skip"
+  );
   const addEmployee = useMutation(api.userManagement.addEmployee);
   const createCompanyInvitationLink = useMutation(api.companyInvitations.createCompanyInvitationLink);
   const createUserWithInvitation = useMutation(api.userManagement.createUserWithInvitation);
@@ -75,6 +86,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
     currentLevel: 'A1',
     password: '',
     sendInvite: true,
+    companyId: propCompanyId,
     groupId: undefined,
     takesIndividualLessons: false,
   });
@@ -121,11 +133,19 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
     setEmailSent(false);
     setEmailError(null);
 
+    // Determine which company ID to use for this operation
+    const targetCompanyId = formData.companyId || effectiveCompanyId;
+    if (!targetCompanyId) {
+      alert('Please select a company');
+      setIsProcessing(false);
+      return;
+    }
+
     try {
       if (formData.sendInvite) {
         // First, create the user record in the database
         await addEmployee({
-          companyId: companyId as Id<"companies">,
+          companyId: targetCompanyId as Id<"companies">,
           name: formData.name,
           email: formData.email,
           role: formData.role,
@@ -133,9 +153,11 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
         });
 
         // Then create a company invitation link for sign-up
+        // Note: corporate_admin role is not supported for invitation links
+        const inviteRole = formData.role === 'corporate_admin' ? 'admin' : formData.role;
         const linkResult = await createCompanyInvitationLink({
-          companyId: companyId as Id<"companies">,
-          role: formData.role,
+          companyId: targetCompanyId as Id<"companies">,
+          role: inviteRole as "admin" | "teacher" | "student",
           ...(formData.quizId && { quizId: formData.quizId as Id<"quizzes"> }),
         });
 
@@ -170,7 +192,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
       } else {
         // Direct user creation without invitation link
         await addEmployee({
-          companyId: companyId as Id<"companies">,
+          companyId: targetCompanyId as Id<"companies">,
           name: formData.name,
           email: formData.email,
           role: formData.role,
@@ -192,6 +214,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
         currentLevel: 'A1',
         password: '',
         sendInvite: true,
+        companyId: propCompanyId,
         groupId: undefined,
         takesIndividualLessons: false,
       });
@@ -286,6 +309,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
       currentLevel: user.currentLevel || 'A1',
       password: '',
       sendInvite: false,
+      companyId: propCompanyId,
       groupId: undefined, // Note: Edit doesn't change group assignment
       takesIndividualLessons: false,
     });
@@ -319,6 +343,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
         currentLevel: 'A1',
         password: '',
         sendInvite: true,
+        companyId: propCompanyId,
         groupId: undefined,
         takesIndividualLessons: false,
       });
@@ -495,6 +520,33 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
                 {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
               </div>
 
+              {/* Company selector - always show so user can assign to any company */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
+                <select
+                  value={formData.companyId || ''}
+                  onChange={(e) => {
+                    const newCompanyId = e.target.value || undefined;
+                    // Reset group when company changes
+                    setFormData(prev => ({
+                      ...prev,
+                      companyId: newCompanyId,
+                      groupId: undefined,
+                    }));
+                    // Update the selected company to load groups
+                    setSelectedCompanyId(newCompanyId);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
+                >
+                  <option value="">Select a company...</option>
+                  {allCompanies?.map((comp) => (
+                    <option key={comp._id} value={comp._id}>
+                      {comp.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
                 <select
@@ -666,6 +718,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
                     currentLevel: 'A1',
                     password: '',
                     sendInvite: true,
+                    companyId: propCompanyId,
                     groupId: undefined,
                     takesIndividualLessons: false,
                   });
@@ -956,6 +1009,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
                       currentLevel: 'A1',
                       password: '',
                       sendInvite: true,
+                      companyId: propCompanyId,
                       groupId: undefined,
                       takesIndividualLessons: false,
                     });
