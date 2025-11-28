@@ -177,14 +177,17 @@ export const acceptInvitationLink = mutation({
     let testSessionId: string | null = null;
     if (link.quizId && currentUser) {
       const sessionId = await ctx.db.insert("testSessions", {
+        testId: link.quizId.toString(),
         quizId: link.quizId,
         userId: currentUser._id,
         companyId: link.companyId,
-        status: "pending",
+        status: "created",
         startedAt: now,
         totalQuestions: 0,
         questionsAnswered: 0,
         attemptNumber: 1,
+        createdAt: now,
+        updatedAt: now,
       });
       testSessionId = sessionId;
     }
@@ -194,6 +197,10 @@ export const acceptInvitationLink = mutation({
       currentUses: link.currentUses + 1,
       updatedAt: now,
     });
+
+    if (!currentUser) {
+      throw new Error("Current user not found");
+    }
 
     return {
       success: true,

@@ -1163,10 +1163,10 @@ export const generateUploadUrl = mutation({
 // Save uploaded material
 export const saveLessonMaterial = mutation({
   args: {
-    companyId: v.union(v.id("companies"), v.string()),
+    companyId: v.id("companies"),
     scheduledLessonId: v.optional(v.id("scheduledLessons")),
     virtualLessonId: v.optional(v.id("virtualLessons")),
-    uploadedBy: v.union(v.id("users"), v.string()),
+    uploadedBy: v.id("users"),
     storageId: v.id("_storage"),
     fileName: v.string(),
     fileType: v.string(),
