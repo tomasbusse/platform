@@ -1,3 +1,12 @@
+/**
+ * Dashboard.tsx - Main Dashboard Component
+ *
+ * Navigation consolidation: "Teaching" and "Take Test" links have been merged into "Tests"
+ * See docs/TESTS_MODULE_CHANGELOG.md for rollback instructions
+ *
+ * Updated: November 28, 2025
+ */
+
 import React, { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
@@ -5,16 +14,15 @@ import { User, Company, DashboardStats } from '../types';
 import UserManagement from '../components/UserManagement';
 import CompanyRegistrationForm from '../components/CompanyRegistrationForm';
 import RecentMaterialsWidget from '../components/RecentMaterialsWidget';
-import TestTaking from './TestTaking';
 import TestResults from './TestResults';
 import LearningManagement from './LearningManagement';
-import TeacherTools from './TeacherTools';
 import EmailSystem from './EmailSystem';
 import SettingsPage from './SettingsPage';
 import CompanyManagement from './CompanyManagement';
 import LessonsPage from './LessonsPage';
 import StudentDashboard from './StudentDashboard';
 import MaterialsPage from './MaterialsPage';
+import TestsPage from './TestsPage'; // New unified Tests page
 
 interface DashboardProps {
   currentUser: User | null;
@@ -251,17 +259,15 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout })
       case 'employees':
         return company ? <UserManagement companyId={company._id} currentUserId={currentUser?._id} /> : <div>No company data</div>;
 
-      case 'test-taking':
-        return <TestTaking currentUser={currentUser} company={company} />;
+      // Consolidated Tests page - replaces both 'test-taking' and 'teacher-tools'
+      case 'tests':
+        return <TestsPage currentUser={currentUser} company={company} />;
 
       case 'test-results':
         return <TestResults currentUser={currentUser} company={company} />;
 
       case 'learning-mgmt':
         return <LearningManagement currentUser={currentUser} company={company} />;
-
-      case 'teacher-tools':
-        return <TeacherTools currentUser={currentUser} company={company} />;
 
       case 'lessons':
         return <LessonsPage currentUser={currentUser} company={company} />;
@@ -296,14 +302,15 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout })
   const isSuperAdmin = currentUser.role === 'admin' || currentUser.role === 'corporate_admin'; // Admin roles can manage companies
   const isTeacher = currentUser.role === 'teacher' || isAdmin;
 
+  // Navigation items - "Teaching" and "Take Test" consolidated into "Tests"
+  // See docs/TESTS_MODULE_CHANGELOG.md for rollback instructions
   const navItems = [
     { id: 'overview', name: 'Dashboard', icon: HomeIcon, show: true },
     { id: 'lessons', name: 'Lessons', icon: LessonsIcon, show: true },
     { id: 'materials', name: 'Materials', icon: MaterialsIcon, show: true },
-    { id: 'test-taking', name: 'Take Test', icon: TestIcon, show: true },
+    { id: 'tests', name: 'Tests', icon: TestIcon, show: true }, // Consolidated: replaces 'test-taking' and 'teacher-tools'
     { id: 'learning-mgmt', name: 'Learning', icon: LearnIcon, show: true },
     { id: 'test-results', name: 'Results', icon: ChartIcon, show: isTeacher },
-    { id: 'teacher-tools', name: 'Teaching', icon: TestIcon, show: isTeacher },
     { id: 'email-system', name: 'Messages', icon: EmailIcon, show: isTeacher },
     { id: 'employees', name: 'Users', icon: UsersIcon, show: isAdmin },
     { id: 'companies', name: 'Companies', icon: BuildingIcon, show: isSuperAdmin },
