@@ -22,8 +22,8 @@ const RecentMaterialsWidget: React.FC<RecentMaterialsWidgetProps> = ({
   // Get materials accessible to user
   const materials = useQuery(api.materials.getMaterialsForUser, {
     companyId: company._id as Id<"companies">,
-    userId: currentUser._id as Id<"users">,
-    groupIds: (currentUser.groupIds || []) as Id<"groups">[],
+    userId: currentUser._id,
+    groupIds: currentUser.groupIds || [],
   });
 
   // Get recent materials (last 5)

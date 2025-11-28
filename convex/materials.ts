@@ -84,58 +84,49 @@ export const uploadMaterial = mutation({
 export const getMaterialsForUser = query({
   args: {
     companyId: v.id("companies"),
-    userId: v.optional(v.id("users")),
-    groupIds: v.optional(v.array(v.id("groups"))),
+    userId: v.optional(v.string()),
+    groupIds: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    try {
-      // Get all materials for the company
-      const allMaterials = await ctx.db
-        .query("lessonMaterials")
-        .collect();
+    // Query materials for this company using the index
+    const allMaterials = await ctx.db
+      .query("lessonMaterials")
+      .withIndex("by_company", (q) => q.eq("companyId", args.companyId))
+      .collect();
 
-      // Filter by company and access scope
-      const materials = allMaterials.filter((material) => {
-        // Must be from the same company
-        if (material.companyId !== args.companyId) {
-          return false;
-        }
-
-        // Must be active
-        if (!material.isActive) {
-          return false;
-        }
-
-        // Check access scope
-        if (material.accessScope === "company") {
-          return true;
-        }
-
-        if (material.accessScope === "group") {
-          if (!args.groupIds || args.groupIds.length === 0) {
-            return false;
-          }
-          const hasAccess = material.accessGroupIds?.some((gid) =>
-            args.groupIds!.includes(gid)
-          );
-          return hasAccess || false;
-        }
-
-        if (material.accessScope === "individual") {
-          if (!args.userId) {
-            return false;
-          }
-          return material.accessStudentIds?.includes(args.userId) || false;
-        }
-
+    // Filter by active status and access scope
+    const materials = allMaterials.filter((material) => {
+      // Must be active
+      if (!material.isActive) {
         return false;
-      });
+      }
 
-      return materials;
-    } catch (error) {
-      console.error("Error in getMaterialsForUser:", error);
-      return [];
-    }
+      // Check access scope
+      if (material.accessScope === "company") {
+        return true;
+      }
+
+      if (material.accessScope === "group") {
+        if (!args.groupIds || args.groupIds.length === 0) {
+          return false;
+        }
+        // Convert material group IDs to strings for comparison
+        const materialGroupIds = (material.accessGroupIds || []).map(String);
+        return args.groupIds.some((gid) => materialGroupIds.includes(gid));
+      }
+
+      if (material.accessScope === "individual") {
+        if (!args.userId) {
+          return false;
+        }
+        const studentIds = material.accessStudentIds || [];
+        return studentIds.includes(args.userId);
+      }
+
+      return false;
+    });
+
+    return materials;
   },
 });
 

@@ -23,8 +23,8 @@ const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({ currentUser, compan
   // Get materials accessible to user
   const materials = useQuery(api.materials.getMaterialsForUser, {
     companyId: company._id as Id<"companies">,
-    userId: currentUser._id as Id<"users">,
-    groupIds: userGroups as Id<"groups">[],
+    userId: currentUser._id,
+    groupIds: userGroups,
   });
 
   const categories = [
