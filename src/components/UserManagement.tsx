@@ -113,7 +113,16 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
 
     try {
       if (formData.sendInvite) {
-        // Create a company invitation link
+        // First, create the user record in the database
+        await addEmployee({
+          companyId: companyId as Id<"companies">,
+          name: formData.name,
+          email: formData.email,
+          role: formData.role,
+          ...(formData.role === 'student' && { currentLevel: formData.currentLevel }),
+        });
+
+        // Then create a company invitation link for sign-up
         const linkResult = await createCompanyInvitationLink({
           companyId: companyId as Id<"companies">,
           role: formData.role,
@@ -154,6 +163,16 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
         }
 
         setShowInviteModal(true);
+      } else {
+        // Direct user creation without invitation link
+        await addEmployee({
+          companyId: companyId as Id<"companies">,
+          name: formData.name,
+          email: formData.email,
+          role: formData.role,
+          ...(formData.role === 'student' && { currentLevel: formData.currentLevel }),
+        });
+        alert('User added successfully! They can now log in.');
       }
 
       setFormData({
@@ -166,10 +185,6 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, currentUserI
       });
       setShowAddForm(false);
       setErrors({});
-
-      if (!formData.sendInvite) {
-        alert('User added successfully! They can now log in.');
-      }
     } catch (error) {
       console.error('Error adding user:', error);
       alert(`Failed to add user: ${error instanceof Error ? error.message : 'Unknown error'}`);
