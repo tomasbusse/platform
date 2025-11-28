@@ -385,6 +385,37 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
             )}
           </div>
 
+          {/* AI Model Dropdown */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-simmonds-charcoal mb-2">
+              AI Model
+            </label>
+            {availableModels.length > 0 ? (
+              <select
+                value={config.selectedModelId || ''}
+                onChange={(e) => {
+                  const selectedModel = availableModels.find(m => m.id === e.target.value);
+                  if (selectedModel) {
+                    updateConfig('selectedModelId', selectedModel.id);
+                    updateConfig('selectedModelName', selectedModel.name);
+                  }
+                }}
+                className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
+                disabled={isLoading}
+              >
+                {availableModels.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}{model.isDefault ? ' (Default)' : ''}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="text-sm text-simmonds-stone px-4 py-2 bg-simmonds-cream/30 rounded-xl">
+                Using default AI model. Configure available models in Settings.
+              </p>
+            )}
+          </div>
+
           {/* Document Upload */}
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-simmonds-charcoal mb-2">
@@ -533,102 +564,6 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
           <p className="mt-2 text-sm text-simmonds-terracotta">{errors.questionTypes}</p>
         )}
       </div>
-
-      {/* AI Model Selection (shown when models are available) */}
-      {availableModels.length > 0 && (
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-simmonds-cream">
-          <h3 className="text-lg font-semibold text-simmonds-charcoal mb-4 flex items-center gap-2">
-            <svg className="w-5 h-5 text-simmonds-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-            AI Model
-          </h3>
-
-          <div>
-            <label className="block text-sm font-medium text-simmonds-charcoal mb-2">
-              Select AI Model for Generation
-            </label>
-            <p className="text-xs text-simmonds-stone mb-3">
-              Choose which AI model to use for generating quiz questions
-            </p>
-            <div className="grid gap-2">
-              {availableModels.map((model) => (
-                <div
-                  key={model.id}
-                  className={`
-                    flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer
-                    transition-all duration-200
-                    ${config.selectedModelId === model.id
-                      ? 'border-simmonds-primary bg-simmonds-primary/5'
-                      : 'border-simmonds-cream hover:border-simmonds-stone/30'
-                    }
-                    ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
-                  `}
-                  onClick={() => {
-                    if (!isLoading) {
-                      updateConfig('selectedModelId', model.id);
-                      updateConfig('selectedModelName', model.name);
-                    }
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    {/* Selection indicator */}
-                    <div
-                      className={`
-                        w-5 h-5 rounded-full border-2 flex items-center justify-center
-                        transition-all duration-200
-                        ${config.selectedModelId === model.id
-                          ? 'border-simmonds-primary bg-simmonds-primary'
-                          : 'border-simmonds-stone/40'
-                        }
-                      `}
-                    >
-                      {config.selectedModelId === model.id && (
-                        <svg
-                          className="w-3 h-3 text-white"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      )}
-                    </div>
-
-                    {/* Model info */}
-                    <div>
-                      <p className="font-medium text-simmonds-charcoal">{model.name}</p>
-                      <p className="text-xs text-simmonds-stone">{model.id}</p>
-                    </div>
-                  </div>
-
-                  {/* Default badge */}
-                  {model.isDefault && (
-                    <span className="px-2 py-0.5 bg-simmonds-lime/20 text-simmonds-lime-dark text-xs rounded-full">
-                      Default
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* No models configured message */}
-      {availableModels.length === 0 && (
-        <div className="bg-simmonds-cream/30 p-4 rounded-xl border border-simmonds-cream">
-          <p className="text-sm text-simmonds-stone flex items-center gap-2">
-            <svg className="w-5 h-5 text-simmonds-stone" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Using default AI model. Configure available models in Settings to choose.
-          </p>
-        </div>
-      )}
 
       {/* Audio Settings (shown when listening is selected) */}
       {hasListeningType && (
