@@ -2174,16 +2174,34 @@ Keep it achievable and focused.`,
               </p>
             </div>
           ) : (
-            <div className="max-h-64 overflow-y-auto border border-simmonds-cream rounded-xl divide-y divide-simmonds-cream">
+            <>
+              {/* Search box for models */}
+              <div className="mb-3">
+                <input
+                  type="text"
+                  placeholder="Search models (e.g., claude, gpt, gemini, llama, mistral, qwen...)"
+                  className="w-full px-4 py-2 border border-simmonds-cream rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-simmonds-primary/20"
+                  value={modelSearchQuery}
+                  onChange={(e) => setModelSearchQuery(e.target.value)}
+                />
+              </div>
+              <div className="max-h-80 overflow-y-auto border border-simmonds-cream rounded-xl divide-y divide-simmonds-cream">
               {openRouterModels
-                .filter(model =>
-                  model.id.includes('claude') ||
-                  model.id.includes('gpt') ||
-                  model.id.includes('gemini') ||
-                  model.id.includes('llama') ||
-                  model.id.includes('mixtral')
-                )
-                .slice(0, 20)
+                .filter(model => {
+                  // Include popular model providers
+                  const popularProviders = [
+                    'claude', 'gpt', 'gemini', 'llama', 'mixtral', 'mistral',
+                    'qwen', 'deepseek', 'cohere', 'command', 'phi', 'yi',
+                    'codestral', 'dbrx', 'nous', 'perplexity', 'wizardlm',
+                    'openchat', 'dolphin', 'hermes', 'solar', 'jamba'
+                  ];
+                  const isPopularModel = popularProviders.some(provider => model.id.toLowerCase().includes(provider));
+                  // Also filter by search query if provided
+                  const matchesSearch = !modelSearchQuery ||
+                    model.id.toLowerCase().includes(modelSearchQuery.toLowerCase()) ||
+                    model.name.toLowerCase().includes(modelSearchQuery.toLowerCase());
+                  return isPopularModel && matchesSearch;
+                })
                 .map((model) => {
                   const isSelected = settings.availableAIModels.some(m => m.id === model.id);
                   const isDefault = settings.availableAIModels.find(m => m.id === model.id)?.isDefault;
@@ -2265,7 +2283,8 @@ Keep it achievable and focused.`,
                     </div>
                   );
                 })}
-            </div>
+              </div>
+            </>
           )}
         </div>
 
