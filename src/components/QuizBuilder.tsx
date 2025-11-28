@@ -447,39 +447,32 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, editing
 
     setIsSaving(true);
     try {
-      // First, save all questions to the question bank
-      const savedQuestionIds: Id<"questionBank">[] = [];
-
-      for (const question of questions) {
-        const questionId = await addQuestionToBank({
-          companyId: company._id as Id<"companies">,
-          createdBy: currentUser._id as Id<"users">,
-          questionType: question.questionType,
-          skill: question.skill,
-          level: question.level,
-          difficulty: question.difficulty,
-          questionText: question.questionText,
-          questionData: {
-            options: question.options,
-            correctAnswer: question.correctAnswer,
-            explanation: question.explanation,
-            audioUrl: question.audioUrl,
-            readingPassage: question.readingPassage,
-            hints: question.hints,
-          },
-          points: question.points,
-          timeLimit: question.timeLimit,
-          tags: question.tags,
-          isCambridgeAligned: question.isCambridgeAligned,
-          cambridgeReference: undefined,
-        });
-        savedQuestionIds.push(questionId);
-      }
+      // Convert questions to inline format for database storage
+      const inlineQuestions = questions.map(question => ({
+        id: question.id,
+        questionType: question.questionType,
+        questionText: question.questionText,
+        questionData: {
+          options: question.options,
+          correctAnswer: question.correctAnswer,
+          explanation: question.explanation,
+          audioUrl: question.audioUrl,
+          readingPassage: question.readingPassage,
+          hints: question.hints,
+          matchingPairs: question.matchingPairs,
+          itemsToOrder: question.itemsToOrder,
+          correctOrder: question.correctOrder,
+          textWithBlanks: question.textWithBlanks,
+        },
+        points: question.points,
+        skill: question.skill,
+        level: question.level,
+      }));
 
       let resultQuizId: string;
 
       if (isEditMode && editingQuiz) {
-        // Update existing quiz
+        // Update existing quiz with inline questions
         await updateQuizMutation({
           quizId: editingQuiz._id as Id<"quizzes">,
           title: quizForm.title,
@@ -493,11 +486,12 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, editing
           settings: quizForm.settings,
           tags: quizForm.tags,
           isCambridgeAligned: quizForm.isCambridgeAligned,
+          inlineQuestions,
         });
         resultQuizId = String(editingQuiz._id);
         alert('Quiz updated successfully!');
       } else {
-        // Create new quiz
+        // Create new quiz with inline questions
         resultQuizId = await createQuiz({
           companyId: company._id as Id<"companies">,
           createdBy: currentUser._id as Id<"users">,
@@ -513,6 +507,7 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, editing
           tags: quizForm.tags,
           isCambridgeAligned: quizForm.isCambridgeAligned,
           cambridgeLevel: quizForm.isCambridgeAligned ? quizForm.level : undefined,
+          inlineQuestions,
         });
         alert('Quiz saved successfully!');
       }

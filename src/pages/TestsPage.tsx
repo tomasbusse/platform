@@ -148,10 +148,17 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterPurpose, setFilterPurpose] = useState<string>('all');
   const [selectedTestId, setSelectedTestId] = useState<Id<"quizzes"> | null>(null);
+  const [previewQuestionIndex, setPreviewQuestionIndex] = useState(0);
+  const [previewAnswers, setPreviewAnswers] = useState<Record<string, string>>({});
+  const [showPreviewResults, setShowPreviewResults] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Determine user role
   const isTeacher = currentUser?.role === 'teacher' || currentUser?.role === 'admin' || currentUser?.role === 'corporate_admin';
   const isStudent = currentUser?.role === 'student';
+
+  // Mutations
+  const deleteQuizMutation = useMutation(api.quizzes.deleteQuiz);
 
   // Fetch quizzes based on role
   const quizzes = useQuery(
@@ -213,7 +220,29 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
 
   const handlePreviewTest = (testId: Id<"quizzes">) => {
     setSelectedTestId(testId);
+    setPreviewQuestionIndex(0);
+    setPreviewAnswers({});
+    setShowPreviewResults(false);
     setViewMode('preview');
+  };
+
+  const handleDeleteQuiz = async (quizId: Id<"quizzes">) => {
+    if (!confirm('Are you sure you want to delete this quiz? This action cannot be undone.')) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await deleteQuizMutation({ quizId });
+      alert('Quiz deleted successfully');
+      setViewMode('list');
+      setSelectedTestId(null);
+    } catch (error) {
+      console.error('Error deleting quiz:', error);
+      alert(`Failed to delete quiz: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleBackToList = () => {
@@ -646,7 +675,7 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
     );
   };
 
-  // Render preview test view
+  // Render preview test view - Interactive quiz preview
   const renderPreviewTest = () => {
     const selectedQuiz = quizzes?.find(q => q._id === selectedTestId) as QuizData | undefined;
 
@@ -669,8 +698,176 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
       );
     }
 
+    const questions = selectedQuiz.inlineQuestions || [];
+    const currentQuestion = questions[previewQuestionIndex];
+    const totalQuestions = questions.length;
+
+    // Calculate score for results
+    const calculateScore = () => {
+      let correct = 0;
+      questions.forEach((q: any) => {
+        const userAnswer = previewAnswers[q.id];
+        const correctAnswer = q.questionData?.correctAnswer;
+        if (userAnswer && correctAnswer && userAnswer.toLowerCase() === String(correctAnswer).toLowerCase()) {
+          correct++;
+        }
+      });
+      return { correct, total: totalQuestions, percentage: totalQuestions > 0 ? Math.round((correct / totalQuestions) * 100) : 0 };
+    };
+
+    // Show results view
+    if (showPreviewResults) {
+      const score = calculateScore();
+      return (
+        <div className="space-y-6 max-w-3xl mx-auto">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleBackToList}
+              className="flex items-center gap-2 text-simmonds-primary hover:text-simmonds-primary-dark"
+            >
+              <BackIcon />
+              Back to Tests
+            </button>
+            <h2 className="text-xl font-semibold text-simmonds-charcoal">Preview Results</h2>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-simmonds-cream p-8 text-center">
+            <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 ${
+              score.percentage >= selectedQuiz.passingScore ? 'bg-simmonds-lime/20' : 'bg-simmonds-terracotta/20'
+            }`}>
+              <span className={`text-3xl font-bold ${
+                score.percentage >= selectedQuiz.passingScore ? 'text-simmonds-lime-dark' : 'text-simmonds-terracotta'
+              }`}>
+                {score.percentage}%
+              </span>
+            </div>
+            <h3 className="text-xl font-semibold text-simmonds-charcoal mb-2">
+              {score.percentage >= selectedQuiz.passingScore ? 'Passed!' : 'Keep Practicing'}
+            </h3>
+            <p className="text-simmonds-stone mb-6">
+              You got {score.correct} out of {score.total} questions correct
+            </p>
+
+            {/* Question Review */}
+            <div className="text-left space-y-4 mt-8">
+              <h4 className="font-semibold text-simmonds-charcoal">Question Review</h4>
+              {questions.map((q: any, i: number) => {
+                const userAnswer = previewAnswers[q.id];
+                const correctAnswer = q.questionData?.correctAnswer;
+                const isCorrect = userAnswer && correctAnswer && userAnswer.toLowerCase() === String(correctAnswer).toLowerCase();
+                return (
+                  <div key={i} className={`p-4 rounded-xl ${isCorrect ? 'bg-simmonds-lime/10' : 'bg-simmonds-terracotta/10'}`}>
+                    <div className="flex items-start gap-3">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        isCorrect ? 'bg-simmonds-lime/30 text-simmonds-lime-dark' : 'bg-simmonds-terracotta/30 text-simmonds-terracotta'
+                      }`}>
+                        Q{i + 1}
+                      </span>
+                      <div className="flex-1">
+                        <p className="text-sm text-simmonds-charcoal mb-2">{q.questionText}</p>
+                        <p className="text-xs text-simmonds-stone">
+                          Your answer: <span className={isCorrect ? 'text-simmonds-lime-dark' : 'text-simmonds-terracotta'}>{userAnswer || '(no answer)'}</span>
+                        </p>
+                        {!isCorrect && correctAnswer && (
+                          <p className="text-xs text-simmonds-lime-dark mt-1">
+                            Correct answer: {String(correctAnswer)}
+                          </p>
+                        )}
+                        {q.questionData?.explanation && (
+                          <p className="text-xs text-simmonds-stone mt-2 italic">
+                            {q.questionData.explanation}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex justify-center gap-3 mt-8">
+              <button
+                onClick={() => {
+                  setPreviewQuestionIndex(0);
+                  setPreviewAnswers({});
+                  setShowPreviewResults(false);
+                }}
+                className="px-6 py-2 border border-simmonds-cream text-simmonds-charcoal rounded-xl font-medium hover:bg-simmonds-cream-light transition-colors"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={handleBackToList}
+                className="px-6 py-2 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light transition-colors"
+              >
+                Back to Tests
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // No questions yet
+    if (totalQuestions === 0) {
+      return (
+        <div className="space-y-6 max-w-3xl mx-auto">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleBackToList}
+                className="flex items-center gap-2 text-simmonds-primary hover:text-simmonds-primary-dark"
+              >
+                <BackIcon />
+                Back to Tests
+              </button>
+              <h2 className="text-xl font-semibold text-simmonds-charcoal">Preview: {selectedQuiz.title}</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              {selectedQuiz.status !== 'published' && (
+                <button
+                  onClick={() => handleDeleteQuiz(selectedQuiz._id)}
+                  disabled={isDeleting}
+                  className="flex items-center gap-1.5 px-4 py-2 text-simmonds-terracotta hover:bg-simmonds-terracotta/10 rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete'}
+                </button>
+              )}
+              {selectedQuiz.status !== 'published' && (
+                <button
+                  onClick={() => handleEditTest(selectedQuiz._id)}
+                  className="flex items-center gap-1.5 px-4 py-2 text-simmonds-primary hover:bg-simmonds-primary/10 rounded-xl text-sm font-medium transition-colors"
+                >
+                  <EditIcon />
+                  Edit
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-simmonds-cream p-12 text-center">
+            <div className="w-16 h-16 bg-simmonds-cream rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <QuestionIcon />
+            </div>
+            <h3 className="text-lg font-semibold text-simmonds-charcoal mb-2">No Questions Yet</h3>
+            <p className="text-simmonds-stone mb-6">Add some questions to preview this quiz</p>
+            {selectedQuiz.status !== 'published' && (
+              <button
+                onClick={() => handleEditTest(selectedQuiz._id)}
+                className="px-6 py-2 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light transition-colors"
+              >
+                Add Questions
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Interactive quiz view
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-3xl mx-auto">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -680,249 +877,135 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
               <BackIcon />
               Back to Tests
             </button>
-            <h2 className="text-xl font-semibold text-simmonds-charcoal">Preview: {selectedQuiz.title}</h2>
+            <h2 className="text-xl font-semibold text-simmonds-charcoal">{selectedQuiz.title}</h2>
           </div>
           <div className="flex items-center gap-2">
             <span className={`px-3 py-1 rounded-full text-xs font-medium ${
               selectedQuiz.status === 'published'
                 ? 'bg-simmonds-lime/20 text-simmonds-lime-dark'
-                : selectedQuiz.status === 'archived'
-                ? 'bg-gray-100 text-gray-600'
                 : 'bg-simmonds-cream text-simmonds-stone'
             }`}>
-              {selectedQuiz.status === 'published' ? 'Published' : selectedQuiz.status === 'archived' ? 'Archived' : 'Draft'}
+              {selectedQuiz.status === 'published' ? 'Published' : 'Draft'} - Preview Mode
             </span>
             {selectedQuiz.status !== 'published' && (
               <button
-                onClick={() => handleEditTest(selectedQuiz._id)}
-                className="flex items-center gap-1.5 px-4 py-2 text-simmonds-primary hover:bg-simmonds-primary/10 rounded-xl text-sm font-medium transition-colors"
+                onClick={() => handleDeleteQuiz(selectedQuiz._id)}
+                disabled={isDeleting}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-simmonds-terracotta hover:bg-simmonds-terracotta/10 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
               >
-                <EditIcon />
-                Edit
+                {isDeleting ? 'Deleting...' : 'Delete'}
               </button>
             )}
           </div>
         </div>
 
-        {/* Quiz Overview Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-simmonds-cream overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-simmonds-primary/10 to-simmonds-olive/10 p-6 border-b border-simmonds-cream">
-            <h3 className="text-2xl font-bold text-simmonds-charcoal mb-2">{selectedQuiz.title}</h3>
-            {selectedQuiz.description && (
-              <p className="text-simmonds-stone">{selectedQuiz.description}</p>
-            )}
-            <div className="flex flex-wrap gap-2 mt-4">
-              <span className="px-3 py-1 bg-simmonds-primary/10 text-simmonds-primary rounded-lg text-sm font-medium">
-                {selectedQuiz.level}
-              </span>
-              <span className="px-3 py-1 bg-simmonds-olive/10 text-simmonds-olive rounded-lg text-sm font-medium capitalize">
-                {selectedQuiz.skillFocus}
-              </span>
-              <span className="px-3 py-1 bg-simmonds-cream text-simmonds-stone rounded-lg text-sm font-medium capitalize">
-                {selectedQuiz.testPurpose.replace('_', ' ')}
-              </span>
-              {selectedQuiz.isCambridgeAligned && (
-                <span className="px-3 py-1 bg-simmonds-terracotta/10 text-simmonds-terracotta rounded-lg text-sm font-medium">
-                  Cambridge Aligned
-                </span>
-              )}
-            </div>
+        {/* Progress bar */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-simmonds-cream">
+          <div className="flex justify-between text-sm text-simmonds-stone mb-2">
+            <span>Question {previewQuestionIndex + 1} of {totalQuestions}</span>
+            <span>{currentQuestion?.points || 1} point{(currentQuestion?.points || 1) !== 1 ? 's' : ''}</span>
+          </div>
+          <div className="h-2 bg-simmonds-cream rounded-full overflow-hidden">
+            <div
+              className="h-full bg-simmonds-primary transition-all duration-300"
+              style={{ width: `${((previewQuestionIndex + 1) / totalQuestions) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Question Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-simmonds-cream p-6">
+          <div className="mb-6">
+            <span className="inline-block px-3 py-1 bg-simmonds-primary/10 text-simmonds-primary rounded-lg text-sm font-medium mb-3">
+              {currentQuestion?.questionType?.replace('_', ' ') || 'Question'}
+            </span>
+            <h3 className="text-lg font-medium text-simmonds-charcoal">
+              {currentQuestion?.questionText}
+            </h3>
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6">
-            <div className="text-center p-4 bg-simmonds-primary/5 rounded-xl">
-              <p className="text-sm text-simmonds-stone mb-1">Questions</p>
-              <p className="text-2xl font-bold text-simmonds-primary">{selectedQuiz.totalQuestions}</p>
-            </div>
-            <div className="text-center p-4 bg-simmonds-olive/10 rounded-xl">
-              <p className="text-sm text-simmonds-stone mb-1">Total Points</p>
-              <p className="text-2xl font-bold text-simmonds-olive">{selectedQuiz.totalPoints || 0}</p>
-            </div>
-            <div className="text-center p-4 bg-simmonds-lime/10 rounded-xl">
-              <p className="text-sm text-simmonds-stone mb-1">Duration</p>
-              <p className="text-2xl font-bold text-simmonds-lime-dark">{selectedQuiz.duration} min</p>
-            </div>
-            <div className="text-center p-4 bg-simmonds-cream rounded-xl">
-              <p className="text-sm text-simmonds-stone mb-1">Passing Score</p>
-              <p className="text-2xl font-bold text-simmonds-charcoal">{selectedQuiz.passingScore}%</p>
-            </div>
-          </div>
-
-          {/* Instructions */}
-          {selectedQuiz.instructions && (
-            <div className="px-6 pb-4">
-              <h4 className="font-semibold text-simmonds-charcoal mb-2">Instructions</h4>
-              <div className="bg-simmonds-cream/50 p-4 rounded-xl">
-                <p className="text-simmonds-stone whitespace-pre-wrap">{selectedQuiz.instructions}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Settings */}
-          {selectedQuiz.settings && (
-            <div className="px-6 pb-6">
-              <h4 className="font-semibold text-simmonds-charcoal mb-3">Quiz Settings</h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {selectedQuiz.settings.shuffleQuestions && (
-                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
-                    <CheckCircleIcon />
-                    <span>Shuffle Questions</span>
-                  </div>
-                )}
-                {selectedQuiz.settings.shuffleOptions && (
-                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
-                    <CheckCircleIcon />
-                    <span>Shuffle Options</span>
-                  </div>
-                )}
-                {selectedQuiz.settings.showCorrectAnswers && (
-                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
-                    <CheckCircleIcon />
-                    <span>Show Correct Answers</span>
-                  </div>
-                )}
-                {selectedQuiz.settings.showExplanations && (
-                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
-                    <CheckCircleIcon />
-                    <span>Show Explanations</span>
-                  </div>
-                )}
-                {selectedQuiz.settings.allowRetake && (
-                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
-                    <CheckCircleIcon />
-                    <span>Allow Retakes ({selectedQuiz.settings.maxAttempts} max)</span>
-                  </div>
-                )}
-                {selectedQuiz.settings.showTimer && (
-                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
-                    <CheckCircleIcon />
-                    <span>Show Timer</span>
-                  </div>
-                )}
-                {selectedQuiz.settings.showProgressBar && (
-                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
-                    <CheckCircleIcon />
-                    <span>Show Progress Bar</span>
-                  </div>
-                )}
-                {selectedQuiz.settings.allowSkip && (
-                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
-                    <CheckCircleIcon />
-                    <span>Allow Skip</span>
-                  </div>
-                )}
-                {selectedQuiz.settings.allowReview && (
-                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
-                    <CheckCircleIcon />
-                    <span>Allow Review</span>
-                  </div>
-                )}
-                {selectedQuiz.settings.autoSubmitOnTimeout && (
-                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
-                    <CheckCircleIcon />
-                    <span>Auto-submit on Timeout</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Tags */}
-          {selectedQuiz.tags && selectedQuiz.tags.length > 0 && (
-            <div className="px-6 pb-6">
-              <h4 className="font-semibold text-simmonds-charcoal mb-2">Tags</h4>
-              <div className="flex flex-wrap gap-2">
-                {selectedQuiz.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-simmonds-primary/10 text-simmonds-primary rounded-full text-sm"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Questions Summary */}
-          <div className="border-t border-simmonds-cream p-6">
-            <h4 className="font-semibold text-simmonds-charcoal mb-4">
-              Questions ({selectedQuiz.totalQuestions})
-            </h4>
-            {selectedQuiz.totalQuestions === 0 ? (
-              <div className="text-center py-8 bg-simmonds-cream/30 rounded-xl">
-                <p className="text-simmonds-stone mb-2">No questions added yet</p>
-                {selectedQuiz.status !== 'published' && (
-                  <button
-                    onClick={() => handleEditTest(selectedQuiz._id)}
-                    className="text-simmonds-primary hover:underline text-sm"
-                  >
-                    Add questions
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="bg-simmonds-cream/30 rounded-xl p-4">
-                <p className="text-sm text-simmonds-stone">
-                  This quiz contains {selectedQuiz.totalQuestions} question{selectedQuiz.totalQuestions !== 1 ? 's' : ''}
-                  {selectedQuiz.totalPoints ? ` worth ${selectedQuiz.totalPoints} total points` : ''}.
-                </p>
-                {selectedQuiz.inlineQuestions && selectedQuiz.inlineQuestions.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    {selectedQuiz.inlineQuestions.slice(0, 5).map((q: any, i: number) => (
-                      <div key={i} className="flex items-center gap-2 text-sm">
-                        <span className="px-2 py-0.5 bg-simmonds-primary/10 text-simmonds-primary rounded text-xs">
-                          Q{i + 1}
-                        </span>
-                        <span className="text-simmonds-charcoal truncate flex-1">
-                          {q.questionText || 'Untitled question'}
-                        </span>
-                        <span className="text-simmonds-stone text-xs">
-                          {q.points || 1} pt{(q.points || 1) !== 1 ? 's' : ''}
-                        </span>
-                      </div>
-                    ))}
-                    {selectedQuiz.inlineQuestions.length > 5 && (
-                      <p className="text-xs text-simmonds-stone mt-2">
-                        + {selectedQuiz.inlineQuestions.length - 5} more questions
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="border-t border-simmonds-cream p-6 bg-simmonds-cream/20">
-            <div className="flex flex-wrap gap-3 justify-end">
+          {/* Answer Options */}
+          <div className="space-y-3">
+            {currentQuestion?.questionData?.options?.map((option: string, i: number) => (
               <button
-                onClick={handleBackToList}
-                className="px-6 py-2 border border-simmonds-cream text-simmonds-charcoal rounded-xl font-medium hover:bg-white transition-colors"
+                key={i}
+                onClick={() => setPreviewAnswers({ ...previewAnswers, [currentQuestion.id]: option })}
+                className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                  previewAnswers[currentQuestion.id] === option
+                    ? 'border-simmonds-primary bg-simmonds-primary/5'
+                    : 'border-simmonds-cream hover:border-simmonds-primary/50'
+                }`}
               >
-                Back to List
+                <div className="flex items-center gap-3">
+                  <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                    previewAnswers[currentQuestion.id] === option
+                      ? 'bg-simmonds-primary text-white'
+                      : 'bg-simmonds-cream text-simmonds-stone'
+                  }`}>
+                    {String.fromCharCode(65 + i)}
+                  </span>
+                  <span className="text-simmonds-charcoal">{option}</span>
+                </div>
               </button>
-              {selectedQuiz.status !== 'published' && (
-                <button
-                  onClick={() => handleEditTest(selectedQuiz._id)}
-                  className="px-6 py-2 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light transition-colors"
-                >
-                  Edit Quiz
-                </button>
-              )}
-              {selectedQuiz.status === 'published' && (
-                <button
-                  onClick={() => handleTakeTest(selectedQuiz._id)}
-                  className="px-6 py-2 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light transition-colors flex items-center gap-2"
-                >
-                  <PlayIcon />
-                  Take Test
-                </button>
-              )}
-            </div>
+            ))}
+
+            {/* Fill in blank / text input */}
+            {!currentQuestion?.questionData?.options && (
+              <input
+                type="text"
+                placeholder="Type your answer..."
+                value={previewAnswers[currentQuestion?.id] || ''}
+                onChange={(e) => setPreviewAnswers({ ...previewAnswers, [currentQuestion.id]: e.target.value })}
+                className="w-full p-4 rounded-xl border-2 border-simmonds-cream focus:border-simmonds-primary focus:outline-none"
+              />
+            )}
           </div>
+        </div>
+
+        {/* Navigation */}
+        <div className="flex justify-between">
+          <button
+            onClick={() => setPreviewQuestionIndex(Math.max(0, previewQuestionIndex - 1))}
+            disabled={previewQuestionIndex === 0}
+            className="px-6 py-2 border border-simmonds-cream text-simmonds-charcoal rounded-xl font-medium hover:bg-simmonds-cream-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+
+          {previewQuestionIndex < totalQuestions - 1 ? (
+            <button
+              onClick={() => setPreviewQuestionIndex(previewQuestionIndex + 1)}
+              className="px-6 py-2 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light transition-colors"
+            >
+              Next
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowPreviewResults(true)}
+              className="px-6 py-2 bg-simmonds-lime text-white rounded-xl font-medium hover:bg-simmonds-lime-dark transition-colors"
+            >
+              Finish Preview
+            </button>
+          )}
+        </div>
+
+        {/* Question navigation dots */}
+        <div className="flex justify-center gap-2 flex-wrap">
+          {questions.map((_: any, i: number) => (
+            <button
+              key={i}
+              onClick={() => setPreviewQuestionIndex(i)}
+              className={`w-8 h-8 rounded-full text-xs font-medium transition-all ${
+                i === previewQuestionIndex
+                  ? 'bg-simmonds-primary text-white'
+                  : previewAnswers[questions[i].id]
+                  ? 'bg-simmonds-lime/30 text-simmonds-lime-dark'
+                  : 'bg-simmonds-cream text-simmonds-stone hover:bg-simmonds-cream-dark'
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
         </div>
       </div>
     );

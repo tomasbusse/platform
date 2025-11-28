@@ -59,6 +59,16 @@ export const createQuiz = mutation({
     tags: v.optional(v.array(v.string())),
     isCambridgeAligned: v.optional(v.boolean()),
     cambridgeLevel: v.optional(v.string()),
+    // Inline questions for quiz content
+    inlineQuestions: v.optional(v.array(v.object({
+      id: v.string(),
+      questionType: v.string(),
+      questionText: v.string(),
+      questionData: v.any(),
+      points: v.number(),
+      skill: v.string(),
+      level: v.string(),
+    }))),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -85,6 +95,10 @@ export const createQuiz = mutation({
       autoSubmitOnTimeout: true,
     };
 
+    // Calculate totals from inline questions if provided
+    const totalQuestions = args.inlineQuestions?.length || 0;
+    const totalPoints = args.inlineQuestions?.reduce((sum, q) => sum + q.points, 0) || 0;
+
     // Insert quiz record
     const quizId = await ctx.db.insert("quizzes", {
       companyId: args.companyId,
@@ -97,13 +111,14 @@ export const createQuiz = mutation({
       skillFocus: args.skillFocus,
       duration: args.duration,
       passingScore: args.passingScore,
-      totalQuestions: 0,
-      totalPoints: 0,
+      totalQuestions,
+      totalPoints,
       status: "draft",
       isCambridgeAligned: args.isCambridgeAligned || false,
       cambridgeLevel: args.cambridgeLevel,
       settings: args.settings || defaultSettings,
       tags: args.tags || [],
+      inlineQuestions: args.inlineQuestions,
       createdAt: now,
       updatedAt: now,
     });
@@ -174,6 +189,16 @@ export const updateQuiz = mutation({
     })),
     tags: v.optional(v.array(v.string())),
     isCambridgeAligned: v.optional(v.boolean()),
+    // Inline questions for quiz content
+    inlineQuestions: v.optional(v.array(v.object({
+      id: v.string(),
+      questionType: v.string(),
+      questionText: v.string(),
+      questionData: v.any(),
+      points: v.number(),
+      skill: v.string(),
+      level: v.string(),
+    }))),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -202,6 +227,11 @@ export const updateQuiz = mutation({
     if (args.settings !== undefined) updateData.settings = args.settings;
     if (args.tags !== undefined) updateData.tags = args.tags;
     if (args.isCambridgeAligned !== undefined) updateData.isCambridgeAligned = args.isCambridgeAligned;
+    if (args.inlineQuestions !== undefined) {
+      updateData.inlineQuestions = args.inlineQuestions;
+      updateData.totalQuestions = args.inlineQuestions.length;
+      updateData.totalPoints = args.inlineQuestions.reduce((sum, q) => sum + q.points, 0);
+    }
 
     // Update quiz
     await ctx.db.patch(args.quizId, updateData);
