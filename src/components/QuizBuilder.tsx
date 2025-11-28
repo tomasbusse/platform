@@ -5,9 +5,44 @@ import { Id } from '../../convex/_generated/dataModel';
 import { User, Company } from '../types';
 import { AIQuizGenerator } from './quiz';
 
+interface EditingQuiz {
+  _id: any; // Convex Id or string
+  title: string;
+  description?: string;
+  instructions?: string;
+  level: string;
+  testPurpose: string;
+  skillFocus: string;
+  duration: number;
+  passingScore: number;
+  totalQuestions: number;
+  totalPoints: number;
+  status: string;
+  isCambridgeAligned: boolean;
+  cambridgeLevel?: string;
+  settings?: {
+    shuffleQuestions: boolean;
+    shuffleOptions: boolean;
+    showCorrectAnswers: boolean;
+    showExplanations: boolean;
+    allowRetake: boolean;
+    maxAttempts: number;
+    requirePassingScore: boolean;
+    showTimer: boolean;
+    showProgressBar?: boolean;
+    allowSkip?: boolean;
+    allowReview?: boolean;
+    autoSubmitOnTimeout?: boolean;
+  };
+  tags?: string[];
+  questionIds?: string[];
+  inlineQuestions?: any[];
+}
+
 interface QuizBuilderProps {
   currentUser: User | null;
   company: Company | null;
+  editingQuiz?: EditingQuiz;
   onQuizCreated?: (quizId: string) => void;
 }
 
@@ -110,24 +145,78 @@ const defaultQuizSettings = {
   autoSubmitOnTimeout: true,
 };
 
-const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizCreated }) => {
+const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, editingQuiz, onQuizCreated }) => {
+  // Check if we're in edit mode
+  const isEditMode = !!editingQuiz;
+
   // Creation mode: 'select' for mode selection, 'manual' for manual creation, 'ai' for AI generation
-  const [creationMode, setCreationMode] = useState<'select' | 'manual' | 'ai'>('select');
+  // When editing, skip mode selection and go directly to manual
+  const [creationMode, setCreationMode] = useState<'select' | 'manual' | 'ai'>(isEditMode ? 'manual' : 'select');
   const [step, setStep] = useState<'details' | 'questions' | 'preview'>('details');
-  const [quizForm, setQuizForm] = useState<QuizFormData>({
-    title: '',
-    description: '',
-    instructions: '',
-    level: 'A1',
-    testPurpose: 'practice',
-    skillFocus: 'mixed',
-    duration: 30,
-    passingScore: 60,
-    isCambridgeAligned: false,
-    settings: defaultQuizSettings,
-    tags: [],
+
+  // Initialize form with editing quiz data if available
+  const [quizForm, setQuizForm] = useState<QuizFormData>(() => {
+    if (editingQuiz) {
+      return {
+        title: editingQuiz.title,
+        description: editingQuiz.description || '',
+        instructions: editingQuiz.instructions || '',
+        level: (editingQuiz.level as Level) || 'A1',
+        testPurpose: (editingQuiz.testPurpose as TestPurpose) || 'practice',
+        skillFocus: (editingQuiz.skillFocus as SkillFocus) || 'mixed',
+        duration: editingQuiz.duration || 30,
+        passingScore: editingQuiz.passingScore || 60,
+        isCambridgeAligned: editingQuiz.isCambridgeAligned || false,
+        settings: editingQuiz.settings || defaultQuizSettings,
+        tags: editingQuiz.tags || [],
+      };
+    }
+    return {
+      title: '',
+      description: '',
+      instructions: '',
+      level: 'A1',
+      testPurpose: 'practice',
+      skillFocus: 'mixed',
+      duration: 30,
+      passingScore: 60,
+      isCambridgeAligned: false,
+      settings: defaultQuizSettings,
+      tags: [],
+    };
   });
-  const [questions, setQuestions] = useState<QuestionData[]>([]);
+
+  // Initialize questions from editing quiz if available
+  const [questions, setQuestions] = useState<QuestionData[]>(() => {
+    if (editingQuiz?.inlineQuestions && editingQuiz.inlineQuestions.length > 0) {
+      return editingQuiz.inlineQuestions.map((q: any, index: number) => ({
+        id: q.id || `q_${Date.now()}_${index}`,
+        questionType: q.questionType || 'multiple_choice',
+        skill: q.skill || 'grammar',
+        level: q.level || editingQuiz.level || 'A1',
+        difficulty: q.difficulty || 'medium',
+        questionText: q.questionText || '',
+        options: q.options || q.questionData?.options || [],
+        correctAnswer: q.correctAnswer || q.questionData?.correctAnswer || '',
+        explanation: q.explanation || q.questionData?.explanation || '',
+        audio: q.audio,
+        audioUrl: q.audioUrl || q.questionData?.audioUrl,
+        image: q.image,
+        imageUrl: q.imageUrl,
+        readingPassage: q.readingPassage || q.questionData?.readingPassage,
+        textWithBlanks: q.textWithBlanks,
+        matchingPairs: q.matchingPairs,
+        itemsToOrder: q.itemsToOrder,
+        correctOrder: q.correctOrder,
+        hints: q.hints || q.questionData?.hints,
+        points: q.points || 1,
+        timeLimit: q.timeLimit || 60,
+        tags: q.tags || [],
+        isCambridgeAligned: q.isCambridgeAligned || false,
+      }));
+    }
+    return [];
+  });
   const [editingQuestion, setEditingQuestion] = useState<QuestionData | null>(null);
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -139,6 +228,7 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizC
 
   // Convex mutations
   const createQuiz = useMutation(api.quizzes.createQuiz);
+  const updateQuizMutation = useMutation(api.quizzes.updateQuiz);
   const addQuestionToBank = useMutation(api.quizzes.addQuestionToBank);
 
   // Get existing questions from question bank
@@ -386,43 +476,67 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizC
         savedQuestionIds.push(questionId);
       }
 
-      // Then create the quiz
-      const quizId = await createQuiz({
-        companyId: company._id as Id<"companies">,
-        createdBy: currentUser._id as Id<"users">,
-        title: quizForm.title,
-        description: quizForm.description,
-        instructions: quizForm.instructions,
-        level: quizForm.level,
-        testPurpose: quizForm.testPurpose,
-        skillFocus: quizForm.skillFocus,
-        duration: quizForm.duration,
-        passingScore: quizForm.passingScore,
-        settings: quizForm.settings,
-        tags: quizForm.tags,
-        isCambridgeAligned: quizForm.isCambridgeAligned,
-        cambridgeLevel: quizForm.isCambridgeAligned ? quizForm.level : undefined,
-      });
+      let resultQuizId: string;
 
-      alert('Quiz saved successfully!');
-      onQuizCreated?.(quizId);
+      if (isEditMode && editingQuiz) {
+        // Update existing quiz
+        await updateQuizMutation({
+          quizId: editingQuiz._id as Id<"quizzes">,
+          title: quizForm.title,
+          description: quizForm.description,
+          instructions: quizForm.instructions,
+          level: quizForm.level,
+          testPurpose: quizForm.testPurpose,
+          skillFocus: quizForm.skillFocus,
+          duration: quizForm.duration,
+          passingScore: quizForm.passingScore,
+          settings: quizForm.settings,
+          tags: quizForm.tags,
+          isCambridgeAligned: quizForm.isCambridgeAligned,
+        });
+        resultQuizId = String(editingQuiz._id);
+        alert('Quiz updated successfully!');
+      } else {
+        // Create new quiz
+        resultQuizId = await createQuiz({
+          companyId: company._id as Id<"companies">,
+          createdBy: currentUser._id as Id<"users">,
+          title: quizForm.title,
+          description: quizForm.description,
+          instructions: quizForm.instructions,
+          level: quizForm.level,
+          testPurpose: quizForm.testPurpose,
+          skillFocus: quizForm.skillFocus,
+          duration: quizForm.duration,
+          passingScore: quizForm.passingScore,
+          settings: quizForm.settings,
+          tags: quizForm.tags,
+          isCambridgeAligned: quizForm.isCambridgeAligned,
+          cambridgeLevel: quizForm.isCambridgeAligned ? quizForm.level : undefined,
+        });
+        alert('Quiz saved successfully!');
+      }
 
-      // Reset form
-      setQuizForm({
-        title: '',
-        description: '',
-        instructions: '',
-        level: 'A1',
-        testPurpose: 'practice',
-        skillFocus: 'mixed',
-        duration: 30,
-        passingScore: 60,
-        isCambridgeAligned: false,
-        settings: defaultQuizSettings,
-        tags: [],
-      });
-      setQuestions([]);
-      setStep('details');
+      onQuizCreated?.(resultQuizId);
+
+      // Reset form only if creating new quiz
+      if (!isEditMode) {
+        setQuizForm({
+          title: '',
+          description: '',
+          instructions: '',
+          level: 'A1',
+          testPurpose: 'practice',
+          skillFocus: 'mixed',
+          duration: 30,
+          passingScore: 60,
+          isCambridgeAligned: false,
+          settings: defaultQuizSettings,
+          tags: [],
+        });
+        setQuestions([]);
+        setStep('details');
+      }
     } catch (error) {
       console.error('Error saving quiz:', error);
       alert(`Failed to save quiz: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -833,7 +947,7 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizC
   const renderPreviewStep = () => (
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-simmonds-cream">
-        <h3 className="text-lg font-semibold text-simmonds-charcoal mb-4">Quiz Preview</h3>
+        <h3 className="text-lg font-semibold text-simmonds-charcoal mb-4">{isEditMode ? 'Edit Quiz Preview' : 'Quiz Preview'}</h3>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="p-4 bg-simmonds-primary/10 rounded-xl">
@@ -903,7 +1017,7 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizC
           disabled={isSaving}
           className="px-6 py-2 bg-simmonds-lime text-white rounded-xl font-medium hover:bg-simmonds-lime-dark disabled:opacity-50"
         >
-          {isSaving ? 'Saving...' : 'Save Quiz'}
+          {isSaving ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update Quiz' : 'Save Quiz')}
         </button>
       </div>
     </div>
@@ -1331,16 +1445,18 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, onQuizC
   // Manual creation mode - original QuizBuilder UI
   return (
     <div className="space-y-6">
-      {/* Back to mode selection */}
-      <button
-        onClick={() => setCreationMode('select')}
-        className="text-sm text-simmonds-stone hover:text-simmonds-charcoal flex items-center gap-1"
-      >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-        Back to Creation Options
-      </button>
+      {/* Back to mode selection - only show when creating new quiz (not editing) */}
+      {!isEditMode && (
+        <button
+          onClick={() => setCreationMode('select')}
+          className="text-sm text-simmonds-stone hover:text-simmonds-charcoal flex items-center gap-1"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Creation Options
+        </button>
+      )}
 
       {/* Progress Steps */}
       <div className="flex items-center justify-center mb-8">

@@ -28,21 +28,41 @@ interface TestsPageProps {
 }
 
 // Types
-type ViewMode = 'list' | 'create' | 'take-test' | 'results' | 'question-bank' | 'analytics';
+type ViewMode = 'list' | 'create' | 'edit' | 'preview' | 'take-test' | 'results' | 'question-bank' | 'analytics';
 type TestStatus = 'draft' | 'published' | 'archived';
 
 interface QuizData {
   _id: Id<"quizzes">;
   title: string;
   description?: string;
+  instructions?: string;
   level: string;
   testPurpose: string;
   skillFocus: string;
   duration: number;
   passingScore: number;
   totalQuestions: number;
+  totalPoints: number;
   status: TestStatus;
   isCambridgeAligned: boolean;
+  cambridgeLevel?: string;
+  settings?: {
+    shuffleQuestions: boolean;
+    shuffleOptions: boolean;
+    showCorrectAnswers: boolean;
+    showExplanations: boolean;
+    allowRetake: boolean;
+    maxAttempts: number;
+    requirePassingScore: boolean;
+    showTimer: boolean;
+    showProgressBar?: boolean;
+    allowSkip?: boolean;
+    allowReview?: boolean;
+    autoSubmitOnTimeout?: boolean;
+  };
+  tags?: string[];
+  questionIds?: Id<"questionBank">[];
+  inlineQuestions?: any[];
   createdAt: number;
 }
 
@@ -105,6 +125,19 @@ const BankIcon = () => (
 const BackIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+  </svg>
+);
+
+const EyeIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+  </svg>
+);
+
+const CheckCircleIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
   </svg>
 );
 
@@ -175,8 +208,12 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
 
   const handleEditTest = (testId: Id<"quizzes">) => {
     setSelectedTestId(testId);
-    // For now, just show a message - full edit functionality would open the quiz builder with existing data
-    alert('Edit functionality coming soon. Use the Quiz Builder to create new tests.');
+    setViewMode('edit');
+  };
+
+  const handlePreviewTest = (testId: Id<"quizzes">) => {
+    setSelectedTestId(testId);
+    setViewMode('preview');
   };
 
   const handleBackToList = () => {
@@ -277,19 +314,31 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
               </span>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => handleEditTest(quiz._id)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-simmonds-primary hover:bg-simmonds-primary/10 rounded-lg text-sm font-medium transition-colors"
+                  onClick={() => handlePreviewTest(quiz._id)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-simmonds-olive hover:bg-simmonds-olive/10 rounded-lg text-sm font-medium transition-colors"
+                  title="Preview quiz"
                 >
-                  <EditIcon />
-                  Edit
+                  <EyeIcon />
+                  Preview
                 </button>
+                {quiz.status !== 'published' && (
+                  <button
+                    onClick={() => handleEditTest(quiz._id)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-simmonds-primary hover:bg-simmonds-primary/10 rounded-lg text-sm font-medium transition-colors"
+                    title="Edit quiz"
+                  >
+                    <EditIcon />
+                    Edit
+                  </button>
+                )}
                 {quiz.status === 'published' && (
                   <button
                     onClick={() => handleTakeTest(quiz._id)}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-simmonds-primary text-white rounded-lg text-sm font-medium hover:bg-simmonds-primary-light transition-colors"
+                    title="Take quiz as student would"
                   >
                     <PlayIcon />
-                    Preview
+                    Take
                   </button>
                 )}
               </div>
@@ -506,6 +555,379 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
     );
   };
 
+  // Render edit test view
+  const renderEditTest = () => {
+    const selectedQuiz = quizzes?.find(q => q._id === selectedTestId) as QuizData | undefined;
+
+    if (!selectedQuiz) {
+      return (
+        <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleBackToList}
+              className="flex items-center gap-2 text-simmonds-primary hover:text-simmonds-primary-dark"
+            >
+              <BackIcon />
+              Back to Tests
+            </button>
+          </div>
+          <div className="text-center py-12">
+            <p className="text-simmonds-stone">Test not found</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (selectedQuiz.status === 'published') {
+      return (
+        <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleBackToList}
+              className="flex items-center gap-2 text-simmonds-primary hover:text-simmonds-primary-dark"
+            >
+              <BackIcon />
+              Back to Tests
+            </button>
+            <h2 className="text-xl font-semibold text-simmonds-charcoal">Edit Test</h2>
+          </div>
+          <div className="bg-white rounded-2xl shadow-sm border border-simmonds-cream p-8 text-center max-w-lg mx-auto">
+            <div className="w-16 h-16 bg-simmonds-terracotta/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-simmonds-terracotta" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-simmonds-charcoal mb-2">Cannot Edit Published Test</h3>
+            <p className="text-simmonds-stone mb-6">
+              Published tests cannot be edited directly. You can archive this test and create a new version, or duplicate it to make changes.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={handleBackToList}
+                className="px-6 py-2 border border-simmonds-cream text-simmonds-charcoal rounded-xl font-medium hover:bg-simmonds-cream-light transition-colors"
+              >
+                Back to List
+              </button>
+              <button
+                onClick={() => handlePreviewTest(selectedQuiz._id)}
+                className="px-6 py-2 bg-simmonds-olive text-white rounded-xl font-medium hover:bg-simmonds-olive-light transition-colors"
+              >
+                Preview Instead
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={handleBackToList}
+            className="flex items-center gap-2 text-simmonds-primary hover:text-simmonds-primary-dark"
+          >
+            <BackIcon />
+            Back to Tests
+          </button>
+          <h2 className="text-xl font-semibold text-simmonds-charcoal">Edit Test: {selectedQuiz.title}</h2>
+        </div>
+        <QuizBuilder
+          currentUser={currentUser}
+          company={company}
+          editingQuiz={selectedQuiz}
+          onQuizCreated={(quizId) => {
+            console.log('Quiz updated:', quizId);
+            setViewMode('list');
+            setSelectedTestId(null);
+          }}
+        />
+      </div>
+    );
+  };
+
+  // Render preview test view
+  const renderPreviewTest = () => {
+    const selectedQuiz = quizzes?.find(q => q._id === selectedTestId) as QuizData | undefined;
+
+    if (!selectedQuiz) {
+      return (
+        <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleBackToList}
+              className="flex items-center gap-2 text-simmonds-primary hover:text-simmonds-primary-dark"
+            >
+              <BackIcon />
+              Back to Tests
+            </button>
+          </div>
+          <div className="text-center py-12">
+            <p className="text-simmonds-stone">Test not found</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleBackToList}
+              className="flex items-center gap-2 text-simmonds-primary hover:text-simmonds-primary-dark"
+            >
+              <BackIcon />
+              Back to Tests
+            </button>
+            <h2 className="text-xl font-semibold text-simmonds-charcoal">Preview: {selectedQuiz.title}</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+              selectedQuiz.status === 'published'
+                ? 'bg-simmonds-lime/20 text-simmonds-lime-dark'
+                : selectedQuiz.status === 'archived'
+                ? 'bg-gray-100 text-gray-600'
+                : 'bg-simmonds-cream text-simmonds-stone'
+            }`}>
+              {selectedQuiz.status === 'published' ? 'Published' : selectedQuiz.status === 'archived' ? 'Archived' : 'Draft'}
+            </span>
+            {selectedQuiz.status !== 'published' && (
+              <button
+                onClick={() => handleEditTest(selectedQuiz._id)}
+                className="flex items-center gap-1.5 px-4 py-2 text-simmonds-primary hover:bg-simmonds-primary/10 rounded-xl text-sm font-medium transition-colors"
+              >
+                <EditIcon />
+                Edit
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Quiz Overview Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-simmonds-cream overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-simmonds-primary/10 to-simmonds-olive/10 p-6 border-b border-simmonds-cream">
+            <h3 className="text-2xl font-bold text-simmonds-charcoal mb-2">{selectedQuiz.title}</h3>
+            {selectedQuiz.description && (
+              <p className="text-simmonds-stone">{selectedQuiz.description}</p>
+            )}
+            <div className="flex flex-wrap gap-2 mt-4">
+              <span className="px-3 py-1 bg-simmonds-primary/10 text-simmonds-primary rounded-lg text-sm font-medium">
+                {selectedQuiz.level}
+              </span>
+              <span className="px-3 py-1 bg-simmonds-olive/10 text-simmonds-olive rounded-lg text-sm font-medium capitalize">
+                {selectedQuiz.skillFocus}
+              </span>
+              <span className="px-3 py-1 bg-simmonds-cream text-simmonds-stone rounded-lg text-sm font-medium capitalize">
+                {selectedQuiz.testPurpose.replace('_', ' ')}
+              </span>
+              {selectedQuiz.isCambridgeAligned && (
+                <span className="px-3 py-1 bg-simmonds-terracotta/10 text-simmonds-terracotta rounded-lg text-sm font-medium">
+                  Cambridge Aligned
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6">
+            <div className="text-center p-4 bg-simmonds-primary/5 rounded-xl">
+              <p className="text-sm text-simmonds-stone mb-1">Questions</p>
+              <p className="text-2xl font-bold text-simmonds-primary">{selectedQuiz.totalQuestions}</p>
+            </div>
+            <div className="text-center p-4 bg-simmonds-olive/10 rounded-xl">
+              <p className="text-sm text-simmonds-stone mb-1">Total Points</p>
+              <p className="text-2xl font-bold text-simmonds-olive">{selectedQuiz.totalPoints || 0}</p>
+            </div>
+            <div className="text-center p-4 bg-simmonds-lime/10 rounded-xl">
+              <p className="text-sm text-simmonds-stone mb-1">Duration</p>
+              <p className="text-2xl font-bold text-simmonds-lime-dark">{selectedQuiz.duration} min</p>
+            </div>
+            <div className="text-center p-4 bg-simmonds-cream rounded-xl">
+              <p className="text-sm text-simmonds-stone mb-1">Passing Score</p>
+              <p className="text-2xl font-bold text-simmonds-charcoal">{selectedQuiz.passingScore}%</p>
+            </div>
+          </div>
+
+          {/* Instructions */}
+          {selectedQuiz.instructions && (
+            <div className="px-6 pb-4">
+              <h4 className="font-semibold text-simmonds-charcoal mb-2">Instructions</h4>
+              <div className="bg-simmonds-cream/50 p-4 rounded-xl">
+                <p className="text-simmonds-stone whitespace-pre-wrap">{selectedQuiz.instructions}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Settings */}
+          {selectedQuiz.settings && (
+            <div className="px-6 pb-6">
+              <h4 className="font-semibold text-simmonds-charcoal mb-3">Quiz Settings</h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {selectedQuiz.settings.shuffleQuestions && (
+                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
+                    <CheckCircleIcon />
+                    <span>Shuffle Questions</span>
+                  </div>
+                )}
+                {selectedQuiz.settings.shuffleOptions && (
+                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
+                    <CheckCircleIcon />
+                    <span>Shuffle Options</span>
+                  </div>
+                )}
+                {selectedQuiz.settings.showCorrectAnswers && (
+                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
+                    <CheckCircleIcon />
+                    <span>Show Correct Answers</span>
+                  </div>
+                )}
+                {selectedQuiz.settings.showExplanations && (
+                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
+                    <CheckCircleIcon />
+                    <span>Show Explanations</span>
+                  </div>
+                )}
+                {selectedQuiz.settings.allowRetake && (
+                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
+                    <CheckCircleIcon />
+                    <span>Allow Retakes ({selectedQuiz.settings.maxAttempts} max)</span>
+                  </div>
+                )}
+                {selectedQuiz.settings.showTimer && (
+                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
+                    <CheckCircleIcon />
+                    <span>Show Timer</span>
+                  </div>
+                )}
+                {selectedQuiz.settings.showProgressBar && (
+                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
+                    <CheckCircleIcon />
+                    <span>Show Progress Bar</span>
+                  </div>
+                )}
+                {selectedQuiz.settings.allowSkip && (
+                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
+                    <CheckCircleIcon />
+                    <span>Allow Skip</span>
+                  </div>
+                )}
+                {selectedQuiz.settings.allowReview && (
+                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
+                    <CheckCircleIcon />
+                    <span>Allow Review</span>
+                  </div>
+                )}
+                {selectedQuiz.settings.autoSubmitOnTimeout && (
+                  <div className="flex items-center gap-2 text-sm text-simmonds-stone">
+                    <CheckCircleIcon />
+                    <span>Auto-submit on Timeout</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Tags */}
+          {selectedQuiz.tags && selectedQuiz.tags.length > 0 && (
+            <div className="px-6 pb-6">
+              <h4 className="font-semibold text-simmonds-charcoal mb-2">Tags</h4>
+              <div className="flex flex-wrap gap-2">
+                {selectedQuiz.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-simmonds-primary/10 text-simmonds-primary rounded-full text-sm"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Questions Summary */}
+          <div className="border-t border-simmonds-cream p-6">
+            <h4 className="font-semibold text-simmonds-charcoal mb-4">
+              Questions ({selectedQuiz.totalQuestions})
+            </h4>
+            {selectedQuiz.totalQuestions === 0 ? (
+              <div className="text-center py-8 bg-simmonds-cream/30 rounded-xl">
+                <p className="text-simmonds-stone mb-2">No questions added yet</p>
+                {selectedQuiz.status !== 'published' && (
+                  <button
+                    onClick={() => handleEditTest(selectedQuiz._id)}
+                    className="text-simmonds-primary hover:underline text-sm"
+                  >
+                    Add questions
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="bg-simmonds-cream/30 rounded-xl p-4">
+                <p className="text-sm text-simmonds-stone">
+                  This quiz contains {selectedQuiz.totalQuestions} question{selectedQuiz.totalQuestions !== 1 ? 's' : ''}
+                  {selectedQuiz.totalPoints ? ` worth ${selectedQuiz.totalPoints} total points` : ''}.
+                </p>
+                {selectedQuiz.inlineQuestions && selectedQuiz.inlineQuestions.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    {selectedQuiz.inlineQuestions.slice(0, 5).map((q: any, i: number) => (
+                      <div key={i} className="flex items-center gap-2 text-sm">
+                        <span className="px-2 py-0.5 bg-simmonds-primary/10 text-simmonds-primary rounded text-xs">
+                          Q{i + 1}
+                        </span>
+                        <span className="text-simmonds-charcoal truncate flex-1">
+                          {q.questionText || 'Untitled question'}
+                        </span>
+                        <span className="text-simmonds-stone text-xs">
+                          {q.points || 1} pt{(q.points || 1) !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    ))}
+                    {selectedQuiz.inlineQuestions.length > 5 && (
+                      <p className="text-xs text-simmonds-stone mt-2">
+                        + {selectedQuiz.inlineQuestions.length - 5} more questions
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="border-t border-simmonds-cream p-6 bg-simmonds-cream/20">
+            <div className="flex flex-wrap gap-3 justify-end">
+              <button
+                onClick={handleBackToList}
+                className="px-6 py-2 border border-simmonds-cream text-simmonds-charcoal rounded-xl font-medium hover:bg-white transition-colors"
+              >
+                Back to List
+              </button>
+              {selectedQuiz.status !== 'published' && (
+                <button
+                  onClick={() => handleEditTest(selectedQuiz._id)}
+                  className="px-6 py-2 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light transition-colors"
+                >
+                  Edit Quiz
+                </button>
+              )}
+              {selectedQuiz.status === 'published' && (
+                <button
+                  onClick={() => handleTakeTest(selectedQuiz._id)}
+                  className="px-6 py-2 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light transition-colors flex items-center gap-2"
+                >
+                  <PlayIcon />
+                  Take Test
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Render main list view
   const renderListView = () => (
     <>
@@ -661,6 +1083,8 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
     <div className="max-w-7xl mx-auto">
       {viewMode === 'list' && renderListView()}
       {viewMode === 'create' && renderCreateTest()}
+      {viewMode === 'edit' && renderEditTest()}
+      {viewMode === 'preview' && renderPreviewTest()}
       {viewMode === 'question-bank' && renderQuestionBank()}
       {viewMode === 'analytics' && renderAnalytics()}
       {viewMode === 'take-test' && renderTakeTest()}
