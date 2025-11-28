@@ -38,9 +38,10 @@ export const generateQuestionsWithClaude = action({
     numberOfQuestions: v.number(),
     questionTypes: v.array(v.string()),
     audioWordLimit: v.number(),
+    documentContent: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { apiKey, language, targetLevel, topic, numberOfQuestions, questionTypes, audioWordLimit } = args;
+    const { apiKey, language, targetLevel, topic, numberOfQuestions, questionTypes, audioWordLimit, documentContent } = args;
 
     if (!apiKey) {
       throw new Error("API key is required for question generation");
@@ -54,6 +55,7 @@ export const generateQuestionsWithClaude = action({
       numberOfQuestions,
       questionTypes,
       audioWordLimit,
+      documentContent,
     });
 
     try {
@@ -238,12 +240,22 @@ function buildQuestionGenerationPrompt(args: {
   numberOfQuestions: number;
   questionTypes: string[];
   audioWordLimit: number;
+  documentContent?: string;
 }): string {
-  const { language, targetLevel, topic, numberOfQuestions, questionTypes, audioWordLimit } = args;
+  const { language, targetLevel, topic, numberOfQuestions, questionTypes, audioWordLimit, documentContent } = args;
 
   const languageName = language === "german" ? "German" : "English";
 
-  return `You are an expert ${languageName} language teacher creating quiz questions. Generate exactly ${numberOfQuestions} questions about "${topic}" for ${targetLevel} CEFR level students.
+  // Build document context section if provided
+  const documentSection = documentContent
+    ? `\n\nSOURCE DOCUMENT CONTENT:\n"""
+${documentContent}
+"""
+
+IMPORTANT: Generate questions based SPECIFICALLY on the content from the document above. The questions should test comprehension and understanding of this specific material.`
+    : "";
+
+  return `You are an expert ${languageName} language teacher creating quiz questions. Generate exactly ${numberOfQuestions} questions about "${topic}" for ${targetLevel} CEFR level students.${documentSection}
 
 QUESTION TYPES TO CREATE: ${questionTypes.join(", ")}
 
@@ -254,7 +266,7 @@ RULES:
 2. Questions must be clear and have one unambiguous correct answer (except multiple-select)
 3. For listening questions: write natural, conversational scripts
 4. Include explanations for why answers are correct
-5. Use appropriate vocabulary and grammar for the level
+5. Use appropriate vocabulary and grammar for the level${documentContent ? "\n6. Questions MUST be based on the provided document content" : ""}
 
 OUTPUT FORMAT: Return ONLY a valid JSON array. No markdown formatting, no explanation text, just the JSON.
 

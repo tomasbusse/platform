@@ -2,6 +2,87 @@ import React, { useState } from 'react';
 import QuestionTypeSelector, { QuestionType } from './QuestionTypeSelector';
 import VoiceSelector from './VoiceSelector';
 
+// Simple text extraction from PDF (client-side, basic)
+async function extractTextFromPDF(file: File): Promise<string> {
+  // For a simple approach, we'll read the binary and extract visible text
+  // This is a basic implementation - complex PDFs may need server-side processing
+  const arrayBuffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(arrayBuffer);
+
+  // Convert to string and try to extract readable text between stream markers
+  let text = '';
+  let textChunks: string[] = [];
+
+  // Simple approach: look for text between BT and ET markers (PDF text objects)
+  const decoder = new TextDecoder('utf-8', { fatal: false });
+  const pdfString = decoder.decode(bytes);
+
+  // Extract text from PDF streams (simplified)
+  const textMatches = pdfString.match(/\(([^)]+)\)/g);
+  if (textMatches) {
+    textChunks = textMatches.map(m => m.slice(1, -1));
+    text = textChunks.join(' ');
+  }
+
+  // Clean up the text
+  text = text
+    .replace(/\\n/g, '\n')
+    .replace(/\\r/g, '')
+    .replace(/\\t/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // If we couldn't extract much, provide a helpful message
+  if (text.length < 50) {
+    throw new Error('Could not extract text from PDF. Please try a text file or copy-paste the content.');
+  }
+
+  return text;
+}
+
+// Simple text extraction from DOCX (client-side)
+async function extractTextFromDocx(file: File): Promise<string> {
+  // DOCX files are ZIP archives containing XML
+  // We'll use the browser's built-in compression API if available
+
+  try {
+    // Try to use JSZip-like approach with native APIs
+    const arrayBuffer = await file.arrayBuffer();
+
+    // DOCX is a ZIP file - try to find document.xml content
+    const decoder = new TextDecoder('utf-8', { fatal: false });
+    const content = decoder.decode(arrayBuffer);
+
+    // Look for text content in the XML
+    // Simple regex to extract text from XML tags
+    const textContent = content
+      .replace(/<[^>]+>/g, ' ') // Remove XML tags
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Filter to only readable ASCII/Unicode text
+    const readableText = textContent
+      .split('')
+      .filter(char => {
+        const code = char.charCodeAt(0);
+        return (code >= 32 && code <= 126) || code >= 160 || char === '\n';
+      })
+      .join('');
+
+    if (readableText.length < 50) {
+      throw new Error('Could not extract text from DOCX');
+    }
+
+    return readableText;
+  } catch {
+    throw new Error('Could not extract text from DOCX. Please try a text file or copy-paste the content.');
+  }
+}
+
 export interface QuizGenerationConfig {
   title: string;
   language: 'english' | 'german';
@@ -14,6 +95,9 @@ export interface QuizGenerationConfig {
   selectedVoiceName: string;
   replaysAllowed: number;
   timeLimitMinutes?: number;
+  // Document-based generation
+  documentContent?: string;
+  documentName?: string;
 }
 
 interface AIQuizConfigFormProps {
@@ -43,8 +127,10 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
 }) => {
   const [config, setConfig] = useState<QuizGenerationConfig>(defaultConfig);
   const [errors, setErrors] = useState<Partial<Record<keyof QuizGenerationConfig, string>>>({});
+  const [isProcessingDocument, setIsProcessingDocument] = useState(false);
 
   const hasListeningType = config.questionTypes.includes('listening');
+  const hasDocument = !!config.documentContent;
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof QuizGenerationConfig, string>> = {};
@@ -53,12 +139,12 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
       newErrors.title = 'Quiz title is required';
     }
 
-    if (!config.topic.trim()) {
-      newErrors.topic = 'Topic is required';
+    if (!config.topic.trim() && !config.documentContent) {
+      newErrors.topic = 'Topic is required (or upload a document)';
     }
 
-    if (config.numberOfQuestions < 5 || config.numberOfQuestions > 50) {
-      newErrors.numberOfQuestions = 'Number of questions must be between 5 and 50';
+    if (config.numberOfQuestions < 5 || config.numberOfQuestions > 100) {
+      newErrors.numberOfQuestions = 'Number of questions must be between 5 and 100';
     }
 
     if (config.questionTypes.length === 0) {
@@ -94,6 +180,86 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
     if (errors[key]) {
       setErrors((prev) => ({ ...prev, [key]: undefined }));
     }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = [
+      'text/plain',
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword',
+    ];
+    const allowedExtensions = ['.txt', '.pdf', '.docx', '.doc'];
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+      setErrors((prev) => ({ ...prev, documentContent: 'Please upload a .txt, .pdf, or .docx file' }));
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors((prev) => ({ ...prev, documentContent: 'File size must be less than 5MB' }));
+      return;
+    }
+
+    setIsProcessingDocument(true);
+    setErrors((prev) => ({ ...prev, documentContent: undefined }));
+
+    try {
+      let content = '';
+
+      if (file.type === 'text/plain' || fileExtension === '.txt') {
+        // Read text file directly
+        content = await file.text();
+      } else if (file.type === 'application/pdf' || fileExtension === '.pdf') {
+        // For PDF, we'll extract text client-side using a simple approach
+        // Note: For complex PDFs, server-side processing would be better
+        content = await extractTextFromPDF(file);
+      } else if (
+        file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+        fileExtension === '.docx'
+      ) {
+        // For DOCX, extract text
+        content = await extractTextFromDocx(file);
+      }
+
+      if (!content.trim()) {
+        setErrors((prev) => ({ ...prev, documentContent: 'Could not extract text from the document' }));
+        return;
+      }
+
+      // Limit content length (keep first ~10000 characters for API limits)
+      const maxChars = 10000;
+      if (content.length > maxChars) {
+        content = content.substring(0, maxChars) + '\n\n[Document truncated for processing...]';
+      }
+
+      setConfig((prev) => ({
+        ...prev,
+        documentContent: content,
+        documentName: file.name,
+        // Auto-set topic if empty
+        topic: prev.topic || `Content from: ${file.name}`,
+      }));
+    } catch (error) {
+      console.error('Error processing document:', error);
+      setErrors((prev) => ({ ...prev, documentContent: 'Error processing document. Please try a different file.' }));
+    } finally {
+      setIsProcessingDocument(false);
+    }
+  };
+
+  const clearDocument = () => {
+    setConfig((prev) => ({
+      ...prev,
+      documentContent: undefined,
+      documentName: undefined,
+    }));
   };
 
   return (
@@ -168,7 +334,7 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
           {/* Topic */}
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-simmonds-charcoal mb-2">
-              Topic / Theme *
+              Topic / Theme {!hasDocument && '*'}
             </label>
             <input
               type="text"
@@ -185,6 +351,81 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
             )}
           </div>
 
+          {/* Document Upload */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-simmonds-charcoal mb-2">
+              Upload Document (Optional)
+            </label>
+            <p className="text-xs text-simmonds-stone mb-2">
+              Upload a document to generate questions from its content. Supports .txt, .pdf, .docx
+            </p>
+
+            {!hasDocument ? (
+              <div className="relative">
+                <input
+                  type="file"
+                  accept=".txt,.pdf,.docx,.doc"
+                  onChange={handleFileUpload}
+                  disabled={isLoading || isProcessingDocument}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                />
+                <div
+                  className={`
+                    border-2 border-dashed rounded-xl p-6 text-center transition-colors
+                    ${isProcessingDocument ? 'border-simmonds-primary bg-simmonds-primary/5' : 'border-simmonds-cream hover:border-simmonds-stone/30'}
+                  `}
+                >
+                  {isProcessingDocument ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <svg className="w-5 h-5 text-simmonds-primary animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      <span className="text-simmonds-primary font-medium">Processing document...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <svg className="w-8 h-8 text-simmonds-stone mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <p className="text-simmonds-charcoal font-medium">Click to upload or drag and drop</p>
+                      <p className="text-xs text-simmonds-stone mt-1">PDF, DOCX, or TXT (max 5MB)</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between p-4 bg-simmonds-olive/10 border border-simmonds-olive/30 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <svg className="w-8 h-8 text-simmonds-olive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <div>
+                    <p className="font-medium text-simmonds-charcoal">{config.documentName}</p>
+                    <p className="text-xs text-simmonds-stone">
+                      {config.documentContent?.length.toLocaleString()} characters extracted
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={clearDocument}
+                  disabled={isLoading}
+                  className="p-2 text-simmonds-terracotta hover:bg-simmonds-terracotta/10 rounded-lg transition-colors"
+                  title="Remove document"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            )}
+
+            {errors.documentContent && (
+              <p className="mt-1 text-sm text-simmonds-terracotta">{errors.documentContent}</p>
+            )}
+          </div>
+
           {/* Number of Questions */}
           <div>
             <label className="block text-sm font-medium text-simmonds-charcoal mb-2">
@@ -194,7 +435,7 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
               <input
                 type="range"
                 min="5"
-                max="50"
+                max="100"
                 value={config.numberOfQuestions}
                 onChange={(e) => updateConfig('numberOfQuestions', parseInt(e.target.value))}
                 className="flex-1 h-2 bg-simmonds-cream rounded-lg appearance-none cursor-pointer"
