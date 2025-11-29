@@ -14,7 +14,7 @@
  * Rollback: See docs/TESTS_MODULE_CHANGELOG.md
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
@@ -172,6 +172,22 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
 
+  // Test-taking state
+  const [testSessionId, setTestSessionId] = useState<Id<"testSessions"> | null>(null);
+  const [testQuestionIndex, setTestQuestionIndex] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<Record<string, string>>({});
+  const [testStartTime, setTestStartTime] = useState<number | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const [isTestStarted, setIsTestStarted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [testResults, setTestResults] = useState<{
+    score: number;
+    percentage: number;
+    total: number;
+    passed: boolean;
+    level?: string;
+  } | null>(null);
+
   // Determine user role
   const isTeacher = currentUser?.role === 'teacher' || currentUser?.role === 'admin' || currentUser?.role === 'corporate_admin';
   const isStudent = currentUser?.role === 'student';
@@ -180,6 +196,9 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
   const deleteQuizMutation = useMutation(api.quizzes.deleteQuiz);
   const publishQuizMutation = useMutation(api.quizzes.publishQuiz);
   const archiveQuizMutation = useMutation(api.quizzes.archiveQuiz);
+  const createTestSessionMutation = useMutation(api.testSessions.createTestSession);
+  const updateTestSessionMutation = useMutation(api.testSessions.updateTestSession);
+  const completeTestMutation = useMutation(api.testSessions.completeTestAndAssignGroup);
 
   // Fetch quizzes based on role
   const quizzes = useQuery(
@@ -215,6 +234,143 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
 
   // Published quizzes count for students
   const availableTestsCount = quizzes?.filter(q => q.status === 'published').length || 0;
+
+  // Timer effect for test-taking
+  useEffect(() => {
+    if (!isTestStarted || !testStartTime || timeRemaining === null) return;
+
+    const timer = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - testStartTime) / 1000);
+      const selectedQuiz = quizzes?.find(q => q._id === selectedTestId);
+      const durationSeconds = (selectedQuiz?.duration || 30) * 60;
+      const remaining = Math.max(0, durationSeconds - elapsed);
+
+      setTimeRemaining(remaining);
+
+      if (remaining === 0) {
+        // Auto-submit when time runs out
+        handleSubmitTest();
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isTestStarted, testStartTime, selectedTestId, quizzes]);
+
+  // Format time remaining
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Start test session
+  const handleStartTest = async () => {
+    const selectedQuiz = quizzes?.find(q => q._id === selectedTestId) as QuizData | undefined;
+    if (!selectedQuiz || !currentUser || !company) return;
+
+    try {
+      const questions = selectedQuiz.inlineQuestions || [];
+      const sessionId = await createTestSessionMutation({
+        testId: selectedQuiz._id,
+        userId: currentUser._id as Id<"users">,
+        companyId: company._id as Id<"companies">,
+        status: 'in_progress',
+        startedAt: Date.now(),
+        totalQuestions: questions.length,
+        questionsAnswered: 0,
+        quizId: selectedQuiz._id,
+      });
+
+      setTestSessionId(sessionId);
+      setTestStartTime(Date.now());
+      setTimeRemaining(selectedQuiz.duration * 60);
+      setIsTestStarted(true);
+      setTestQuestionIndex(0);
+      setTestAnswers({});
+      setTestResults(null);
+    } catch (error) {
+      console.error('Error starting test:', error);
+      alert('Failed to start test. Please try again.');
+    }
+  };
+
+  // Submit test
+  const handleSubmitTest = useCallback(async () => {
+    const selectedQuiz = quizzes?.find(q => q._id === selectedTestId) as QuizData | undefined;
+    if (!selectedQuiz || !testSessionId || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      const questions = selectedQuiz.inlineQuestions || [];
+
+      // Calculate score
+      let correctCount = 0;
+      const answers = questions.map((q: any) => {
+        const userAnswer = testAnswers[q.id] || '';
+        const correctAnswer = q.questionData?.correctAnswer;
+        const isCorrect = userAnswer && correctAnswer &&
+          userAnswer.toLowerCase() === String(correctAnswer).toLowerCase();
+        if (isCorrect) correctCount++;
+
+        return {
+          questionId: q.id,
+          answer: userAnswer,
+          isCorrect: !!isCorrect,
+          timeSpent: 0, // Could track per-question time
+        };
+      });
+
+      const percentage = questions.length > 0 ? Math.round((correctCount / questions.length) * 100) : 0;
+      const passed = percentage >= selectedQuiz.passingScore;
+
+      // Determine recommended level based on score
+      let level = 'A1';
+      if (percentage >= 90) level = 'C2';
+      else if (percentage >= 80) level = 'C1';
+      else if (percentage >= 70) level = 'B2';
+      else if (percentage >= 60) level = 'B1';
+      else if (percentage >= 50) level = 'A2';
+
+      // Update session with results
+      await updateTestSessionMutation({
+        sessionId: testSessionId,
+        answers,
+        questionsAnswered: questions.length,
+        status: 'completed',
+        completedAt: Date.now(),
+        totalScore: correctCount,
+        percentageScore: percentage,
+        recommendedLevel: level,
+      });
+
+      setTestResults({
+        score: correctCount,
+        percentage,
+        total: questions.length,
+        passed,
+        level,
+      });
+      setIsTestStarted(false);
+    } catch (error) {
+      console.error('Error submitting test:', error);
+      alert('Failed to submit test. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [quizzes, selectedTestId, testSessionId, testAnswers, isSubmitting, updateTestSessionMutation]);
+
+  // Reset test state when going back
+  const handleBackFromTest = () => {
+    setIsTestStarted(false);
+    setTestSessionId(null);
+    setTestQuestionIndex(0);
+    setTestAnswers({});
+    setTestStartTime(null);
+    setTimeRemaining(null);
+    setTestResults(null);
+    setViewMode('list');
+    setSelectedTestId(null);
+  };
 
   // Handle test actions
   const handleCreateTest = () => {
@@ -610,78 +766,322 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
     </div>
   );
 
-  // Render take test view (placeholder - would integrate with existing test taking functionality)
+  // Render take test view - Full test-taking experience
   const renderTakeTest = () => {
-    const selectedQuiz = quizzes?.find(q => q._id === selectedTestId);
+    const selectedQuiz = quizzes?.find(q => q._id === selectedTestId) as QuizData | undefined;
 
+    if (!selectedQuiz) {
+      return (
+        <div className="space-y-6">
+          <button onClick={handleBackFromTest} className="flex items-center gap-2 text-simmonds-primary hover:text-simmonds-primary-dark">
+            <BackIcon /> Back to Tests
+          </button>
+          <div className="text-center py-12">
+            <p className="text-simmonds-stone">Test not found</p>
+          </div>
+        </div>
+      );
+    }
+
+    const questions = selectedQuiz.inlineQuestions || [];
+    const currentQuestion = questions[testQuestionIndex];
+    const totalQuestions = questions.length;
+    const answeredCount = Object.keys(testAnswers).length;
+
+    // Show results view
+    if (testResults) {
+      return (
+        <div className="space-y-6 max-w-3xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-sm border border-simmonds-cream p-8 text-center">
+            <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 ${
+              testResults.passed ? 'bg-simmonds-lime/20' : 'bg-simmonds-terracotta/20'
+            }`}>
+              <span className={`text-3xl font-bold ${
+                testResults.passed ? 'text-simmonds-lime-dark' : 'text-simmonds-terracotta'
+              }`}>
+                {testResults.percentage}%
+              </span>
+            </div>
+            <h3 className="text-2xl font-semibold text-simmonds-charcoal mb-2">
+              {testResults.passed ? 'Congratulations!' : 'Keep Practicing'}
+            </h3>
+            <p className="text-simmonds-stone mb-2">
+              You got {testResults.score} out of {testResults.total} questions correct
+            </p>
+            {testResults.level && (
+              <p className="text-simmonds-primary font-medium mb-6">
+                Recommended Level: {testResults.level}
+              </p>
+            )}
+
+            {/* Question Review */}
+            <div className="text-left space-y-4 mt-8">
+              <h4 className="font-semibold text-simmonds-charcoal">Question Review</h4>
+              {questions.map((q: any, i: number) => {
+                const userAnswer = testAnswers[q.id];
+                const correctAnswer = q.questionData?.correctAnswer;
+                const isCorrect = userAnswer && correctAnswer && userAnswer.toLowerCase() === String(correctAnswer).toLowerCase();
+                return (
+                  <div key={i} className={`p-4 rounded-xl ${isCorrect ? 'bg-simmonds-lime/10' : 'bg-simmonds-terracotta/10'}`}>
+                    <div className="flex items-start gap-3">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        isCorrect ? 'bg-simmonds-lime/30 text-simmonds-lime-dark' : 'bg-simmonds-terracotta/30 text-simmonds-terracotta'
+                      }`}>
+                        Q{i + 1}
+                      </span>
+                      <div className="flex-1">
+                        <p className="text-sm text-simmonds-charcoal mb-2">{q.questionText}</p>
+                        <p className="text-xs text-simmonds-stone">
+                          Your answer: <span className={isCorrect ? 'text-simmonds-lime-dark' : 'text-simmonds-terracotta'}>{userAnswer || '(no answer)'}</span>
+                        </p>
+                        {!isCorrect && correctAnswer && (
+                          <p className="text-xs text-simmonds-lime-dark mt-1">
+                            Correct answer: {String(correctAnswer)}
+                          </p>
+                        )}
+                        {q.questionData?.explanation && (
+                          <p className="text-xs text-simmonds-stone mt-2 italic">{q.questionData.explanation}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex justify-center gap-3 mt-8">
+              <button
+                onClick={handleBackFromTest}
+                className="px-6 py-2 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light transition-colors"
+              >
+                Back to Tests
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Show active test view
+    if (isTestStarted && currentQuestion) {
+      return (
+        <div className="space-y-6 max-w-3xl mx-auto">
+          {/* Header with timer */}
+          <div className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-simmonds-cream">
+            <div className="flex items-center gap-4">
+              <h2 className="text-lg font-semibold text-simmonds-charcoal">{selectedQuiz.title}</h2>
+              <span className="px-3 py-1 bg-simmonds-primary/10 text-simmonds-primary rounded-full text-sm">
+                {selectedQuiz.level}
+              </span>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-simmonds-stone">
+                {answeredCount}/{totalQuestions} answered
+              </span>
+              {timeRemaining !== null && (
+                <span className={`px-3 py-1 rounded-lg font-mono font-medium ${
+                  timeRemaining < 300 ? 'bg-simmonds-terracotta/10 text-simmonds-terracotta' : 'bg-simmonds-olive/10 text-simmonds-olive'
+                }`}>
+                  <ClockIcon /> {formatTime(timeRemaining)}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="h-2 bg-simmonds-cream rounded-full overflow-hidden">
+            <div
+              className="h-full bg-simmonds-primary transition-all duration-300"
+              style={{ width: `${((testQuestionIndex + 1) / totalQuestions) * 100}%` }}
+            />
+          </div>
+
+          {/* Question dots */}
+          <div className="flex flex-wrap gap-2 justify-center">
+            {questions.map((_: any, i: number) => {
+              const q = questions[i] as any;
+              const isAnswered = !!testAnswers[q.id];
+              const isCurrent = i === testQuestionIndex;
+              return (
+                <button
+                  key={i}
+                  onClick={() => setTestQuestionIndex(i)}
+                  className={`w-8 h-8 rounded-full text-xs font-medium transition-all ${
+                    isCurrent
+                      ? 'bg-simmonds-primary text-white'
+                      : isAnswered
+                      ? 'bg-simmonds-lime/30 text-simmonds-lime-dark'
+                      : 'bg-simmonds-cream text-simmonds-stone hover:bg-simmonds-cream-dark'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Question card */}
+          <div className="bg-white rounded-2xl shadow-sm border border-simmonds-cream p-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="px-3 py-1 bg-simmonds-primary/10 text-simmonds-primary rounded-full text-xs font-medium">
+                Question {testQuestionIndex + 1} of {totalQuestions}
+              </span>
+              {currentQuestion.level && (
+                <span className="px-3 py-1 bg-simmonds-olive/10 text-simmonds-olive rounded-full text-xs font-medium">
+                  {currentQuestion.level}
+                </span>
+              )}
+              {currentQuestion.skill && (
+                <span className="px-3 py-1 bg-simmonds-cream text-simmonds-stone rounded-full text-xs font-medium">
+                  {currentQuestion.skill}
+                </span>
+              )}
+            </div>
+
+            <h3 className="text-lg font-medium text-simmonds-charcoal mb-6">
+              {currentQuestion.questionText}
+            </h3>
+
+            {/* Multiple choice options */}
+            {currentQuestion.questionData?.options && (
+              <div className="space-y-3">
+                {currentQuestion.questionData.options.map((option: string, optIndex: number) => {
+                  const isSelected = testAnswers[currentQuestion.id] === option;
+                  return (
+                    <button
+                      key={optIndex}
+                      onClick={() => setTestAnswers(prev => ({ ...prev, [currentQuestion.id]: option }))}
+                      className={`w-full p-4 text-left rounded-xl border-2 transition-all ${
+                        isSelected
+                          ? 'border-simmonds-primary bg-simmonds-primary/5'
+                          : 'border-simmonds-cream hover:border-simmonds-stone/30'
+                      }`}
+                    >
+                      <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full mr-3 text-sm font-medium ${
+                        isSelected ? 'bg-simmonds-primary text-white' : 'bg-simmonds-cream text-simmonds-stone'
+                      }`}>
+                        {String.fromCharCode(65 + optIndex)}
+                      </span>
+                      {option}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Navigation buttons */}
+          <div className="flex justify-between">
+            <button
+              onClick={() => setTestQuestionIndex(prev => Math.max(0, prev - 1))}
+              disabled={testQuestionIndex === 0}
+              className="px-6 py-2 border border-simmonds-cream text-simmonds-charcoal rounded-xl font-medium hover:bg-simmonds-cream-light transition-colors disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <div className="flex gap-3">
+              {testQuestionIndex === totalQuestions - 1 ? (
+                <button
+                  onClick={handleSubmitTest}
+                  disabled={isSubmitting}
+                  className="px-8 py-2 bg-simmonds-lime text-white rounded-xl font-medium hover:bg-simmonds-lime-dark transition-colors disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Test'}
+                </button>
+              ) : (
+                <button
+                  onClick={() => setTestQuestionIndex(prev => Math.min(totalQuestions - 1, prev + 1))}
+                  className="px-6 py-2 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light transition-colors"
+                >
+                  Next
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Show start screen
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
           <button
-            onClick={handleBackToList}
+            onClick={handleBackFromTest}
             className="flex items-center gap-2 text-simmonds-primary hover:text-simmonds-primary-dark"
           >
             <BackIcon />
             Back to Tests
           </button>
           <h2 className="text-xl font-semibold text-simmonds-charcoal">
-            {selectedQuiz?.title || 'Take Test'}
+            {selectedQuiz.title}
           </h2>
         </div>
 
-        {selectedQuiz ? (
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-simmonds-cream max-w-3xl mx-auto">
-            <div className="text-center mb-8">
-              <div className="w-20 h-20 bg-simmonds-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <PlayIcon />
-              </div>
-              <h3 className="text-2xl font-semibold text-simmonds-charcoal mb-2">{selectedQuiz.title}</h3>
-              <p className="text-simmonds-stone">{selectedQuiz.description}</p>
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-simmonds-cream max-w-3xl mx-auto">
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 bg-simmonds-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <PlayIcon />
             </div>
+            <h3 className="text-2xl font-semibold text-simmonds-charcoal mb-2">{selectedQuiz.title}</h3>
+            <p className="text-simmonds-stone">{selectedQuiz.description}</p>
+          </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <div className="text-center p-4 bg-simmonds-primary/5 rounded-xl">
-                <p className="text-sm text-simmonds-stone">Level</p>
-                <p className="text-xl font-bold text-simmonds-primary">{selectedQuiz.level}</p>
-              </div>
-              <div className="text-center p-4 bg-simmonds-olive/10 rounded-xl">
-                <p className="text-sm text-simmonds-stone">Questions</p>
-                <p className="text-xl font-bold text-simmonds-olive">{selectedQuiz.totalQuestions}</p>
-              </div>
-              <div className="text-center p-4 bg-simmonds-lime/10 rounded-xl">
-                <p className="text-sm text-simmonds-stone">Duration</p>
-                <p className="text-xl font-bold text-simmonds-lime-dark">{selectedQuiz.duration} min</p>
-              </div>
-              <div className="text-center p-4 bg-simmonds-cream rounded-xl">
-                <p className="text-sm text-simmonds-stone">Passing</p>
-                <p className="text-xl font-bold text-simmonds-charcoal">{selectedQuiz.passingScore}%</p>
-              </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="text-center p-4 bg-simmonds-primary/5 rounded-xl">
+              <p className="text-sm text-simmonds-stone">Level</p>
+              <p className="text-xl font-bold text-simmonds-primary">{selectedQuiz.level}</p>
             </div>
-
-            <div className="bg-simmonds-cream-light border border-simmonds-cream rounded-xl p-4 mb-6">
-              <h4 className="font-semibold text-simmonds-charcoal mb-2">Important Information</h4>
-              <ul className="text-sm text-simmonds-stone space-y-1">
-                <li>- Ensure you have a stable internet connection</li>
-                <li>- Find a quiet environment to take the test</li>
-                <li>- You will have {selectedQuiz.duration} minutes to complete</li>
-                <li>- Your progress will be saved automatically</li>
-              </ul>
+            <div className="text-center p-4 bg-simmonds-olive/10 rounded-xl">
+              <p className="text-sm text-simmonds-stone">Questions</p>
+              <p className="text-xl font-bold text-simmonds-olive">{totalQuestions}</p>
             </div>
-
-            <div className="text-center">
-              <button
-                onClick={() => alert('Test taking functionality coming soon. Please use the existing Take Test feature from the navigation.')}
-                className="px-8 py-3 bg-simmonds-primary text-white rounded-xl font-semibold hover:bg-simmonds-primary-light transition-colors"
-              >
-                Begin Test
-              </button>
+            <div className="text-center p-4 bg-simmonds-lime/10 rounded-xl">
+              <p className="text-sm text-simmonds-stone">Duration</p>
+              <p className="text-xl font-bold text-simmonds-lime-dark">{selectedQuiz.duration} min</p>
+            </div>
+            <div className="text-center p-4 bg-simmonds-cream rounded-xl">
+              <p className="text-sm text-simmonds-stone">Passing</p>
+              <p className="text-xl font-bold text-simmonds-charcoal">{selectedQuiz.passingScore}%</p>
             </div>
           </div>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-simmonds-stone">Test not found</p>
-          </div>
-        )}
+
+          {totalQuestions === 0 ? (
+            <div className="text-center p-8 bg-simmonds-cream-light rounded-xl">
+              <p className="text-simmonds-stone mb-4">This test has no questions yet.</p>
+              {isTeacher && (
+                <button
+                  onClick={() => handleEditTest(selectedQuiz._id)}
+                  className="px-6 py-2 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light transition-colors"
+                >
+                  Add Questions
+                </button>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="bg-simmonds-cream-light border border-simmonds-cream rounded-xl p-4 mb-6">
+                <h4 className="font-semibold text-simmonds-charcoal mb-2">Important Information</h4>
+                <ul className="text-sm text-simmonds-stone space-y-1">
+                  <li>• Ensure you have a stable internet connection</li>
+                  <li>• Find a quiet environment to take the test</li>
+                  <li>• You will have {selectedQuiz.duration} minutes to complete</li>
+                  <li>• Your progress will be saved automatically</li>
+                  <li>• You need {selectedQuiz.passingScore}% to pass</li>
+                </ul>
+              </div>
+
+              <div className="text-center">
+                <button
+                  onClick={handleStartTest}
+                  className="px-8 py-3 bg-simmonds-primary text-white rounded-xl font-semibold hover:bg-simmonds-primary-light transition-colors"
+                >
+                  Begin Test
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     );
   };
