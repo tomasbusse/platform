@@ -8,26 +8,33 @@ export const getTeacherStats = query({
     companyId: v.id("companies"),
   },
   handler: async (ctx, args) => {
-    // Get lessons created by this teacher
-    const lessons = await ctx.db
-      .query("lessons")
+    // Get scheduled lessons created by this teacher
+    const allScheduledLessons = await ctx.db
+      .query("scheduledLessons")
       .withIndex("by_company", (q) => q.eq("companyId", args.companyId))
-      .filter((q) => q.eq(q.field("teacherId"), args.teacherId))
       .collect();
+    const scheduledLessons = allScheduledLessons.filter(l => l.createdBy === args.teacherId || l.teacherId === args.teacherId);
+
+    // Get virtual lessons created by this teacher
+    const allVirtualLessons = await ctx.db
+      .query("virtualLessons")
+      .withIndex("by_company", (q) => q.eq("companyId", args.companyId))
+      .collect();
+    const virtualLessons = allVirtualLessons.filter(l => l.createdBy === args.teacherId);
 
     // Get quizzes/tests created by this teacher
-    const quizzes = await ctx.db
+    const allQuizzes = await ctx.db
       .query("quizzes")
       .withIndex("by_company", (q) => q.eq("companyId", args.companyId))
-      .filter((q) => q.eq(q.field("createdBy"), args.teacherId))
       .collect();
+    const quizzes = allQuizzes.filter(q => q.createdBy === args.teacherId);
 
     // Get groups managed by this teacher
-    const groups = await ctx.db
+    const allGroups = await ctx.db
       .query("groups")
       .withIndex("by_company", (q) => q.eq("companyId", args.companyId))
-      .filter((q) => q.eq(q.field("teacherId"), args.teacherId))
       .collect();
+    const groups = allGroups.filter(g => g.teacherId === args.teacherId);
 
     // Count students in teacher's groups
     let assignedStudents = 0;
@@ -37,7 +44,7 @@ export const getTeacherStats = query({
 
     return {
       assignedStudents,
-      lessonsCreated: lessons.length,
+      lessonsCreated: scheduledLessons.length + virtualLessons.length,
       testsCreated: quizzes.length,
       groupsManaged: groups.length,
     };
