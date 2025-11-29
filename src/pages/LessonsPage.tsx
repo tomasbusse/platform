@@ -276,40 +276,40 @@ const LessonsPage: React.FC<LessonsPageProps> = ({ currentUser, company }) => {
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-simmonds-charcoal mb-2">Lessons</h1>
-        <p className="text-simmonds-stone">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-simmonds-charcoal mb-1 sm:mb-2">Lessons</h1>
+        <p className="text-sm sm:text-base text-simmonds-stone">
           {isTeacher
-            ? 'Schedule lessons, create virtual content, and track student progress'
-            : 'Access your lessons and track your learning progress'}
+            ? 'Schedule lessons, create content, and track progress'
+            : 'Access your lessons and track progress'}
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         {isTeacher && teacherStats && (
           <>
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-simmonds-cream">
-              <p className="text-sm text-simmonds-stone">Upcoming Lessons</p>
-              <p className="text-2xl font-bold text-simmonds-primary">
+            <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-simmonds-cream">
+              <p className="text-xs sm:text-sm text-simmonds-stone">Upcoming</p>
+              <p className="text-xl sm:text-2xl font-bold text-simmonds-primary">
                 {teacherStats.upcomingLessons}
               </p>
             </div>
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-simmonds-cream">
-              <p className="text-sm text-simmonds-stone">Completed Lessons</p>
-              <p className="text-2xl font-bold text-simmonds-lime-dark">
+            <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-simmonds-cream">
+              <p className="text-xs sm:text-sm text-simmonds-stone">Completed</p>
+              <p className="text-xl sm:text-2xl font-bold text-simmonds-lime-dark">
                 {teacherStats.completedLessons}
               </p>
             </div>
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-simmonds-cream">
-              <p className="text-sm text-simmonds-stone">Practice Sessions</p>
-              <p className="text-2xl font-bold text-simmonds-olive">
+            <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-simmonds-cream">
+              <p className="text-xs sm:text-sm text-simmonds-stone">Practice</p>
+              <p className="text-xl sm:text-2xl font-bold text-simmonds-olive">
                 {teacherStats.totalVirtualLessons}
               </p>
             </div>
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-simmonds-cream">
-              <p className="text-sm text-simmonds-stone">Published</p>
-              <p className="text-2xl font-bold text-simmonds-charcoal">
+            <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-simmonds-cream">
+              <p className="text-xs sm:text-sm text-simmonds-stone">Published</p>
+              <p className="text-xl sm:text-2xl font-bold text-simmonds-charcoal">
                 {teacherStats.publishedVirtualLessons}
               </p>
             </div>
@@ -318,27 +318,27 @@ const LessonsPage: React.FC<LessonsPageProps> = ({ currentUser, company }) => {
 
         {isStudent && studentStats && (
           <>
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-simmonds-cream">
-              <p className="text-sm text-simmonds-stone">Lessons Completed</p>
-              <p className="text-2xl font-bold text-simmonds-lime-dark">
+            <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-simmonds-cream">
+              <p className="text-xs sm:text-sm text-simmonds-stone">Completed</p>
+              <p className="text-xl sm:text-2xl font-bold text-simmonds-lime-dark">
                 {studentStats.completedLessons}
               </p>
             </div>
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-simmonds-cream">
-              <p className="text-sm text-simmonds-stone">In Progress</p>
-              <p className="text-2xl font-bold text-simmonds-olive">
+            <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-simmonds-cream">
+              <p className="text-xs sm:text-sm text-simmonds-stone">In Progress</p>
+              <p className="text-xl sm:text-2xl font-bold text-simmonds-olive">
                 {studentStats.inProgressLessons}
               </p>
             </div>
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-simmonds-cream">
-              <p className="text-sm text-simmonds-stone">Tests Passed</p>
-              <p className="text-2xl font-bold text-simmonds-primary">
+            <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-simmonds-cream">
+              <p className="text-xs sm:text-sm text-simmonds-stone">Tests Passed</p>
+              <p className="text-xl sm:text-2xl font-bold text-simmonds-primary">
                 {studentStats.testsPassed}/{studentStats.totalTestsTaken}
               </p>
             </div>
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-simmonds-cream">
-              <p className="text-sm text-simmonds-stone">Avg Test Score</p>
-              <p className="text-2xl font-bold text-simmonds-charcoal">
+            <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-simmonds-cream">
+              <p className="text-xs sm:text-sm text-simmonds-stone">Avg Score</p>
+              <p className="text-xl sm:text-2xl font-bold text-simmonds-charcoal">
                 {studentStats.averageTestScore}%
               </p>
             </div>
@@ -348,52 +348,54 @@ const LessonsPage: React.FC<LessonsPageProps> = ({ currentUser, company }) => {
 
       {/* Action Buttons (Teachers only) */}
       {isTeacher && (
-        <div className="flex gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4 sm:mb-6">
           <button
             onClick={() => setViewMode('schedule')}
-            className="px-6 py-3 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light flex items-center gap-2"
+            className="px-4 sm:px-6 py-2.5 sm:py-3 bg-simmonds-primary text-white rounded-xl text-sm sm:text-base font-medium hover:bg-simmonds-primary-light flex items-center justify-center gap-2"
           >
-            📅 Schedule Lesson
+            <span>📅</span>
+            <span>Schedule Lesson</span>
           </button>
           <button
             onClick={() => setViewMode('create')}
-            className="px-6 py-3 bg-gradient-to-r from-simmonds-olive to-simmonds-lime text-white rounded-xl font-medium hover:opacity-90 flex items-center gap-2"
+            className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-simmonds-olive to-simmonds-lime text-white rounded-xl text-sm sm:text-base font-medium hover:opacity-90 flex items-center justify-center gap-2"
           >
-            ✨ Create Practice Session
+            <span>✨</span>
+            <span>Create Practice Session</span>
           </button>
         </div>
       )}
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-simmonds-cream">
+      <div className="flex gap-1 sm:gap-2 mb-4 sm:mb-6 border-b border-simmonds-cream overflow-x-auto scrollbar-hide">
         {isTeacher ? (
           <>
             <button
               onClick={() => setActiveTab('scheduled')}
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors whitespace-nowrap ${
                 activeTab === 'scheduled'
                   ? 'text-simmonds-primary border-b-2 border-simmonds-primary'
                   : 'text-simmonds-stone hover:text-simmonds-charcoal'
               }`}
             >
-              Scheduled Lessons
+              Scheduled
             </button>
             <button
               onClick={() => setActiveTab('virtual')}
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors whitespace-nowrap ${
                 activeTab === 'virtual'
                   ? 'text-simmonds-primary border-b-2 border-simmonds-primary'
                   : 'text-simmonds-stone hover:text-simmonds-charcoal'
               }`}
             >
-              Practice Sessions
+              Practice
             </button>
           </>
         ) : (
           <>
             <button
               onClick={() => setActiveTab('my-progress')}
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors whitespace-nowrap ${
                 activeTab === 'my-progress'
                   ? 'text-simmonds-primary border-b-2 border-simmonds-primary'
                   : 'text-simmonds-stone hover:text-simmonds-charcoal'
@@ -403,23 +405,23 @@ const LessonsPage: React.FC<LessonsPageProps> = ({ currentUser, company }) => {
             </button>
             <button
               onClick={() => setActiveTab('scheduled')}
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors whitespace-nowrap ${
                 activeTab === 'scheduled'
                   ? 'text-simmonds-primary border-b-2 border-simmonds-primary'
                   : 'text-simmonds-stone hover:text-simmonds-charcoal'
               }`}
             >
-              Upcoming Classes
+              Upcoming
             </button>
             <button
               onClick={() => setActiveTab('virtual')}
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors whitespace-nowrap ${
                 activeTab === 'virtual'
                   ? 'text-simmonds-primary border-b-2 border-simmonds-primary'
                   : 'text-simmonds-stone hover:text-simmonds-charcoal'
               }`}
             >
-              Available Lessons
+              Available
             </button>
           </>
         )}
@@ -427,14 +429,14 @@ const LessonsPage: React.FC<LessonsPageProps> = ({ currentUser, company }) => {
 
       {/* Scheduled Lessons Tab */}
       {activeTab === 'scheduled' && (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {(isStudent ? studentScheduledLessons : scheduledLessons)?.length === 0 ? (
-            <div className="text-center py-12 bg-simmonds-cream/30 rounded-2xl">
-              <p className="text-simmonds-stone">No scheduled lessons yet</p>
+            <div className="text-center py-8 sm:py-12 bg-simmonds-cream/30 rounded-2xl">
+              <p className="text-sm sm:text-base text-simmonds-stone">No scheduled lessons yet</p>
               {isTeacher && (
                 <button
                   onClick={() => setViewMode('schedule')}
-                  className="mt-4 px-4 py-2 bg-simmonds-primary/10 text-simmonds-primary rounded-xl"
+                  className="mt-4 px-4 py-2 bg-simmonds-primary/10 text-simmonds-primary rounded-xl text-sm sm:text-base"
                 >
                   Schedule Your First Lesson
                 </button>
@@ -444,12 +446,12 @@ const LessonsPage: React.FC<LessonsPageProps> = ({ currentUser, company }) => {
             (isStudent ? studentScheduledLessons : scheduledLessons)?.map((lesson) => (
               <div
                 key={lesson._id}
-                className="bg-white p-4 rounded-2xl shadow-sm border border-simmonds-cream hover:border-simmonds-primary/50 transition-colors"
+                className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-simmonds-cream hover:border-simmonds-primary/50 transition-colors"
               >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold text-simmonds-charcoal">{lesson.title}</h3>
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <h3 className="font-semibold text-simmonds-charcoal text-sm sm:text-base">{lesson.title}</h3>
                       <span
                         className={`px-2 py-0.5 rounded text-xs ${
                           lesson.status === 'scheduled'
@@ -464,8 +466,8 @@ const LessonsPage: React.FC<LessonsPageProps> = ({ currentUser, company }) => {
                         {lesson.status}
                       </span>
                     </div>
-                    <p className="text-sm text-simmonds-stone mb-2">{lesson.topic}</p>
-                    <div className="flex items-center gap-4 text-sm text-simmonds-stone">
+                    <p className="text-xs sm:text-sm text-simmonds-stone mb-2">{lesson.topic}</p>
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-simmonds-stone">
                       <span>📅 {formatDate(lesson.scheduledDate)}</span>
                       <span>⏱️ {lesson.duration} min</span>
                       <span
@@ -503,13 +505,13 @@ const LessonsPage: React.FC<LessonsPageProps> = ({ currentUser, company }) => {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 mt-3 sm:mt-0">
                     {lesson.meetingLink && lesson.status === 'scheduled' && (
                       <a
                         href={lesson.meetingLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-4 py-2 bg-simmonds-primary text-white rounded-xl text-sm font-medium"
+                        className="px-3 sm:px-4 py-1.5 sm:py-2 bg-simmonds-primary text-white rounded-xl text-xs sm:text-sm font-medium"
                       >
                         Join
                       </a>
@@ -521,39 +523,41 @@ const LessonsPage: React.FC<LessonsPageProps> = ({ currentUser, company }) => {
                           setSelectedLessonId(lesson._id);
                           setViewMode('create');
                         }}
-                        className="px-4 py-2 bg-gradient-to-r from-simmonds-olive to-simmonds-lime text-white rounded-xl text-sm font-medium hover:opacity-90 transition-all flex items-center gap-2 shadow-sm"
+                        className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-simmonds-olive to-simmonds-lime text-white rounded-xl text-xs sm:text-sm font-medium hover:opacity-90 transition-all flex items-center gap-1.5 sm:gap-2 shadow-sm"
                       >
-                        <span className="text-lg">✨</span>
-                        Add Practice Session
+                        <span>✨</span>
+                        <span className="hidden sm:inline">Add Practice</span>
+                        <span className="sm:hidden">Practice</span>
                       </button>
                     )}
                     {/* View linked practice session if exists */}
                     {lesson.virtualLessonId && (
                       <button
                         onClick={() => handleViewLesson(lesson.virtualLessonId!)}
-                        className="px-4 py-2 bg-simmonds-lime/20 text-simmonds-lime-dark rounded-xl text-sm font-medium hover:bg-simmonds-lime/30 transition-all flex items-center gap-2"
+                        className="px-3 sm:px-4 py-1.5 sm:py-2 bg-simmonds-lime/20 text-simmonds-lime-dark rounded-xl text-xs sm:text-sm font-medium hover:bg-simmonds-lime/30 transition-all flex items-center gap-1.5 sm:gap-2"
                       >
                         <span>📚</span>
-                        View Practice Session
+                        <span className="hidden sm:inline">View Practice</span>
+                        <span className="sm:hidden">View</span>
                       </button>
                     )}
                     {isTeacher && (
                       <>
                         <button
                           onClick={() => handleEditLesson(lesson as ScheduledLesson)}
-                          className="p-2 text-simmonds-primary hover:bg-simmonds-primary/10 rounded-lg transition-colors"
+                          className="p-1.5 sm:p-2 text-simmonds-primary hover:bg-simmonds-primary/10 rounded-lg transition-colors"
                           title="Edit lesson"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                           </svg>
                         </button>
                         <button
                           onClick={() => setShowDeleteConfirm(lesson._id)}
-                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-1.5 sm:p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete lesson"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                           </svg>
                         </button>
@@ -569,7 +573,7 @@ const LessonsPage: React.FC<LessonsPageProps> = ({ currentUser, company }) => {
 
       {/* Practice Sessions Tab */}
       {activeTab === 'virtual' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
           {virtualLessons?.filter((l) => l.isPublished || isTeacher).length === 0 ? (
             <div className="col-span-full text-center py-16 bg-gradient-to-br from-simmonds-cream/30 to-simmonds-cream/10 rounded-2xl border-2 border-dashed border-simmonds-cream">
               <div className="w-16 h-16 mx-auto mb-4 bg-simmonds-cream/50 rounded-full flex items-center justify-center">

@@ -14,6 +14,7 @@ import { User, Company, DashboardStats } from '../types';
 import UserManagement from '../components/UserManagement';
 import CompanyRegistrationForm from '../components/CompanyRegistrationForm';
 import RecentMaterialsWidget from '../components/RecentMaterialsWidget';
+import MobileMenu from '../components/MobileMenu';
 import TestResults from './TestResults';
 import LearningManagement from './LearningManagement';
 import EmailSystem from './EmailSystem';
@@ -107,6 +108,7 @@ const MenuIcon = () => (
 const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const registerCompany = useMutation(api.userManagement.registerCompany);
 
   const stats = useQuery(
@@ -318,8 +320,20 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout })
 
   return (
     <div className="min-h-screen bg-simmonds-cream-lighter flex">
-      {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-simmonds-cream-lighter min-h-screen transition-all duration-300 flex flex-col border-r border-simmonds-cream`}>
+      {/* Mobile Menu */}
+      <MobileMenu
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        navItems={navItems}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        currentUser={currentUser}
+        onLogout={onLogout}
+        getRoleDisplayName={getRoleDisplayName}
+      />
+
+      {/* Sidebar - Hidden on mobile */}
+      <aside className={`hidden lg:flex ${sidebarOpen ? 'w-64' : 'w-20'} bg-simmonds-cream-lighter min-h-screen transition-all duration-300 flex-col border-r border-simmonds-cream`}>
         {/* Logo/Brand */}
         <div className="p-4 border-b border-simmonds-cream">
           <div className="flex items-center gap-3">
@@ -388,31 +402,52 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout })
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <header className="bg-white shadow-sm px-6 py-4">
+        <header className="bg-white shadow-sm px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              {/* Mobile menu button */}
               <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 rounded-lg hover:bg-simmonds-cream transition-colors text-simmonds-charcoal"
+                onClick={() => setMobileMenuOpen(true)}
+                className="lg:hidden p-2 rounded-lg hover:bg-simmonds-cream transition-colors text-simmonds-charcoal"
+                aria-label="Open menu"
               >
                 <MenuIcon />
               </button>
-              <div>
-                <h2 className="text-xl font-bold text-simmonds-charcoal">
+              {/* Desktop sidebar toggle */}
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="hidden lg:block p-2 rounded-lg hover:bg-simmonds-cream transition-colors text-simmonds-charcoal"
+              >
+                <MenuIcon />
+              </button>
+              {/* Mobile logo */}
+              <div className="lg:hidden flex items-center gap-2">
+                <div className="w-8 h-8 bg-simmonds-primary rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">S</span>
+                </div>
+              </div>
+              <div className="hidden sm:block">
+                <h2 className="text-lg sm:text-xl font-bold text-simmonds-charcoal">
                   {navItems.find(n => n.id === activeTab)?.name || 'Settings'}
                 </h2>
                 {company && (
-                  <p className="text-sm text-simmonds-stone">{company.name}</p>
+                  <p className="text-xs sm:text-sm text-simmonds-stone">{company.name}</p>
                 )}
               </div>
+            </div>
+            {/* Mobile page title - right side */}
+            <div className="sm:hidden text-right">
+              <h2 className="text-base font-bold text-simmonds-charcoal">
+                {navItems.find(n => n.id === activeTab)?.name || 'Settings'}
+              </h2>
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto">
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-simmonds-primary"></div>

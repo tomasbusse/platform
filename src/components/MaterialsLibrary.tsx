@@ -82,81 +82,82 @@ const MaterialsLibrary: React.FC<MaterialsLibraryProps> = ({ currentUser, compan
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-simmonds-charcoal mb-2">Learning Materials Library</h1>
-        <p className="text-gray-600">Access all shared learning materials for your courses</p>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-simmonds-charcoal mb-1 sm:mb-2">Learning Materials Library</h1>
+        <p className="text-sm sm:text-base text-gray-600">Access all shared learning materials for your courses</p>
       </div>
 
       {/* Search and Filter */}
-      <div className="bg-white rounded-lg shadow p-6 space-y-4">
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6 space-y-3 sm:space-y-4">
         <input
           type="text"
           placeholder="Search materials..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
+          className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
         />
 
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setSelectedCategory(null)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
               selectedCategory === null
                 ? 'bg-simmonds-primary text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            All Materials
+            All
           </button>
           {categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                 selectedCategory === cat.id
                   ? 'bg-simmonds-primary text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              {cat.label}
+              <span className="sm:hidden">{cat.icon}</span>
+              <span className="hidden sm:inline">{cat.label}</span>
             </button>
           ))}
         </div>
       </div>
 
       {/* Materials Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {filteredMaterials.length > 0 ? (
           filteredMaterials.map((material: any) => (
-            <div key={material._id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6">
-              <div className="flex items-start justify-between mb-3">
-                <div className="text-3xl">{getCategoryIcon(material.category)}</div>
-                <span className="text-xs bg-simmonds-primary/10 text-simmonds-primary px-2 py-1 rounded">
+            <div key={material._id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-4 sm:p-6">
+              <div className="flex items-start justify-between mb-2 sm:mb-3">
+                <div className="text-2xl sm:text-3xl">{getCategoryIcon(material.category)}</div>
+                <span className="text-xs bg-simmonds-primary/10 text-simmonds-primary px-2 py-0.5 sm:py-1 rounded">
                   {material.accessScope}
                 </span>
               </div>
 
-              <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{material.title}</h3>
-              <p className="text-sm text-gray-600 mb-4 line-clamp-2">{material.description}</p>
+              <h3 className="font-semibold text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base line-clamp-2">{material.title}</h3>
+              <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 line-clamp-2">{material.description}</p>
 
-              <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+              <div className="flex items-center justify-between text-xs text-gray-500 mb-3 sm:mb-4">
                 <span>{formatFileSize(material.fileSize)}</span>
                 <span>{new Date(material.createdAt).toLocaleDateString()}</span>
               </div>
 
               <button
                 onClick={() => handleDownload(material)}
-                className="w-full px-4 py-2 bg-simmonds-primary text-white rounded-lg font-medium hover:bg-simmonds-primary/90 transition-colors"
+                className="w-full px-4 py-2 bg-simmonds-primary text-white rounded-lg text-sm sm:text-base font-medium hover:bg-simmonds-primary/90 transition-colors"
               >
                 {material.externalUrl ? 'Open Link' : 'Download'}
               </button>
             </div>
           ))
         ) : (
-          <div className="col-span-full text-center py-12">
-            <p className="text-gray-500">No materials found</p>
+          <div className="col-span-full text-center py-8 sm:py-12">
+            <p className="text-sm sm:text-base text-gray-500">No materials found</p>
           </div>
         )}
       </div>

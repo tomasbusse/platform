@@ -889,10 +889,10 @@ Keep it achievable and focused.`,
   };
 
   const renderProfileSettings = () => (
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-simmonds-cream">
-        <h3 className="text-lg font-semibold text-simmonds-charcoal mb-4">Profile Information</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-simmonds-cream">
+        <h3 className="text-base sm:text-lg font-semibold text-simmonds-charcoal mb-3 sm:mb-4">Profile Information</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
             <label className="block text-sm font-medium text-simmonds-charcoal mb-2">Full Name</label>
             <input
@@ -969,10 +969,10 @@ Keep it achievable and focused.`,
   );
 
   const renderCompanySettings = () => (
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-simmonds-cream">
-        <h3 className="text-lg font-semibold text-simmonds-charcoal mb-4">Company Information</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-simmonds-cream">
+        <h3 className="text-base sm:text-lg font-semibold text-simmonds-charcoal mb-3 sm:mb-4">Company Information</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
             <label className="block text-sm font-medium text-simmonds-charcoal mb-2">Company Name</label>
             <input
@@ -1031,9 +1031,9 @@ Keep it achievable and focused.`,
   );
 
   const renderAPISettings = () => (
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-simmonds-cream">
-        <h3 className="text-lg font-semibold text-simmonds-charcoal mb-4">API Integrations</h3>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-simmonds-cream">
+        <h3 className="text-base sm:text-lg font-semibold text-simmonds-charcoal mb-3 sm:mb-4">API Integrations</h3>
         <div className="space-y-6">
           <div className="border border-simmonds-cream rounded-xl p-4">
             <div className="flex items-center justify-between mb-4">
@@ -2300,9 +2300,9 @@ Keep it achievable and focused.`,
   );
 
   const renderSecuritySettings = () => (
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-simmonds-cream">
-        <h3 className="text-lg font-semibold text-simmonds-charcoal mb-4">Security Settings</h3>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-simmonds-cream">
+        <h3 className="text-base sm:text-lg font-semibold text-simmonds-charcoal mb-3 sm:mb-4">Security Settings</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
@@ -2354,12 +2354,12 @@ Keep it achievable and focused.`,
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-simmonds-cream">
-        <h3 className="text-lg font-semibold text-simmonds-charcoal mb-4">Password & Account</h3>
-        <div className="space-y-4">
-          <button className="px-4 py-2 border border-simmonds-cream rounded-xl text-simmonds-charcoal hover:bg-simmonds-cream-light transition-colors">Change Password</button>
-          <button className="px-4 py-2 border border-simmonds-cream rounded-xl text-simmonds-charcoal hover:bg-simmonds-cream-light transition-colors">Download Account Data</button>
-          <button className="px-4 py-2 bg-simmonds-terracotta/10 text-simmonds-terracotta rounded-xl hover:bg-simmonds-terracotta/20 transition-colors">Delete Account</button>
+      <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-simmonds-cream">
+        <h3 className="text-base sm:text-lg font-semibold text-simmonds-charcoal mb-3 sm:mb-4">Password & Account</h3>
+        <div className="space-y-3 sm:space-y-4 flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-3">
+          <button className="px-4 py-2 border border-simmonds-cream rounded-xl text-sm sm:text-base text-simmonds-charcoal hover:bg-simmonds-cream-light transition-colors">Change Password</button>
+          <button className="px-4 py-2 border border-simmonds-cream rounded-xl text-sm sm:text-base text-simmonds-charcoal hover:bg-simmonds-cream-light transition-colors">Download Account Data</button>
+          <button className="px-4 py-2 bg-simmonds-terracotta/10 text-simmonds-terracotta rounded-xl text-sm sm:text-base hover:bg-simmonds-terracotta/20 transition-colors">Delete Account</button>
         </div>
       </div>
     </div>
@@ -2379,33 +2379,34 @@ Keep it achievable and focused.`,
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-simmonds-charcoal mb-2">Settings</h1>
-        <p className="text-simmonds-stone">Manage your account and platform configuration</p>
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-simmonds-charcoal mb-1 sm:mb-2">Settings</h1>
+        <p className="text-sm sm:text-base text-simmonds-stone">Manage your account and platform configuration</p>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="mb-6">
-        <nav className="flex space-x-8">
+      <div className="mb-4 sm:mb-6">
+        <nav className="flex flex-wrap gap-2 sm:gap-4 overflow-x-auto scrollbar-hide pb-2">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors ${
+              className={`flex items-center px-3 py-2 text-xs sm:text-sm font-medium rounded-xl transition-colors whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'bg-simmonds-primary/10 text-simmonds-primary'
                   : 'text-simmonds-stone hover:text-simmonds-charcoal hover:bg-simmonds-cream-light'
               }`}
             >
-              <span className="mr-2">{tab.icon}</span>
-              {tab.name}
+              <span className="mr-1.5 sm:mr-2">{tab.icon}</span>
+              <span className="hidden sm:inline">{tab.name}</span>
+              <span className="sm:hidden">{tab.name.split(' ')[0]}</span>
             </button>
           ))}
         </nav>
       </div>
 
       {/* Tab Content */}
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         {activeTab === 'profile' && renderProfileSettings()}
         {activeTab === 'company' && renderCompanySettings()}
         {activeTab === 'apis' && renderAPISettings()}
@@ -2419,7 +2420,7 @@ Keep it achievable and focused.`,
         <button
           onClick={handleSave}
           disabled={isLoading}
-          className="px-6 py-2 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light disabled:opacity-50 transition-colors"
+          className="w-full sm:w-auto px-6 py-2.5 sm:py-2 bg-simmonds-primary text-white rounded-xl text-sm sm:text-base font-medium hover:bg-simmonds-primary-light disabled:opacity-50 transition-colors"
         >
           {isLoading ? 'Saving...' : 'Save Settings'}
         </button>
