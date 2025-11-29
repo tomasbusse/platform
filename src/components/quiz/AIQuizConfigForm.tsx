@@ -87,10 +87,13 @@ async function extractTextFromDocx(file: File): Promise<string> {
   }
 }
 
+export type TestPurpose = 'placement' | 'follow_up' | 'level_assessment' | 'practice' | 'diagnostic' | 'certification';
+
 export interface QuizGenerationConfig {
   title: string;
   language: 'english' | 'german';
-  targetLevel: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+  targetLevel: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | 'mixed';
+  testPurpose: TestPurpose;
   topic: string;
   numberOfQuestions: number;
   questionTypes: QuestionType[];
@@ -132,6 +135,7 @@ const defaultConfig: QuizGenerationConfig = {
   title: '',
   language: 'english',
   targetLevel: 'B1',
+  testPurpose: 'practice',
   topic: '',
   numberOfQuestions: 10,
   questionTypes: ['multiple-choice', 'fill-blank', 'true-false'],
@@ -412,27 +416,62 @@ const AIQuizConfigForm: React.FC<AIQuizConfigFormProps> = ({
             </select>
           </div>
 
-          {/* Target Level */}
+          {/* Test Purpose */}
           <div>
             <label className="block text-sm font-medium text-simmonds-charcoal mb-2">
-              Target Level (CEFR)
+              Test Purpose
             </label>
             <select
-              value={config.targetLevel}
-              onChange={(e) =>
-                updateConfig('targetLevel', e.target.value as QuizGenerationConfig['targetLevel'])
-              }
+              value={config.testPurpose}
+              onChange={(e) => {
+                const newPurpose = e.target.value as TestPurpose;
+                if (newPurpose === 'placement') {
+                  // Placement tests automatically use mixed levels
+                  setConfig(prev => ({ ...prev, testPurpose: newPurpose, targetLevel: 'mixed' }));
+                } else {
+                  updateConfig('testPurpose', newPurpose);
+                }
+              }}
               className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
               disabled={isLoading}
             >
-              <option value="A1">A1 - Beginner</option>
-              <option value="A2">A2 - Elementary</option>
-              <option value="B1">B1 - Intermediate</option>
-              <option value="B2">B2 - Upper Intermediate</option>
-              <option value="C1">C1 - Advanced</option>
-              <option value="C2">C2 - Proficient</option>
+              <option value="placement">Placement Test - Initial assessment</option>
+              <option value="follow_up">Follow-up Test - Progress check</option>
+              <option value="level_assessment">Level Assessment - Readiness check</option>
+              <option value="practice">Practice Test - General practice</option>
+              <option value="diagnostic">Diagnostic Test - Identify gaps</option>
+              <option value="certification">Certification Test - Formal certification</option>
             </select>
+            {config.testPurpose === 'placement' && (
+              <p className="mt-1 text-sm text-simmonds-charcoal/60">
+                AI will generate questions across all levels (A1-C2) to assess proficiency.
+              </p>
+            )}
           </div>
+
+          {/* Target Level - Hidden for placement tests */}
+          {config.testPurpose !== 'placement' && (
+            <div>
+              <label className="block text-sm font-medium text-simmonds-charcoal mb-2">
+                Target Level (CEFR)
+              </label>
+              <select
+                value={config.targetLevel}
+                onChange={(e) =>
+                  updateConfig('targetLevel', e.target.value as QuizGenerationConfig['targetLevel'])
+                }
+                className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
+                disabled={isLoading}
+              >
+                <option value="A1">A1 - Beginner</option>
+                <option value="A2">A2 - Elementary</option>
+                <option value="B1">B1 - Intermediate</option>
+                <option value="B2">B2 - Upper Intermediate</option>
+                <option value="C1">C1 - Advanced</option>
+                <option value="C2">C2 - Proficient</option>
+              </select>
+            </div>
+          )}
 
           {/* Topic */}
           <div className="md:col-span-2">
