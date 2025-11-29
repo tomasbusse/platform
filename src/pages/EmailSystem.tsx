@@ -522,15 +522,15 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
   };
 
   const renderCampaigns = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Company Selector for Super Admin */}
       {isSuperAdmin && allCompanies && (
-        <div className="bg-white p-4 rounded-xl border border-simmonds-primary/30 shadow-sm">
-          <label className="block text-sm font-medium text-simmonds-charcoal mb-2">
+        <div className="bg-white p-3 sm:p-4 rounded-xl border border-simmonds-primary/30 shadow-sm">
+          <label className="block text-xs sm:text-sm font-medium text-simmonds-charcoal mb-2">
             Select Company to Send Invitations For
           </label>
           <select
-            className="w-full md:w-96 px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
+            className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
             value={selectedCompanyId || ''}
             onChange={(e) => setSelectedCompanyId(e.target.value as Id<"companies">)}
           >
@@ -544,7 +544,7 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
               ))}
           </select>
           {selectedCompanyId && selectedCompanyDetails && (
-            <p className="text-sm text-simmonds-stone mt-2">
+            <p className="text-xs sm:text-sm text-simmonds-stone mt-2">
               Sending invitations for: <strong>{selectedCompanyDetails.name}</strong>
             </p>
           )}
@@ -572,18 +572,18 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
       )}
 
       {/* Public Assessment Invitation - No Login Required */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-simmonds-cream">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-simmonds-cream">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-simmonds-charcoal">Public Assessment Invitation</h3>
-            <p className="text-sm text-simmonds-stone">Send assessment links that work without login - students get auto-assigned to groups</p>
+            <h3 className="text-base sm:text-lg font-semibold text-simmonds-charcoal">Public Assessment Invitation</h3>
+            <p className="text-xs sm:text-sm text-simmonds-stone">Send assessment links that work without login</p>
           </div>
-          <span className="px-3 py-1 bg-simmonds-lime/20 text-simmonds-lime-dark text-xs font-medium rounded-full">
+          <span className="self-start px-2 sm:px-3 py-1 bg-simmonds-lime/20 text-simmonds-lime-dark text-xs font-medium rounded-full whitespace-nowrap">
             No Login Required
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-simmonds-charcoal mb-2">Student Name *</label>
             <input
@@ -930,30 +930,30 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
   );
 
   const renderAnalytics = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-simmonds-cream">
-          <p className="text-sm text-simmonds-stone">Emails Sent</p>
-          <p className="text-2xl font-bold text-simmonds-primary">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-simmonds-cream">
+          <p className="text-xs sm:text-sm text-simmonds-stone">Emails Sent</p>
+          <p className="text-xl sm:text-2xl font-bold text-simmonds-primary">
             {notifications?.filter(n => n.isEmailSent).length || 0}
           </p>
         </div>
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-simmonds-cream">
-          <p className="text-sm text-simmonds-stone">Delivery Rate</p>
-          <p className="text-2xl font-bold text-simmonds-lime-dark">98.5%</p>
+        <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-simmonds-cream">
+          <p className="text-xs sm:text-sm text-simmonds-stone">Delivery Rate</p>
+          <p className="text-xl sm:text-2xl font-bold text-simmonds-lime-dark">98.5%</p>
         </div>
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-simmonds-cream">
-          <p className="text-sm text-simmonds-stone">Open Rate</p>
-          <p className="text-2xl font-bold text-simmonds-olive">72.3%</p>
+        <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-simmonds-cream">
+          <p className="text-xs sm:text-sm text-simmonds-stone">Open Rate</p>
+          <p className="text-xl sm:text-2xl font-bold text-simmonds-olive">72.3%</p>
         </div>
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-simmonds-cream">
-          <p className="text-sm text-simmonds-stone">Click Rate</p>
-          <p className="text-2xl font-bold text-simmonds-terracotta">45.1%</p>
+        <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-simmonds-cream">
+          <p className="text-xs sm:text-sm text-simmonds-stone">Click Rate</p>
+          <p className="text-xl sm:text-2xl font-bold text-simmonds-terracotta">45.1%</p>
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-simmonds-cream">
-        <h3 className="text-lg font-semibold text-simmonds-charcoal mb-4">Email Activity (Last 30 Days)</h3>
+      <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-simmonds-cream">
+        <h3 className="text-base sm:text-lg font-semibold text-simmonds-charcoal mb-4">Email Activity (Last 30 Days)</h3>
         <div className="h-48 flex items-end justify-around gap-2">
           {[65, 45, 78, 52, 89, 67, 45, 72, 58, 83, 61, 55, 90, 48, 76].map((value, index) => (
             <div
@@ -982,18 +982,18 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-simmonds-charcoal mb-2">Email System</h1>
-        <p className="text-simmonds-stone">Manage automated communications and email campaigns</p>
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-simmonds-charcoal mb-1 sm:mb-2">Email System</h1>
+        <p className="text-sm sm:text-base text-simmonds-stone">Manage automated communications and email campaigns</p>
       </div>
 
-      <div className="mb-6">
-        <nav className="flex gap-2">
+      <div className="mb-4 sm:mb-6">
+        <nav className="flex flex-wrap gap-2">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors ${
+              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-xl transition-colors ${
                 activeTab === tab.id
                   ? 'bg-simmonds-primary text-white'
                   : 'bg-simmonds-cream text-simmonds-charcoal hover:bg-simmonds-cream-light'

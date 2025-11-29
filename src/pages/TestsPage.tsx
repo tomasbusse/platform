@@ -268,20 +268,20 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
         className="bg-white rounded-2xl shadow-sm border border-simmonds-cream hover:shadow-md hover:border-simmonds-primary/30 transition-all duration-200 overflow-hidden group"
       >
         {/* Card Header with Status Badge */}
-        <div className="p-5 pb-4">
+        <div className="p-4 sm:p-5 pb-3 sm:pb-4">
           <div className="flex items-start justify-between mb-3">
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-simmonds-charcoal text-lg truncate group-hover:text-simmonds-primary transition-colors">
+              <h3 className="font-semibold text-simmonds-charcoal text-base sm:text-lg truncate group-hover:text-simmonds-primary transition-colors">
                 {quiz.title}
               </h3>
               {quiz.description && (
-                <p className="text-sm text-simmonds-stone mt-1 line-clamp-2">
+                <p className="text-xs sm:text-sm text-simmonds-stone mt-1 line-clamp-2">
                   {quiz.description}
                 </p>
               )}
             </div>
             {isTeacher && (
-              <span className={`ml-2 px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+              <span className={`ml-2 px-2 sm:px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
                 quiz.status === 'published'
                   ? 'bg-simmonds-lime/20 text-simmonds-lime-dark'
                   : quiz.status === 'archived'
@@ -294,27 +294,27 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
           </div>
 
           {/* Tags/Badges */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            <span className="px-2.5 py-1 bg-simmonds-primary/10 text-simmonds-primary rounded-lg text-xs font-medium">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3 sm:mb-4">
+            <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 bg-simmonds-primary/10 text-simmonds-primary rounded-lg text-xs font-medium">
               {quiz.level}
             </span>
-            <span className="px-2.5 py-1 bg-simmonds-olive/10 text-simmonds-olive rounded-lg text-xs font-medium capitalize">
+            <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 bg-simmonds-olive/10 text-simmonds-olive rounded-lg text-xs font-medium capitalize">
               {quiz.skillFocus}
             </span>
             {quiz.isCambridgeAligned && (
-              <span className="px-2.5 py-1 bg-simmonds-terracotta/10 text-simmonds-terracotta rounded-lg text-xs font-medium">
+              <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 bg-simmonds-terracotta/10 text-simmonds-terracotta rounded-lg text-xs font-medium">
                 Cambridge
               </span>
             )}
           </div>
 
           {/* Stats Row */}
-          <div className="flex items-center gap-4 text-sm text-simmonds-stone">
-            <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-simmonds-stone">
+            <div className="flex items-center gap-1 sm:gap-1.5">
               <QuestionIcon />
               <span>{quiz.totalQuestions} questions</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 sm:gap-1.5">
               <ClockIcon />
               <span>{quiz.duration} min</span>
             </div>
@@ -322,9 +322,9 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
         </div>
 
         {/* Card Footer with Actions */}
-        <div className="px-5 py-3 bg-simmonds-cream/30 border-t border-simmonds-cream flex items-center justify-between">
+        <div className="px-4 sm:px-5 py-3 bg-simmonds-cream/30 border-t border-simmonds-cream">
           {isStudent ? (
-            <>
+            <div className="flex items-center justify-between">
               {completedSession ? (
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-simmonds-lime-dark font-medium">
@@ -336,33 +336,34 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
               )}
               <button
                 onClick={() => handleTakeTest(quiz._id)}
-                className="flex items-center gap-2 px-4 py-2 bg-simmonds-primary text-white rounded-xl text-sm font-medium hover:bg-simmonds-primary-light transition-colors"
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-simmonds-primary text-white rounded-xl text-sm font-medium hover:bg-simmonds-primary-light transition-colors"
               >
                 <PlayIcon />
-                {completedSession ? 'Retake' : 'Start Test'}
+                <span className="hidden xs:inline">{completedSession ? 'Retake' : 'Start Test'}</span>
+                <span className="xs:hidden">Start</span>
               </button>
-            </>
+            </div>
           ) : (
-            <>
-              <span className="text-xs text-simmonds-stone">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+              <span className="text-xs text-simmonds-stone hidden sm:inline">
                 {quiz.testPurpose.replace('_', ' ')}
               </span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                 <button
                   onClick={() => handlePreviewTest(quiz._id)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-simmonds-olive hover:bg-simmonds-olive/10 rounded-lg text-sm font-medium transition-colors"
+                  className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 text-simmonds-olive hover:bg-simmonds-olive/10 rounded-lg text-xs sm:text-sm font-medium transition-colors"
                   title="Preview quiz"
                 >
                   <EyeIcon />
-                  Preview
+                  <span className="hidden sm:inline">Preview</span>
                 </button>
                 <button
                   onClick={() => handleEditTest(quiz._id)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-simmonds-primary hover:bg-simmonds-primary/10 rounded-lg text-sm font-medium transition-colors"
+                  className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 text-simmonds-primary hover:bg-simmonds-primary/10 rounded-lg text-xs sm:text-sm font-medium transition-colors"
                   title="Edit quiz"
                 >
                   <EditIcon />
-                  Edit
+                  <span className="hidden sm:inline">Edit</span>
                 </button>
                 <button
                   onClick={(e) => {
@@ -370,24 +371,24 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
                     handleDeleteQuiz(quiz._id);
                   }}
                   disabled={isDeleting}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-simmonds-terracotta hover:bg-simmonds-terracotta/10 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                  className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 text-simmonds-terracotta hover:bg-simmonds-terracotta/10 rounded-lg text-xs sm:text-sm font-medium transition-colors disabled:opacity-50"
                   title="Delete quiz"
                 >
                   <TrashIcon />
-                  Delete
+                  <span className="hidden sm:inline">Delete</span>
                 </button>
                 {quiz.status === 'published' && (
                   <button
                     onClick={() => handleTakeTest(quiz._id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-simmonds-primary text-white rounded-lg text-sm font-medium hover:bg-simmonds-primary-light transition-colors"
+                    className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 bg-simmonds-primary text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-simmonds-primary-light transition-colors"
                     title="Take quiz as student would"
                   >
                     <PlayIcon />
-                    Take
+                    <span className="hidden sm:inline">Take</span>
                   </button>
                 )}
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>
@@ -396,46 +397,46 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
 
   // Render analytics view
   const renderAnalytics = () => (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
         <button
           onClick={handleBackToList}
           className="flex items-center gap-2 text-simmonds-primary hover:text-simmonds-primary-dark"
         >
           <BackIcon />
-          Back to Tests
+          <span className="text-sm sm:text-base">Back to Tests</span>
         </button>
-        <h2 className="text-xl font-semibold text-simmonds-charcoal">Test Analytics</h2>
+        <h2 className="text-lg sm:text-xl font-semibold text-simmonds-charcoal">Test Analytics</h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-simmonds-cream">
-          <p className="text-sm text-simmonds-stone mb-1">Total Tests</p>
-          <p className="text-3xl font-bold text-simmonds-primary">{quizzes?.length || 0}</p>
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-simmonds-cream">
+          <p className="text-xs sm:text-sm text-simmonds-stone mb-1">Total Tests</p>
+          <p className="text-2xl sm:text-3xl font-bold text-simmonds-primary">{quizzes?.length || 0}</p>
         </div>
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-simmonds-cream">
-          <p className="text-sm text-simmonds-stone mb-1">Published</p>
-          <p className="text-3xl font-bold text-simmonds-lime-dark">
+        <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-simmonds-cream">
+          <p className="text-xs sm:text-sm text-simmonds-stone mb-1">Published</p>
+          <p className="text-2xl sm:text-3xl font-bold text-simmonds-lime-dark">
             {quizzes?.filter(q => q.status === 'published').length || 0}
           </p>
         </div>
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-simmonds-cream">
-          <p className="text-sm text-simmonds-stone mb-1">Total Questions</p>
-          <p className="text-3xl font-bold text-simmonds-olive">
+        <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-simmonds-cream">
+          <p className="text-xs sm:text-sm text-simmonds-stone mb-1">Total Questions</p>
+          <p className="text-2xl sm:text-3xl font-bold text-simmonds-olive">
             {quizzes?.reduce((sum, q) => sum + q.totalQuestions, 0) || 0}
           </p>
         </div>
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-simmonds-cream">
-          <p className="text-sm text-simmonds-stone mb-1">Cambridge Aligned</p>
-          <p className="text-3xl font-bold text-simmonds-terracotta">
+        <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-simmonds-cream">
+          <p className="text-xs sm:text-sm text-simmonds-stone mb-1">Cambridge Aligned</p>
+          <p className="text-2xl sm:text-3xl font-bold text-simmonds-terracotta">
             {quizzes?.filter(q => q.isCambridgeAligned).length || 0}
           </p>
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-simmonds-cream">
-        <h3 className="text-lg font-semibold text-simmonds-charcoal mb-4">Tests by Level</h3>
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-simmonds-cream">
+        <h3 className="text-base sm:text-lg font-semibold text-simmonds-charcoal mb-4">Tests by Level</h3>
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-4">
           {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map(level => {
             const count = quizzes?.filter(q => q.level === level).length || 0;
             const maxCount = Math.max(...(['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map(l =>
@@ -459,9 +460,9 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-simmonds-cream">
-        <h3 className="text-lg font-semibold text-simmonds-charcoal mb-4">Tests by Purpose</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-simmonds-cream">
+        <h3 className="text-base sm:text-lg font-semibold text-simmonds-charcoal mb-4">Tests by Purpose</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
           {[
             { key: 'placement', label: 'Placement', color: 'simmonds-primary' },
             { key: 'follow_up', label: 'Follow-up', color: 'simmonds-olive' },
@@ -988,10 +989,10 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
   const renderListView = () => (
     <>
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-simmonds-charcoal">Tests</h1>
-          <p className="text-simmonds-stone mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-simmonds-charcoal">Tests</h1>
+          <p className="text-sm sm:text-base text-simmonds-stone mt-0.5 sm:mt-1">
             {isStudent
               ? `${availableTestsCount} test${availableTestsCount !== 1 ? 's' : ''} available`
               : 'Create and manage assessments'
@@ -1000,37 +1001,37 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
         </div>
 
         {isTeacher && (
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <button
               onClick={handleViewAnalytics}
-              className="flex items-center gap-2 px-4 py-2.5 bg-simmonds-cream text-simmonds-charcoal rounded-xl font-medium hover:bg-simmonds-cream-dark transition-colors"
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-simmonds-cream text-simmonds-charcoal rounded-xl text-sm sm:text-base font-medium hover:bg-simmonds-cream-dark transition-colors"
             >
               <ChartIcon />
-              Analytics
+              <span className="hidden sm:inline">Analytics</span>
             </button>
             <button
               onClick={handleViewQuestionBank}
-              className="flex items-center gap-2 px-4 py-2.5 bg-simmonds-cream text-simmonds-charcoal rounded-xl font-medium hover:bg-simmonds-cream-dark transition-colors"
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-simmonds-cream text-simmonds-charcoal rounded-xl text-sm sm:text-base font-medium hover:bg-simmonds-cream-dark transition-colors"
             >
               <BankIcon />
-              Question Bank
+              <span className="hidden sm:inline">Question Bank</span>
             </button>
             <button
               onClick={handleCreateTest}
-              className="flex items-center gap-2 px-4 py-2.5 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light transition-colors"
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-simmonds-primary text-white rounded-xl text-sm sm:text-base font-medium hover:bg-simmonds-primary-light transition-colors"
             >
               <PlusIcon />
-              New Test
+              <span className="hidden xs:inline">New Test</span>
             </button>
           </div>
         )}
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-simmonds-cream mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
+      <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-simmonds-cream mb-4 sm:mb-6">
+        <div className="flex flex-col gap-3 sm:gap-4">
           {/* Search */}
-          <div className="relative flex-1">
+          <div className="relative">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-simmonds-stone">
               <SearchIcon />
             </div>
@@ -1039,31 +1040,31 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
               placeholder="Search tests..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary focus:border-simmonds-primary"
+              className="w-full pl-10 pr-4 py-2 sm:py-2.5 border border-simmonds-cream rounded-xl text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-simmonds-primary focus:border-simmonds-primary"
             />
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <select
               value={filterLevel}
               onChange={(e) => setFilterLevel(e.target.value)}
-              className="px-4 py-2.5 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary bg-white"
+              className="flex-1 min-w-[120px] sm:flex-none px-3 sm:px-4 py-2 sm:py-2.5 border border-simmonds-cream rounded-xl text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-simmonds-primary bg-white"
             >
               <option value="all">All Levels</option>
-              <option value="A1">A1 - Beginner</option>
-              <option value="A2">A2 - Elementary</option>
-              <option value="B1">B1 - Intermediate</option>
-              <option value="B2">B2 - Upper Intermediate</option>
-              <option value="C1">C1 - Advanced</option>
-              <option value="C2">C2 - Proficient</option>
+              <option value="A1">A1</option>
+              <option value="A2">A2</option>
+              <option value="B1">B1</option>
+              <option value="B2">B2</option>
+              <option value="C1">C1</option>
+              <option value="C2">C2</option>
               <option value="mixed">Mixed</option>
             </select>
 
             <select
               value={filterPurpose}
               onChange={(e) => setFilterPurpose(e.target.value)}
-              className="px-4 py-2.5 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary bg-white"
+              className="flex-1 min-w-[120px] sm:flex-none px-3 sm:px-4 py-2 sm:py-2.5 border border-simmonds-cream rounded-xl text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-simmonds-primary bg-white"
             >
               <option value="all">All Types</option>
               <option value="placement">Placement</option>
@@ -1078,7 +1079,7 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-4 py-2.5 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary bg-white"
+                className="flex-1 min-w-[120px] sm:flex-none px-3 sm:px-4 py-2 sm:py-2.5 border border-simmonds-cream rounded-xl text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-simmonds-primary bg-white"
               >
                 <option value="all">All Status</option>
                 <option value="draft">Draft</option>
@@ -1092,10 +1093,10 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
 
       {/* Test Grid */}
       {filteredQuizzes.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow-sm border border-simmonds-cream p-12 text-center">
+        <div className="bg-white rounded-2xl shadow-sm border border-simmonds-cream p-8 sm:p-12 text-center">
           {searchQuery || filterLevel !== 'all' || filterPurpose !== 'all' || filterStatus !== 'all' ? (
             <>
-              <p className="text-simmonds-stone mb-4">No tests match your search criteria</p>
+              <p className="text-sm sm:text-base text-simmonds-stone mb-4">No tests match your search criteria</p>
               <button
                 onClick={() => {
                   setSearchQuery('');
@@ -1103,23 +1104,23 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
                   setFilterPurpose('all');
                   setFilterStatus('all');
                 }}
-                className="text-simmonds-primary hover:underline"
+                className="text-simmonds-primary hover:underline text-sm sm:text-base"
               >
                 Clear filters
               </button>
             </>
           ) : (
             <>
-              <div className="w-16 h-16 bg-simmonds-cream rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-simmonds-cream rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <QuestionIcon />
               </div>
-              <p className="text-simmonds-stone mb-4">
+              <p className="text-sm sm:text-base text-simmonds-stone mb-4">
                 {isStudent ? 'No tests available yet' : 'No tests created yet'}
               </p>
               {isTeacher && (
                 <button
                   onClick={handleCreateTest}
-                  className="px-6 py-2.5 bg-simmonds-primary text-white rounded-xl font-medium hover:bg-simmonds-primary-light transition-colors"
+                  className="px-5 sm:px-6 py-2 sm:py-2.5 bg-simmonds-primary text-white rounded-xl text-sm sm:text-base font-medium hover:bg-simmonds-primary-light transition-colors"
                 >
                   Create Your First Test
                 </button>
@@ -1128,7 +1129,7 @@ const TestsPage: React.FC<TestsPageProps> = ({ currentUser, company }) => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredQuizzes.map(quiz => renderTestCard(quiz as unknown as QuizData))}
         </div>
       )}

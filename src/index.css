@@ -5,6 +5,12 @@
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Prevent horizontal scroll on mobile */
+  body {
+    overflow-x: hidden;
   }
 }
 
@@ -12,20 +18,62 @@
   .btn {
     @apply px-4 py-2 rounded-md font-medium transition-colors duration-200;
   }
-  
+
   .btn-primary {
     @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
   }
-  
+
   .btn-secondary {
     @apply bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
   }
-  
+
   .card {
     @apply bg-white rounded-lg shadow-md p-6;
   }
-  
+
   .input {
     @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  }
+
+  /* Mobile-friendly touch targets */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+}
+
+@layer utilities {
+  /* Animation for mobile menu slide in */
+  .animate-slideIn {
+    animation: slideIn 0.3s ease-out forwards;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Safe area padding for notched devices */
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-area-inset-top {
+    padding-top: env(safe-area-inset-top);
   }
 }
