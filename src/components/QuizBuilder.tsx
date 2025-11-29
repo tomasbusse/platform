@@ -113,6 +113,7 @@ interface QuizFormData {
   duration: number;
   passingScore: number;
   isCambridgeAligned: boolean;
+  placementQuestionCount?: number; // Number of questions for placement tests
   settings: {
     shuffleQuestions: boolean;
     shuffleOptions: boolean;
@@ -172,6 +173,7 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, editing
         duration: editingQuiz.duration || 30,
         passingScore: editingQuiz.passingScore || 60,
         isCambridgeAligned: editingQuiz.isCambridgeAligned || false,
+        placementQuestionCount: (editingQuiz as any).placementQuestionCount || 30,
         settings: mergedSettings,
         tags: editingQuiz.tags || [],
       };
@@ -186,6 +188,7 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, editing
       duration: 30,
       passingScore: 60,
       isCambridgeAligned: false,
+      placementQuestionCount: 30,
       settings: defaultQuizSettings,
       tags: [],
     };
@@ -612,6 +615,27 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, editing
               </p>
             )}
           </div>
+
+          {quizForm.testPurpose === 'placement' && (
+            <div>
+              <label className="block text-sm font-medium text-simmonds-charcoal mb-2">Number of Questions *</label>
+              <select
+                value={quizForm.placementQuestionCount || 30}
+                onChange={(e) => setQuizForm({ ...quizForm, placementQuestionCount: parseInt(e.target.value) })}
+                className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary focus:border-simmonds-primary"
+              >
+                <option value={15}>15 questions (~15 min)</option>
+                <option value={20}>20 questions (~20 min)</option>
+                <option value={25}>25 questions (~25 min)</option>
+                <option value={30}>30 questions (~30 min) - Recommended</option>
+                <option value={40}>40 questions (~40 min)</option>
+                <option value={50}>50 questions (~50 min)</option>
+              </select>
+              <p className="mt-1 text-sm text-simmonds-charcoal/60">
+                More questions provide a more accurate assessment of the student's level.
+              </p>
+            </div>
+          )}
 
           {quizForm.testPurpose !== 'placement' && (
             <div>
