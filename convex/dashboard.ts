@@ -62,23 +62,27 @@ export const getStudentStats = query({
       };
     }
 
-    // Get test sessions for this student
-    const testSessions = await ctx.db
+    // Get test sessions for this student (using company index + filter since userId is a union type)
+    const allTestSessions = await ctx.db
       .query("testSessions")
-      .withIndex("by_user", (q) => q.eq("userId", args.studentId))
+      .withIndex("by_company", (q) => q.eq("companyId", args.companyId))
       .collect();
+
+    const testSessions = allTestSessions.filter(s => s.userId === args.studentId);
 
     const completedTests = testSessions.filter(s => s.status === 'completed').length;
     const totalScore = testSessions
-      .filter(s => s.status === 'completed' && s.score !== undefined)
-      .reduce((sum, s) => sum + (s.score || 0), 0);
+      .filter(s => s.status === 'completed' && s.percentageScore !== undefined)
+      .reduce((sum, s) => sum + (s.percentageScore || 0), 0);
     const averageScore = completedTests > 0 ? Math.round(totalScore / completedTests) : 0;
 
-    // Get lesson progress
-    const lessonProgress = await ctx.db
+    // Get lesson progress (using company index + filter since userId is a union type)
+    const allLessonProgress = await ctx.db
       .query("lessonProgress")
-      .withIndex("by_user", (q) => q.eq("userId", args.studentId))
+      .withIndex("by_company", (q) => q.eq("companyId", args.companyId))
       .collect();
+
+    const lessonProgress = allLessonProgress.filter(p => p.userId === args.studentId);
 
     const completedLessons = lessonProgress.filter(p => p.status === 'completed').length;
     const inProgressLessons = lessonProgress.filter(p => p.status === 'in_progress').length;
