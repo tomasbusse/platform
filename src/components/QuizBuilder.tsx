@@ -57,7 +57,7 @@ type QuestionType =
   | 'read_aloud' | 'drag_and_drop' | 'hotspot' | 'conversation_completion';
 
 type Skill = 'grammar' | 'vocabulary' | 'reading' | 'listening' | 'writing' | 'speaking' | 'pronunciation';
-type Level = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+type Level = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | 'mixed';
 type Difficulty = 'easy' | 'medium' | 'hard';
 // Updated test purpose types
 type TestPurpose = 'placement' | 'follow_up' | 'level_assessment' | 'practice' | 'diagnostic' | 'certification';
@@ -585,27 +585,18 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, editing
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-simmonds-charcoal mb-2">CEFR Level *</label>
-            <select
-              value={quizForm.level}
-              onChange={(e) => setQuizForm({ ...quizForm, level: e.target.value as Level })}
-              className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary focus:border-simmonds-primary"
-            >
-              <option value="mixed">Mixed Levels (for placement tests)</option>
-              <option value="A1">A1 - Beginner</option>
-              <option value="A2">A2 - Elementary</option>
-              <option value="B1">B1 - Intermediate</option>
-              <option value="B2">B2 - Upper Intermediate</option>
-              <option value="C1">C1 - Advanced</option>
-              <option value="C2">C2 - Proficient</option>
-            </select>
-          </div>
-
-          <div>
             <label className="block text-sm font-medium text-simmonds-charcoal mb-2">Test Purpose *</label>
             <select
               value={quizForm.testPurpose}
-              onChange={(e) => setQuizForm({ ...quizForm, testPurpose: e.target.value as TestPurpose })}
+              onChange={(e) => {
+                const newPurpose = e.target.value as TestPurpose;
+                if (newPurpose === 'placement') {
+                  // Placement tests automatically use mixed levels
+                  setQuizForm({ ...quizForm, testPurpose: newPurpose, level: 'mixed' as Level });
+                } else {
+                  setQuizForm({ ...quizForm, testPurpose: newPurpose });
+                }
+              }}
               className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary focus:border-simmonds-primary"
             >
               <option value="placement">Placement Test - Initial assessment</option>
@@ -615,7 +606,30 @@ const QuizBuilder: React.FC<QuizBuilderProps> = ({ currentUser, company, editing
               <option value="diagnostic">Diagnostic Test - Identify skill gaps</option>
               <option value="certification">Certification Test - Formal level certification</option>
             </select>
+            {quizForm.testPurpose === 'placement' && (
+              <p className="mt-1 text-sm text-simmonds-charcoal/60">
+                Placement tests use questions from all levels (A1-C2) to assess the student's proficiency.
+              </p>
+            )}
           </div>
+
+          {quizForm.testPurpose !== 'placement' && (
+            <div>
+              <label className="block text-sm font-medium text-simmonds-charcoal mb-2">CEFR Level *</label>
+              <select
+                value={quizForm.level}
+                onChange={(e) => setQuizForm({ ...quizForm, level: e.target.value as Level })}
+                className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary focus:border-simmonds-primary"
+              >
+                <option value="A1">A1 - Beginner</option>
+                <option value="A2">A2 - Elementary</option>
+                <option value="B1">B1 - Intermediate</option>
+                <option value="B2">B2 - Upper Intermediate</option>
+                <option value="C1">C1 - Advanced</option>
+                <option value="C2">C2 - Proficient</option>
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-simmonds-charcoal mb-2">Skill Focus *</label>
