@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
+import ViewUserPage from './ViewUserPage';
+import { User as FullUser, Company } from '../types';
 
 interface User {
   _id: string;
@@ -33,9 +35,10 @@ interface UserFormData {
 interface UserManagementProps {
   companyId?: string; // Optional - if not provided, shows company selector
   currentUserId?: string;
+  company?: Company | null; // Company object for viewing user pages
 }
 
-const UserManagement: React.FC<UserManagementProps> = ({ companyId: propCompanyId, currentUserId }) => {
+const UserManagement: React.FC<UserManagementProps> = ({ companyId: propCompanyId, currentUserId, company: propCompany }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -45,6 +48,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId: propCompanyI
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | undefined>(propCompanyId);
+  const [viewingUser, setViewingUser] = useState<User | null>(null);
 
   // Determine the effective company ID (from props or selection)
   const effectiveCompanyId = propCompanyId || selectedCompanyId;
@@ -806,7 +810,20 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId: propCompanyI
                       {user.lastLogin ? formatDate(user.lastLogin) : 'Never'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-1 md:space-x-2">
+                        {propCompany && (
+                          <button
+                            onClick={() => setViewingUser(user as User)}
+                            className="text-simmonds-primary hover:text-simmonds-primary/70 flex items-center gap-1 px-2 py-1 rounded hover:bg-simmonds-primary/10"
+                            title="View user's page"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <span className="hidden md:inline">View</span>
+                          </button>
+                        )}
                         <button
                           onClick={() => handleEditUser(user as User)}
                           className="text-simmonds-olive hover:text-simmonds-olive/70"
@@ -1033,6 +1050,15 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId: propCompanyI
             </form>
           </div>
         </div>
+      )}
+
+      {/* View User Page Modal */}
+      {viewingUser && propCompany && (
+        <ViewUserPage
+          viewingUser={viewingUser as FullUser}
+          company={propCompany}
+          onClose={() => setViewingUser(null)}
+        />
       )}
     </div>
   );
