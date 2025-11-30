@@ -56,6 +56,26 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
     activeCompanyId ? { companyId: activeCompanyId, status: 'pending' } : 'skip'
   );
 
+  // Query available quizzes filtered by test type for single invitation
+  const availableQuizzes = useQuery(
+    api.quizzes.getCompanyQuizzes,
+    activeCompanyId ? {
+      companyId: activeCompanyId,
+      testPurpose: testType,
+      status: 'published' as const
+    } : 'skip'
+  );
+
+  // Query available quizzes filtered by test type for bulk invitations
+  const bulkAvailableQuizzes = useQuery(
+    api.quizzes.getCompanyQuizzes,
+    activeCompanyId ? {
+      companyId: activeCompanyId,
+      testPurpose: bulkTestType,
+      status: 'published' as const
+    } : 'skip'
+  );
+
   // Mutations for assessment invitations
   const createInvitation = useMutation(api.assessmentInvitations.createInvitation);
   const bulkCreateInvitations = useMutation(api.assessmentInvitations.bulkCreateInvitations);
@@ -64,11 +84,13 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
   const [invitationEmail, setInvitationEmail] = useState('');
   const [invitationName, setInvitationName] = useState('');
   const [testType, setTestType] = useState<'placement' | 'follow_up' | 'level_assessment' | 'practice' | 'diagnostic' | 'certification'>('placement');
+  const [selectedQuizId, setSelectedQuizId] = useState<Id<"quizzes"> | null>(null);
   const [expiryDays, setExpiryDays] = useState(7);
 
   // Form state for bulk assessment invitations
   const [bulkAssessmentEmails, setBulkAssessmentEmails] = useState('');
   const [bulkTestType, setBulkTestType] = useState<'placement' | 'follow_up' | 'level_assessment' | 'practice' | 'diagnostic' | 'certification'>('placement');
+  const [bulkSelectedQuizId, setBulkSelectedQuizId] = useState<Id<"quizzes"> | null>(null);
 
   // Legacy form state for test invitation (keeping for backward compatibility)
   const [legacyInvitationEmail, setLegacyInvitationEmail] = useState('');
@@ -140,11 +162,18 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
         email: invitationEmail,
         name: invitationName,
         testType: testType,
+        quizId: selectedQuizId || undefined,
         expiryDays: expiryDays,
         createdBy: currentUser._id as Id<"users">,
       });
 
       const assessmentUrl = `${window.location.origin}/assessment/${result.token}`;
+
+      // Get quiz details if a specific quiz was selected
+      const selectedQuiz = selectedQuizId ? availableQuizzes?.find(q => q._id === selectedQuizId) : null;
+      const quizTitle = selectedQuiz?.title || getTestTypeDisplayName(testType);
+      const quizDuration = selectedQuiz?.duration || 45;
+      const quizQuestionCount = selectedQuiz?.totalQuestions || 20;
 
       // Send email with assessment link
       const htmlContent = `
@@ -174,9 +203,10 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
               <div class="info-box">
                 <strong>Assessment Details:</strong>
                 <ul style="margin: 10px 0; padding-left: 20px;">
+                  <li><strong>Test:</strong> ${quizTitle}</li>
                   <li><strong>Type:</strong> ${getTestTypeDisplayName(testType)}</li>
-                  <li><strong>Duration:</strong> Approximately 30-45 minutes</li>
-                  <li><strong>Questions:</strong> 20 questions across grammar, vocabulary, and reading</li>
+                  <li><strong>Duration:</strong> Approximately ${quizDuration} minutes</li>
+                  <li><strong>Questions:</strong> ${quizQuestionCount} questions</li>
                   <li><strong>Link expires:</strong> ${new Date(Date.now() + expiryDays * 24 * 60 * 60 * 1000).toLocaleDateString()}</li>
                 </ul>
               </div>
@@ -220,6 +250,7 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
       // Reset form
       setInvitationEmail('');
       setInvitationName('');
+      setSelectedQuizId(null);
     } catch (error) {
       console.error('Error sending invitation:', error);
       alert(`Failed to create invitation: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -261,6 +292,7 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
         companyId: activeCompanyId,
         invitations: invitations,
         testType: bulkTestType,
+        quizId: bulkSelectedQuizId || undefined,
         expiryDays: expiryDays,
         createdBy: currentUser._id as Id<"users">,
       });
@@ -316,6 +348,7 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
       }
 
       setBulkAssessmentEmails('');
+      setBulkSelectedQuizId(null);
     } catch (error) {
       console.error('Error creating bulk invitations:', error);
       alert(`Failed to create invitations: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -609,7 +642,10 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
             <select
               className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
               value={testType}
-              onChange={(e) => setTestType(e.target.value as 'placement' | 'follow_up' | 'level_assessment' | 'practice' | 'diagnostic' | 'certification')}
+              onChange={(e) => {
+                setTestType(e.target.value as 'placement' | 'follow_up' | 'level_assessment' | 'practice' | 'diagnostic' | 'certification');
+                setSelectedQuizId(null); // Reset quiz when test type changes
+              }}
             >
               <option value="placement">Placement Test</option>
               <option value="follow_up">Follow-up Test</option>
@@ -618,6 +654,31 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
               <option value="diagnostic">Diagnostic Test</option>
               <option value="certification">Certification Test</option>
             </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-simmonds-charcoal mb-2">
+              Select Test
+              {availableQuizzes && availableQuizzes.length > 0 && (
+                <span className="text-xs text-simmonds-stone ml-2">({availableQuizzes.length} available)</span>
+              )}
+            </label>
+            <select
+              className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
+              value={selectedQuizId || ''}
+              onChange={(e) => setSelectedQuizId(e.target.value ? e.target.value as Id<"quizzes"> : null)}
+            >
+              <option value="">-- Use Default Questions --</option>
+              {availableQuizzes?.map((quiz) => (
+                <option key={quiz._id} value={quiz._id}>
+                  {quiz.title} ({quiz.level} - {quiz.totalQuestions} questions)
+                </option>
+              ))}
+            </select>
+            {(!availableQuizzes || availableQuizzes.length === 0) && (
+              <p className="text-xs text-simmonds-stone mt-1">
+                No published tests for this type. Default questions will be used.
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-simmonds-charcoal mb-2">Link Expires In</label>
@@ -678,7 +739,10 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
               <select
                 className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
                 value={bulkTestType}
-                onChange={(e) => setBulkTestType(e.target.value as 'placement' | 'follow_up' | 'level_assessment' | 'practice' | 'diagnostic' | 'certification')}
+                onChange={(e) => {
+                  setBulkTestType(e.target.value as 'placement' | 'follow_up' | 'level_assessment' | 'practice' | 'diagnostic' | 'certification');
+                  setBulkSelectedQuizId(null); // Reset quiz when test type changes
+                }}
               >
                 <option value="placement">Placement Test</option>
                 <option value="follow_up">Follow-up Test</option>
@@ -701,6 +765,32 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
                 <option value={30}>30 days</option>
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-simmonds-charcoal mb-2">
+              Select Test
+              {bulkAvailableQuizzes && bulkAvailableQuizzes.length > 0 && (
+                <span className="text-xs text-simmonds-stone ml-2">({bulkAvailableQuizzes.length} available)</span>
+              )}
+            </label>
+            <select
+              className="w-full px-4 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
+              value={bulkSelectedQuizId || ''}
+              onChange={(e) => setBulkSelectedQuizId(e.target.value ? e.target.value as Id<"quizzes"> : null)}
+            >
+              <option value="">-- Use Default Questions --</option>
+              {bulkAvailableQuizzes?.map((quiz) => (
+                <option key={quiz._id} value={quiz._id}>
+                  {quiz.title} ({quiz.level} - {quiz.totalQuestions} questions)
+                </option>
+              ))}
+            </select>
+            {(!bulkAvailableQuizzes || bulkAvailableQuizzes.length === 0) && (
+              <p className="text-xs text-simmonds-stone mt-1">
+                No published tests for this type. Default questions will be used.
+              </p>
+            )}
           </div>
 
           <button

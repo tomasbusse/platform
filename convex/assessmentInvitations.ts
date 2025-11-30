@@ -172,43 +172,52 @@ export const startAssessment = mutation({
     if (invitation.status === "started" && invitation.testSessionId) {
       const existingSession = await ctx.db.get(invitation.testSessionId);
       if (existingSession) {
+        // Get time limit from quiz if available
+        let resumeTimeLimit = 45;
+        if (invitation.quizId) {
+          const quiz = await ctx.db.get(invitation.quizId);
+          if (quiz) {
+            resumeTimeLimit = quiz.duration || 45;
+          }
+        }
         return {
           sessionId: invitation.testSessionId,
           questions: existingSession.customQuestions,
-          timeLimit: 45, // minutes
+          timeLimit: resumeTimeLimit,
         };
       }
     }
 
-    // Get placement test questions (generate based on test type)
+    // Get test questions based on invitation configuration
     let questions: any[] = [];
+    let timeLimit = 45; // default minutes
 
     if (invitation.quizId) {
-      // Use specific quiz questions
+      // Use specific quiz questions (from inlineQuestions)
       const quiz = await ctx.db.get(invitation.quizId);
-      if (quiz) {
-        // Get questions from question bank for this quiz
-        const bankQuestions = await ctx.db
-          .query("questionBank")
-          .withIndex("by_company", (q) => q.eq("companyId", invitation.companyId))
-          .filter((q) => q.eq(q.field("isActive"), true))
-          .take(quiz.totalQuestions);
-
-        questions = bankQuestions.map((q, index) => ({
-          id: `q_${index + 1}`,
+      if (quiz && quiz.inlineQuestions && quiz.inlineQuestions.length > 0) {
+        // Use the quiz's inline questions directly
+        questions = quiz.inlineQuestions.map((q: any, index: number) => ({
+          id: q.id || `q_${index + 1}`,
           type: q.questionType,
           skill: q.skill,
           level: q.level,
           question: q.questionText,
-          options: q.questionData.options || [],
-          correctAnswer: q.questionData.correctAnswer,
-          explanation: q.questionData.explanation,
-          points: q.points,
+          options: q.questionData?.options || [],
+          correctAnswer: q.questionData?.correctAnswer,
+          explanation: q.questionData?.explanation,
+          points: q.points || 1,
+          // Include any additional data that might be needed
+          audioUrl: q.questionData?.audioUrl,
+          imageUrl: q.questionData?.imageUrl,
+          readingPassage: q.questionData?.readingPassage,
         }));
+        // Use quiz's duration if available
+        timeLimit = quiz.duration || 45;
       }
     }
 
-    // If no questions from quiz, use default placement test questions
+    // If no questions from quiz (no quizId or quiz has no inline questions), use default placement test questions
     if (questions.length === 0) {
       questions = generatePlacementQuestions();
     }
@@ -237,7 +246,7 @@ export const startAssessment = mutation({
     return {
       sessionId,
       questions,
-      timeLimit: 45, // minutes
+      timeLimit, // minutes (from quiz or default 45)
     };
   },
 });
