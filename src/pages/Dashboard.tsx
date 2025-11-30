@@ -263,6 +263,14 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout })
                     // Navigate to lessons tab
                     setActiveTab('lessons');
                   }}
+                  onCreateLesson={(lessonType) => {
+                    // Navigate to lessons tab - LessonsPage will handle creating
+                    setActiveTab('lessons');
+                  }}
+                  onEditLesson={(lessonId, lessonType) => {
+                    // Navigate to lessons tab - LessonsPage will handle editing
+                    setActiveTab('lessons');
+                  }}
                 />
               </div>
             )}
