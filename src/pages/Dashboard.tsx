@@ -402,7 +402,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout })
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* Top Bar */}
         <header className="bg-white shadow-sm px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
