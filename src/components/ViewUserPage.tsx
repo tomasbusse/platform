@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { User, Company } from '../types';
@@ -6,6 +6,8 @@ import { Id } from '../../convex/_generated/dataModel';
 import StudentDashboard from '../pages/StudentDashboard';
 import RecentMaterialsWidget from './RecentMaterialsWidget';
 import LessonsDashboardWidget from './LessonsDashboardWidget';
+import LessonScheduler from './LessonScheduler';
+import VirtualLessonBuilder from './VirtualLessonBuilder';
 
 interface ViewUserPageProps {
   viewingUser: User;
@@ -15,6 +17,8 @@ interface ViewUserPageProps {
 }
 
 const ViewUserPage: React.FC<ViewUserPageProps> = ({ viewingUser, company, onClose, onNavigateToLessons }) => {
+  const [creatingLessonType, setCreatingLessonType] = useState<'scheduled' | 'virtual' | null>(null);
+
   const isStudent = viewingUser.role === 'student';
   const isTeacher = viewingUser.role === 'teacher' || viewingUser.role === 'admin' || viewingUser.role === 'corporate_admin';
 
@@ -119,12 +123,10 @@ const ViewUserPage: React.FC<ViewUserPageProps> = ({ viewingUser, company, onClo
           company={company}
           isTeacher={true}
           onCreateLesson={(lessonType) => {
-            if (onNavigateToLessons) {
-              onClose();
-              onNavigateToLessons();
-            }
+            setCreatingLessonType(lessonType);
           }}
           onEditLesson={(lessonId, lessonType) => {
+            // For editing, navigate to lessons page
             if (onNavigateToLessons) {
               onClose();
               onNavigateToLessons();
@@ -188,17 +190,60 @@ const ViewUserPage: React.FC<ViewUserPageProps> = ({ viewingUser, company, onClo
         {/* View Mode Banner */}
         <div className="bg-simmonds-primary/10 px-6 py-2 border-b border-simmonds-primary/20 flex-shrink-0">
           <div className="flex items-center gap-2 text-sm text-simmonds-primary">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
-            <span>Viewing as {getRoleDisplayName(viewingUser.role)}: <strong>{viewingUser.name}</strong></span>
+            {creatingLessonType ? (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>
+                  Creating {creatingLessonType === 'scheduled' ? 'Scheduled Lesson' : 'AI Lesson'} as <strong>{viewingUser.name}</strong>
+                </span>
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span>Viewing as {getRoleDisplayName(viewingUser.role)}: <strong>{viewingUser.name}</strong></span>
+              </>
+            )}
           </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-auto p-6">
-          {isStudent ? renderStudentView() : renderTeacherView()}
+          {creatingLessonType === 'scheduled' ? (
+            <div>
+              <button
+                onClick={() => setCreatingLessonType(null)}
+                className="mb-4 text-simmonds-primary hover:underline flex items-center gap-1"
+              >
+                ← Back to Dashboard
+              </button>
+              <LessonScheduler
+                currentUser={viewingUser}
+                company={company}
+                onLessonCreated={() => setCreatingLessonType(null)}
+              />
+            </div>
+          ) : creatingLessonType === 'virtual' ? (
+            <div>
+              <button
+                onClick={() => setCreatingLessonType(null)}
+                className="mb-4 text-simmonds-primary hover:underline flex items-center gap-1"
+              >
+                ← Back to Dashboard
+              </button>
+              <VirtualLessonBuilder
+                currentUser={viewingUser}
+                company={company}
+                onLessonCreated={() => setCreatingLessonType(null)}
+              />
+            </div>
+          ) : (
+            isStudent ? renderStudentView() : renderTeacherView()
+          )}
         </div>
       </div>
     </div>
