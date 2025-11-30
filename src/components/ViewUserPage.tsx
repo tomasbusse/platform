@@ -5,6 +5,7 @@ import { User, Company } from '../types';
 import { Id } from '../../convex/_generated/dataModel';
 import StudentDashboard from '../pages/StudentDashboard';
 import RecentMaterialsWidget from './RecentMaterialsWidget';
+import LessonsDashboardWidget from './LessonsDashboardWidget';
 
 interface ViewUserPageProps {
   viewingUser: User;
@@ -110,6 +111,13 @@ const ViewUserPage: React.FC<ViewUserPageProps> = ({ viewingUser, company, onClo
             </div>
           </div>
         </div>
+
+        {/* Lessons Widget for Teachers */}
+        <LessonsDashboardWidget
+          currentUser={viewingUser}
+          company={company}
+          isTeacher={true}
+        />
 
         {/* Recent Materials */}
         <RecentMaterialsWidget currentUser={viewingUser} company={company} isTeacher={true} />
