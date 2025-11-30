@@ -143,6 +143,10 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout })
     }
   };
 
+  // Role checks - must be before renderTabContent to be accessible inside it
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'corporate_admin';
+  const isSuperAdmin = currentUser?.role === 'admin' || currentUser?.role === 'corporate_admin';
+  const isTeacher = currentUser?.role === 'teacher' || isAdmin;
   const isStudent = currentUser?.role === 'student';
 
   const renderTabContent = () => {
@@ -322,11 +326,6 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout })
     // This should never happen as App.tsx handles auth state
     return null;
   }
-
-  // Rationalized navigation - grouped into logical sections
-  const isAdmin = currentUser.role === 'admin' || currentUser.role === 'corporate_admin';
-  const isSuperAdmin = currentUser.role === 'admin' || currentUser.role === 'corporate_admin'; // Admin roles can manage companies
-  const isTeacher = currentUser.role === 'teacher' || isAdmin;
 
   // Navigation items - "Teaching" and "Take Test" consolidated into "Tests"
   // See docs/TESTS_MODULE_CHANGELOG.md for rollback instructions

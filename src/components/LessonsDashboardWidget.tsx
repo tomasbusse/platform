@@ -383,15 +383,21 @@ const LessonsDashboardWidget: React.FC<LessonsDashboardWidgetProps> = ({
 
   const isLoading = scheduledLessons === undefined || virtualLessons === undefined;
 
-  // Get upcoming scheduled lessons (next 14 days for teachers, 7 for students)
+  // Get scheduled lessons
   const now = Date.now();
-  const daysAhead = isTeacher ? 14 : 7;
+  const daysAhead = isTeacher ? 30 : 7; // Teachers see more days ahead
   const futureLimit = now + daysAhead * 24 * 60 * 60 * 1000;
 
-  const upcomingScheduled = (scheduledLessons || [])
-    .filter((l: any) => l.scheduledDate >= now && l.scheduledDate <= futureLimit && l.status === 'scheduled')
-    .sort((a: any, b: any) => a.scheduledDate - b.scheduledDate)
-    .slice(0, 6);
+  // For teachers: show all recent + upcoming lessons (for management)
+  // For students: show only upcoming scheduled lessons
+  const upcomingScheduled = isTeacher
+    ? (scheduledLessons || [])
+        .sort((a: any, b: any) => b.scheduledDate - a.scheduledDate) // Most recent first for teachers
+        .slice(0, 6)
+    : (scheduledLessons || [])
+        .filter((l: any) => l.scheduledDate >= now && l.scheduledDate <= futureLimit && l.status === 'scheduled')
+        .sort((a: any, b: any) => a.scheduledDate - b.scheduledDate)
+        .slice(0, 6);
 
   const recentVirtual = (virtualLessons || [])
     .sort((a: any, b: any) => b.createdAt - a.createdAt)
@@ -507,9 +513,31 @@ const LessonsDashboardWidget: React.FC<LessonsDashboardWidgetProps> = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
-            <p className="text-simmonds-stone">
-              {viewMode === 'scheduled' ? 'No upcoming scheduled lessons' : viewMode === 'virtual' ? 'No virtual lessons available' : 'No lessons to display'}
+            <p className="text-simmonds-stone mb-4">
+              {viewMode === 'scheduled' ? 'No scheduled lessons yet' : viewMode === 'virtual' ? 'No virtual lessons yet' : 'No lessons to display'}
             </p>
+            {isTeacher && onCreateLesson && (
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  onClick={() => onCreateLesson('scheduled')}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-simmonds-primary bg-simmonds-primary/10 hover:bg-simmonds-primary/20 rounded-lg transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Schedule a Lesson
+                </button>
+                <button
+                  onClick={() => onCreateLesson('virtual')}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 rounded-lg transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Create AI Lesson
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
