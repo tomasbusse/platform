@@ -14,6 +14,7 @@ import { User, Company, DashboardStats } from '../types';
 import UserManagement from '../components/UserManagement';
 import CompanyRegistrationForm from '../components/CompanyRegistrationForm';
 import RecentMaterialsWidget from '../components/RecentMaterialsWidget';
+import LessonsDashboardWidget from '../components/LessonsDashboardWidget';
 import MobileMenu from '../components/MobileMenu';
 import TestResults from './TestResults';
 import LearningManagement from './LearningManagement';
@@ -250,6 +251,21 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout })
                 </div>
               </div>
             </div>
+
+            {/* Lessons Dashboard Widget */}
+            {currentUser && company && (
+              <div className="mt-6">
+                <LessonsDashboardWidget
+                  currentUser={currentUser}
+                  company={company}
+                  isTeacher={isTeacher}
+                  onViewLesson={(lessonId, lessonType) => {
+                    // Navigate to lessons tab
+                    setActiveTab('lessons');
+                  }}
+                />
+              </div>
+            )}
 
             {/* Recent Materials Widget */}
             <div className="mt-6">
