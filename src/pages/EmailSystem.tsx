@@ -56,6 +56,22 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
     activeCompanyId ? { companyId: activeCompanyId, status: 'pending' } : 'skip'
   );
 
+  // Mutations for assessment invitations
+  const createInvitation = useMutation(api.assessmentInvitations.createInvitation);
+  const bulkCreateInvitations = useMutation(api.assessmentInvitations.bulkCreateInvitations);
+
+  // Form state for test invitation
+  const [invitationEmail, setInvitationEmail] = useState('');
+  const [invitationName, setInvitationName] = useState('');
+  const [testType, setTestType] = useState<'placement' | 'follow_up' | 'level_assessment' | 'practice' | 'diagnostic' | 'certification'>('placement');
+  const [selectedQuizId, setSelectedQuizId] = useState<Id<"quizzes"> | null>(null);
+  const [expiryDays, setExpiryDays] = useState(7);
+
+  // Form state for bulk assessment invitations
+  const [bulkAssessmentEmails, setBulkAssessmentEmails] = useState('');
+  const [bulkTestType, setBulkTestType] = useState<'placement' | 'follow_up' | 'level_assessment' | 'practice' | 'diagnostic' | 'certification'>('placement');
+  const [bulkSelectedQuizId, setBulkSelectedQuizId] = useState<Id<"quizzes"> | null>(null);
+
   // Query available quizzes filtered by test type for single invitation
   const availableQuizzes = useQuery(
     api.quizzes.getCompanyQuizzes,
@@ -75,22 +91,6 @@ const EmailSystem: React.FC<PageComponentProps> = ({ currentUser, company }) => 
       status: 'published' as const
     } : 'skip'
   );
-
-  // Mutations for assessment invitations
-  const createInvitation = useMutation(api.assessmentInvitations.createInvitation);
-  const bulkCreateInvitations = useMutation(api.assessmentInvitations.bulkCreateInvitations);
-
-  // Form state for test invitation
-  const [invitationEmail, setInvitationEmail] = useState('');
-  const [invitationName, setInvitationName] = useState('');
-  const [testType, setTestType] = useState<'placement' | 'follow_up' | 'level_assessment' | 'practice' | 'diagnostic' | 'certification'>('placement');
-  const [selectedQuizId, setSelectedQuizId] = useState<Id<"quizzes"> | null>(null);
-  const [expiryDays, setExpiryDays] = useState(7);
-
-  // Form state for bulk assessment invitations
-  const [bulkAssessmentEmails, setBulkAssessmentEmails] = useState('');
-  const [bulkTestType, setBulkTestType] = useState<'placement' | 'follow_up' | 'level_assessment' | 'practice' | 'diagnostic' | 'certification'>('placement');
-  const [bulkSelectedQuizId, setBulkSelectedQuizId] = useState<Id<"quizzes"> | null>(null);
 
   // Legacy form state for test invitation (keeping for backward compatibility)
   const [legacyInvitationEmail, setLegacyInvitationEmail] = useState('');
