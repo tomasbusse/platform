@@ -287,7 +287,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout })
         );
 
       case 'employees':
-        return company ? <UserManagement companyId={company._id} currentUserId={currentUser?._id} company={company} /> : <div>No company data</div>;
+        return company ? <UserManagement companyId={company._id} currentUserId={currentUser?._id} company={company} onNavigateToLessons={() => setActiveTab('lessons')} /> : <div>No company data</div>;
 
       // Consolidated Tests page - replaces both 'test-taking' and 'teacher-tools'
       case 'tests':

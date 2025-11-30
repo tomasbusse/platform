@@ -11,9 +11,10 @@ interface ViewUserPageProps {
   viewingUser: User;
   company: Company;
   onClose: () => void;
+  onNavigateToLessons?: () => void;
 }
 
-const ViewUserPage: React.FC<ViewUserPageProps> = ({ viewingUser, company, onClose }) => {
+const ViewUserPage: React.FC<ViewUserPageProps> = ({ viewingUser, company, onClose, onNavigateToLessons }) => {
   const isStudent = viewingUser.role === 'student';
   const isTeacher = viewingUser.role === 'teacher' || viewingUser.role === 'admin' || viewingUser.role === 'corporate_admin';
 
@@ -117,6 +118,18 @@ const ViewUserPage: React.FC<ViewUserPageProps> = ({ viewingUser, company, onClo
           currentUser={viewingUser}
           company={company}
           isTeacher={true}
+          onCreateLesson={(lessonType) => {
+            if (onNavigateToLessons) {
+              onClose();
+              onNavigateToLessons();
+            }
+          }}
+          onEditLesson={(lessonId, lessonType) => {
+            if (onNavigateToLessons) {
+              onClose();
+              onNavigateToLessons();
+            }
+          }}
         />
 
         {/* Recent Materials */}

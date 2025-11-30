@@ -36,9 +36,10 @@ interface UserManagementProps {
   companyId?: string; // Optional - if not provided, shows company selector
   currentUserId?: string;
   company?: Company | null; // Company object for viewing user pages
+  onNavigateToLessons?: () => void; // Callback to navigate to lessons page
 }
 
-const UserManagement: React.FC<UserManagementProps> = ({ companyId: propCompanyId, currentUserId, company: propCompany }) => {
+const UserManagement: React.FC<UserManagementProps> = ({ companyId: propCompanyId, currentUserId, company: propCompany, onNavigateToLessons }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -1058,6 +1059,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId: propCompanyI
           viewingUser={viewingUser as FullUser}
           company={propCompany}
           onClose={() => setViewingUser(null)}
+          onNavigateToLessons={onNavigateToLessons}
         />
       )}
     </div>
