@@ -868,53 +868,60 @@ STRICT REQUIREMENTS:
         lessonData.sections[i].visualContent = visualContent;
       }
 
-      // Step 3: Generate images for slides and vocabulary if image model is enabled
+      // Step 3: Generate images for slides if image model is enabled
       if (imageModel !== 'none') {
-        // 3a: Generate images for slide placeholders using imagePrompt from each section
         setGenerationProgress('Generating slide images...');
+
+        // Generate images for ALL slides to make them more engaging
         for (let i = 0; i < lessonData.sections.length; i++) {
           const section = lessonData.sections[i];
-          let visualContent = section.visualContent || section.content;
 
-          // Use the imagePrompt from the section if available, otherwise extract from placeholders
+          // Use the imagePrompt from the section, or create one based on type/topic
           let imageDescription = section.imagePrompt;
 
           if (!imageDescription) {
-            // Fallback: Find image placeholders [IMAGE: description] or 🖼️ placeholders
-            const imageMatches = visualContent.match(/\[IMAGE:\s*([^\]]+)\]|🖼️\s*([^<]+)</g);
-            if (imageMatches && imageMatches.length > 0) {
-              const descMatch = imageMatches[0].match(/\[IMAGE:\s*([^\]]+)\]/) || imageMatches[0].match(/🖼️\s*([^<]+)/);
-              imageDescription = descMatch?.[1]?.trim();
-            }
+            // Create a descriptive prompt based on slide type
+            const typePrompts: Record<string, string> = {
+              introduction: `Welcome scene for learning about ${topic}, warm and inviting classroom or study environment`,
+              vocabulary: `Visual representation of key vocabulary words for ${topic}`,
+              listening: `Two people having a conversation about ${topic}, natural setting`,
+              comprehension: `Person thinking or studying, educational context`,
+              grammar: `Educational diagram or visual aid for learning language rules`,
+              expressions: `People communicating using gestures and expressions`,
+              exercise: `Student working on practice exercises, focused study`,
+              speaking: `Two people in role-play conversation, natural dialogue`,
+              cultural: `Cultural scene related to ${topic}, authentic setting`,
+              summary: `Achievement or success moment, celebrating learning`,
+              homework: `Study materials and notebook, preparation for practice`,
+            };
+            imageDescription = typePrompts[section.type] || `Educational scene about ${topic}`;
           }
 
-          if (imageDescription) {
-            // Clean up the prompt - ensure it specifies realistic photography
-            const cleanPrompt = imageDescription.includes('realistic')
-              ? imageDescription
-              : `${imageDescription}, realistic photography, natural lighting, professional photo`;
+          // Clean up the prompt - ensure it specifies realistic photography
+          const cleanPrompt = imageDescription.includes('realistic')
+            ? imageDescription
+            : `${imageDescription}, realistic photography, natural lighting, professional photo`;
 
-            setGenerationProgress(`Generating image: ${cleanPrompt.substring(0, 50)}...`);
+          setGenerationProgress(`Generating image ${i + 1}/${lessonData.sections.length}: ${section.title}...`);
 
-            try {
-              const imageUrl = await generateImage(`${cleanPrompt}. Educational image for language learning about ${topic}.`);
-              if (imageUrl) {
-                // Store the image URL in the section
-                lessonData.sections[i].imageUrl = imageUrl;
+          try {
+            const imageUrl = await generateImage(`${cleanPrompt}. Educational image for language learning.`);
+            if (imageUrl) {
+              // Store the image URL in the section
+              lessonData.sections[i].imageUrl = imageUrl;
 
-                // Re-apply template with the new image URL
-                const updatedVisualContent = getSlideTemplate({
-                  title: section.title,
-                  content: section.content,
-                  audioScript: section.audioScript,
-                  imageUrl: imageUrl,
-                  type: section.type,
-                });
-                lessonData.sections[i].visualContent = updatedVisualContent;
-              }
-            } catch (e) {
-              console.warn(`Failed to generate image for slide ${i}:`, e);
+              // Re-apply template with the new image URL
+              const updatedVisualContent = getSlideTemplate({
+                title: section.title,
+                content: section.content,
+                audioScript: section.audioScript,
+                imageUrl: imageUrl,
+                type: section.type,
+              });
+              lessonData.sections[i].visualContent = updatedVisualContent;
             }
+          } catch (e) {
+            console.warn(`Failed to generate image for slide ${i}:`, e);
           }
         }
 
@@ -1329,31 +1336,68 @@ STRICT REQUIREMENTS:
         sourceTranscript: transcript || undefined,
       });
 
-      // Create test
-      if (generatedLesson.testQuestions.length > 0) {
+      // Create test - with robust validation
+      if (generatedLesson.testQuestions && generatedLesson.testQuestions.length > 0) {
         setGenerationProgress('Creating lesson test...');
-        await createLessonTest({
-          companyId: company._id as Id<"companies">,
-          virtualLessonId: lessonId,
-          createdBy: currentUser._id as Id<"users">,
-          title: `${generatedLesson.title} - Assessment`,
-          description: 'End of lesson assessment',
-          questions: generatedLesson.testQuestions.map((q) => ({
-            id: q.id,
-            type: q.type as any,
-            questionText: q.questionText,
-            options: q.options,
-            correctAnswer: q.correctAnswer,
-            explanation: q.explanation,
-            points: q.points,
-            skill: q.skill as any,
-          })),
-          passingScore: 70,
-          shuffleQuestions: true,
-          showCorrectAnswers: true,
-          allowRetake: true,
-          maxAttempts: 3,
-        });
+
+        // Valid question types and skills
+        const validQuestionTypes = ['multiple_choice', 'fill_in_blank', 'true_false', 'matching', 'ordering', 'listening'] as const;
+        const validSkills = ['vocabulary', 'grammar', 'reading', 'listening', 'comprehension'] as const;
+
+        type QuestionType = typeof validQuestionTypes[number];
+        type SkillType = typeof validSkills[number];
+
+        const validatedQuestions = generatedLesson.testQuestions
+          .filter(q => q.id && q.questionText && q.correctAnswer) // Filter out invalid questions
+          .map((q, index) => {
+            const question: {
+              id: string;
+              type: QuestionType;
+              questionText: string;
+              correctAnswer: string;
+              points: number;
+              skill: SkillType;
+              options?: string[];
+              explanation?: string;
+            } = {
+              id: q.id || `q-${index}`,
+              type: validQuestionTypes.includes(q.type as QuestionType) ? q.type as QuestionType : 'multiple_choice',
+              questionText: q.questionText,
+              correctAnswer: String(q.correctAnswer),
+              points: typeof q.points === 'number' ? q.points : 10,
+              skill: validSkills.includes(q.skill as SkillType) ? q.skill as SkillType : 'comprehension',
+            };
+
+            if (q.options && Array.isArray(q.options) && q.options.length > 0) {
+              question.options = q.options;
+            }
+            if (q.explanation) {
+              question.explanation = q.explanation;
+            }
+
+            return question;
+          });
+
+        if (validatedQuestions.length > 0) {
+          try {
+            await createLessonTest({
+              companyId: company._id as Id<"companies">,
+              virtualLessonId: lessonId,
+              createdBy: currentUser._id as Id<"users">,
+              title: `${generatedLesson.title} - Assessment`,
+              description: 'End of lesson assessment',
+              questions: validatedQuestions,
+              passingScore: 70,
+              shuffleQuestions: true,
+              showCorrectAnswers: true,
+              allowRetake: true,
+              maxAttempts: 3,
+            });
+          } catch (testError) {
+            console.warn('Failed to create test, but lesson was saved:', testError);
+            // Don't fail the whole save if just the test fails
+          }
+        }
       }
 
       setActiveStep(3);
