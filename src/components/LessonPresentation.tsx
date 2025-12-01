@@ -3,6 +3,7 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
 import { User, Company } from '../types';
+import { exportToPowerPoint, exportToPDF } from '../utils/lessonExport';
 
 interface LessonPresentationProps {
   currentUser: User | null;
@@ -55,6 +56,9 @@ const LessonPresentation: React.FC<LessonPresentationProps> = ({
   const [isGeneratingAllAudio, setIsGeneratingAllAudio] = useState(false);
   const [audioGenerationProgress, setAudioGenerationProgress] = useState('');
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Export state
+  const [isExporting, setIsExporting] = useState<'pptx' | 'pdf' | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -414,6 +418,55 @@ const LessonPresentation: React.FC<LessonPresentationProps> = ({
     ? Math.round((completedSections.length / lesson.sections.length) * 100)
     : 0;
 
+  // Export handlers
+  const handleExportPowerPoint = async () => {
+    if (!lesson) return;
+    setIsExporting('pptx');
+    try {
+      await exportToPowerPoint(
+        {
+          title: lesson.title,
+          description: lesson.description || '',
+          level: lesson.level,
+          objectives: lesson.objectives,
+          sections: lesson.sections,
+          vocabulary: lesson.vocabulary,
+          grammarPoints: lesson.grammarPoints,
+        },
+        company?.name
+      );
+    } catch (error) {
+      console.error('Failed to export PowerPoint:', error);
+      alert('Failed to export PowerPoint. Please try again.');
+    } finally {
+      setIsExporting(null);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (!lesson) return;
+    setIsExporting('pdf');
+    try {
+      await exportToPDF(
+        {
+          title: lesson.title,
+          description: lesson.description || '',
+          level: lesson.level,
+          objectives: lesson.objectives,
+          sections: lesson.sections,
+          vocabulary: lesson.vocabulary,
+          grammarPoints: lesson.grammarPoints,
+        },
+        company?.name
+      );
+    } catch (error) {
+      console.error('Failed to export PDF:', error);
+      alert('Failed to export PDF. Please try again.');
+    } finally {
+      setIsExporting(null);
+    }
+  };
+
   return (
     <div
       ref={containerRef}
@@ -480,6 +533,40 @@ const LessonPresentation: React.FC<LessonPresentationProps> = ({
                 style={{ width: `${progressPercentage}%` }}
               />
             </div>
+          </div>
+
+          {/* Export buttons */}
+          <div className="flex items-center gap-1 border-l border-white/20 pl-3 ml-2">
+            <button
+              onClick={handleExportPDF}
+              disabled={isExporting !== null}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg transition-colors disabled:opacity-50 text-sm"
+              title="Download as PDF worksheet"
+            >
+              {isExporting === 'pdf' ? (
+                <span className="animate-spin">⏳</span>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              )}
+              <span className="hidden sm:inline">PDF</span>
+            </button>
+            <button
+              onClick={handleExportPowerPoint}
+              disabled={isExporting !== null}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg transition-colors disabled:opacity-50 text-sm"
+              title="Download as PowerPoint presentation"
+            >
+              {isExporting === 'pptx' ? (
+                <span className="animate-spin">⏳</span>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              )}
+              <span className="hidden sm:inline">PPTX</span>
+            </button>
           </div>
 
           {/* Fullscreen toggle */}
