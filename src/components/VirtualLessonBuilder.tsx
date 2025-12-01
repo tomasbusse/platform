@@ -3,6 +3,7 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
 import { User, Company } from '../types';
+import { getSlideTemplate } from '../utils/slideTemplates';
 
 interface VirtualLessonBuilderProps {
   currentUser: User | null;
@@ -848,133 +849,23 @@ STRICT REQUIREMENTS:
         throw new Error('Failed to parse generated lesson. Please try again.');
       }
 
-      // Step 2: Generate visually stunning content for each section (using design model)
-      setGenerationProgress('Creating professional slide designs...');
+      // Step 2: Apply professional slide templates (instant, no AI needed)
+      setGenerationProgress('Applying professional slide designs...');
 
       for (let i = 0; i < lessonData.sections.length; i++) {
         const section = lessonData.sections[i];
         setGenerationProgress(`Designing slide ${i + 1}/${lessonData.sections.length}: ${section.title}...`);
 
-        // Get slide type specific design guidance
-        const slideTypeDesigns: Record<string, string> = {
-          introduction: `
-- Hero layout with centered title
-- 3-4 learning objectives as elegant icon bullets (use ✓ or → symbols)
-- Clean, minimal design with lots of whitespace
-- Include audio player indicator (🔊 icon) at bottom`,
-          vocabulary: `
-- Grid of vocabulary cards (2-3 columns)
-- Each card: word in large bold text, definition below, example in italics
-- Cards have hover-ready shadows and rounded corners (16px)
-- Include audio indicator for pronunciation`,
-          listening: `
-- Pre-listening questions prominently displayed
-- Large audio player indicator (🎧 Listen) in center
-- Clean layout with focus on comprehension questions
-- Note: Audio will be auto-played for this slide`,
-          comprehension: `
-- Answers section clearly numbered
-- Useful Phrases box with highlighted background (#E3C6AB)
-- Key phrases in a styled callout box
-- Review indicator for audio playback`,
-          grammar: `
-- Split layout: rule on left, examples on right
-- Use a styled table with gradient header row
-- Formula/pattern in a highlighted box with border-left accent
-- Clear before/after examples`,
-          expressions: `
-- Phrase list with clear formatting
-- Each expression in its own card/row
-- Color-coded by formality level if applicable
-- Practice pronunciation indicator`,
-          exercise: `
-- Question in a prominent card
-- Answer options as clickable-looking buttons/cards
-- Gap-fill blanks clearly indicated with underlines
-- Interactive feel with hover states`,
-          speaking: `
-- Role cards side by side (Role A / Role B)
-- Clear instructions for each role
-- Model dialogue indicator
-- Practice area suggestion`,
-          cultural: `
-- Cultural tip highlighted with special icon (🌍)
-- Comparison points if relevant
-- Practical advice callout
-- Engaging cultural imagery placeholder`,
-          summary: `
-- Key takeaways as numbered items with icons
-- Quick reference box for most important points
-- "Remember" callout box with terracotta border
-- Congratulations message`,
-          homework: `
-- Task assignment clearly boxed
-- Next lesson preview section
-- Motivational closing message
-- Resources/tips if applicable`,
-          reading: `
-- Main text in elegant bordered container
-- Key vocabulary highlighted
-- Pull quote in large italic text`,
-        };
+        // Use pre-built templates for consistent, professional design
+        const visualContent = getSlideTemplate({
+          title: section.title,
+          content: section.content,
+          audioScript: section.audioScript,
+          imageUrl: section.imageUrl,
+          type: section.type,
+        });
 
-        const visualPrompt = `You are a professional presentation designer. Create a STUNNING PowerPoint-style HTML slide.
-
-SLIDE TYPE: "${section.type}" (Slide ${i + 1} of ${lessonData.sections.length})
-TITLE: "${section.title}"
-CONTENT TO DESIGN: ${section.content}
-
-CREATE A PROFESSIONAL PRESENTATION SLIDE with these EXACT specifications:
-
-LAYOUT STRUCTURE:
-- Full-width slide with 16:9 aspect ratio feel
-- Clean header area with title
-- Main content area with clear visual hierarchy
-- Use CSS Grid or Flexbox for professional layouts
-- Maximum 150 words of text - be concise!
-
-DESIGN REQUIREMENTS:
-1. TITLE BAR: Bold gradient header (#003F37 to #4F5338) with white text, 32px font
-2. CONTENT CARDS: White cards with subtle shadows (box-shadow: 0 4px 15px rgba(0,0,0,0.1))
-3. ACCENT COLORS: Use #9F9D38 (lime) for highlights, #B25627 (terracotta) for callouts
-4. BACKGROUND: Cream (#E3C6AB) for special callout boxes
-4. TYPOGRAPHY:
-   - Headings: 28-32px, font-weight: 700, color: #003F37
-   - Body: 18-20px, line-height: 1.6, color: #333
-   - Use system fonts: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif
-
-SLIDE TYPE-SPECIFIC DESIGN (${section.type}):
-${slideTypeDesigns[section.type] || slideTypeDesigns.reading}
-
-IMAGE PLACEHOLDER (use this EXACT format for the image area):
-<div data-image-placeholder style="background: linear-gradient(135deg, #003F37 0%, #9F9D38 100%); height: 180px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 500;">
-  <span style="opacity: 0.9;">🖼️ Image will appear here</span>
-</div>
-
-AUDIO INDICATOR (include for listening slides):
-${section.type === 'listening' ? `
-<div style="background: #003F37; color: white; padding: 16px 24px; border-radius: 12px; display: flex; align-items: center; gap: 12px; margin: 16px 0;">
-  <span style="font-size: 24px;">🎧</span>
-  <span style="font-size: 18px; font-weight: 500;">Click to listen to the dialogue</span>
-</div>` : ''}
-
-ABSOLUTE REQUIREMENTS:
-- Use ONLY inline styles
-- NO external CSS, NO class names
-- Must look like a professional PowerPoint/Keynote slide
-- Everything must fit on ONE screen - NO scrolling
-- Generous padding (24px+) and margins
-- Modern, clean, corporate-professional aesthetic
-- Include ONE image placeholder area with data-image-placeholder attribute
-
-Return ONLY the HTML code, no explanations or markdown.`;
-
-        try {
-          const visualContent = await generateContent(visualPrompt, 'design');
-          lessonData.sections[i].visualContent = visualContent;
-        } catch (e) {
-          console.warn(`Failed to generate visual content for section ${i}:`, e);
-        }
+        lessonData.sections[i].visualContent = visualContent;
       }
 
       // Step 3: Generate images for slides and vocabulary if image model is enabled
@@ -1011,26 +902,15 @@ Return ONLY the HTML code, no explanations or markdown.`;
                 // Store the image URL in the section
                 lessonData.sections[i].imageUrl = imageUrl;
 
-                // Replace placeholder with actual image
-                const imageHtml = `<img src="${imageUrl}" alt="${imageDescription}" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 16px; margin: 12px 0;" />`;
-
-                // Replace the data-image-placeholder div
-                visualContent = visualContent.replace(
-                  /<div[^>]*data-image-placeholder[^>]*>[\s\S]*?<\/div>/i,
-                  imageHtml
-                );
-                // Also try replacing the 🖼️ placeholder div
-                visualContent = visualContent.replace(
-                  /<div[^>]*>[\s\S]*?🖼️[\s\S]*?<\/div>/i,
-                  imageHtml
-                );
-                // Also try replacing text-based placeholder
-                visualContent = visualContent.replace(
-                  /\[IMAGE:\s*[^\]]+\]/gi,
-                  imageHtml
-                );
-
-                lessonData.sections[i].visualContent = visualContent;
+                // Re-apply template with the new image URL
+                const updatedVisualContent = getSlideTemplate({
+                  title: section.title,
+                  content: section.content,
+                  audioScript: section.audioScript,
+                  imageUrl: imageUrl,
+                  type: section.type,
+                });
+                lessonData.sections[i].visualContent = updatedVisualContent;
               }
             } catch (e) {
               console.warn(`Failed to generate image for slide ${i}:`, e);
