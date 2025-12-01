@@ -246,12 +246,69 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
     }
   }, [company]);
 
+  // Helper function to get API key from multiple sources (localStorage fallback for unsaved settings)
+  const getApiKeyFromSources = (
+    flatKey: string,
+    nestedPath: string[]
+  ): string | null => {
+    // 1. Try company.settings (flat format from database)
+    const flatSettings = company?.settings as any;
+    if (flatSettings?.[flatKey]) {
+      return flatSettings[flatKey];
+    }
+
+    // 2. Try companySettings from getCompanySettings query (nested format)
+    let nestedValue: any = companySettings;
+    for (const key of nestedPath) {
+      nestedValue = nestedValue?.[key];
+      if (!nestedValue) break;
+    }
+    if (nestedValue) {
+      return nestedValue;
+    }
+
+    // 3. Fallback to localStorage (for cases where settings haven't been saved to DB yet)
+    try {
+      const localSettings = localStorage.getItem('simmonds_platform_settings');
+      if (localSettings) {
+        const parsed = JSON.parse(localSettings);
+        let localValue: any = parsed;
+        for (const key of nestedPath) {
+          localValue = localValue?.[key];
+          if (!localValue) break;
+        }
+        if (localValue) {
+          return localValue;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not read settings from localStorage:', e);
+    }
+
+    return null;
+  };
+
+  const getOpenRouterApiKey = (): string | null => {
+    return getApiKeyFromSources('openRouterApiKey', ['apis', 'openrouter', 'apiKey']);
+  };
+
+  const getGeminiApiKey = (): string | null => {
+    return getApiKeyFromSources('geminiApiKey', ['apis', 'gemini', 'apiKey']);
+  };
+
+  const getOpenAIApiKey = (): string | null => {
+    return getApiKeyFromSources('openaiApiKey', ['apis', 'openai', 'apiKey']);
+  };
+
+  const getElevenLabsApiKey = (): string | null => {
+    return getApiKeyFromSources('elevenLabsApiKey', ['apis', 'elevenlabs', 'apiKey']);
+  };
+
   const generateWithAI = async (prompt: string): Promise<string> => {
     // Use OpenRouter API with selected model
-    const flatSettings = company?.settings as any;
-    const apiKey = flatSettings?.openRouterApiKey || companySettings?.apis?.openrouter?.apiKey;
+    const apiKey = getOpenRouterApiKey();
     if (!apiKey) {
-      throw new Error('OpenRouter API key not configured. Please add it in Settings.');
+      throw new Error('OpenRouter API key not configured. Please add it in Settings and click Save.');
     }
 
     // Use selected model, fallback to settings model, then to default
@@ -289,10 +346,9 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
 
   // Generate with Gemini API
   const generateWithGemini = async (prompt: string, modelOverride?: string): Promise<string> => {
-    const flatSettings = company?.settings as any;
-    const apiKey = flatSettings?.geminiApiKey || companySettings?.apis?.gemini?.apiKey;
+    const apiKey = getGeminiApiKey();
     if (!apiKey) {
-      throw new Error('Gemini API key not configured. Please add it in Settings.');
+      throw new Error('Gemini API key not configured. Please add it in Settings and click Save.');
     }
 
     const model = modelOverride || companySettings?.apis?.gemini?.model || 'gemini-2.0-flash';
@@ -325,8 +381,7 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
 
   // Generate image with Gemini Imagen
   const generateImageWithGemini = async (prompt: string, modelOverride?: string): Promise<string | null> => {
-    const flatSettings = company?.settings as any;
-    const apiKey = flatSettings?.geminiApiKey || companySettings?.apis?.gemini?.apiKey;
+    const apiKey = getGeminiApiKey();
     if (!apiKey) return null;
 
     const imageModelId = modelOverride || companySettings?.apis?.gemini?.imageModel || 'imagen-3.0-generate-002';
@@ -366,8 +421,7 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
 
   // Generate image with OpenAI
   const generateImageWithOpenAI = async (prompt: string): Promise<string | null> => {
-    const flatSettings = company?.settings as any;
-    const apiKey = flatSettings?.openaiApiKey || companySettings?.apis?.openai?.apiKey;
+    const apiKey = getOpenAIApiKey();
     if (!apiKey) return null;
 
     const imageModelId = companySettings?.apis?.openai?.imageModel || 'dall-e-3';
@@ -672,8 +726,8 @@ Return ONLY the HTML, no explanation.`;
       }
 
       // Step 4: Generate audio for listening questions if API key exists
-      const apiKey = (company?.settings as any)?.elevenLabsApiKey;
-      if (apiKey) {
+      const elevenLabsKey = getElevenLabsApiKey();
+      if (elevenLabsKey) {
         const listeningQuestions = lessonData.testQuestions.filter(q => q.type === 'listening' && q.audioText);
         if (listeningQuestions.length > 0) {
           setGenerationProgress('Generating audio for listening questions...');
@@ -689,7 +743,7 @@ Return ONLY the HTML, no explanation.`;
                   headers: {
                     Accept: 'audio/mpeg',
                     'Content-Type': 'application/json',
-                    'xi-api-key': apiKey,
+                    'xi-api-key': elevenLabsKey,
                   },
                   body: JSON.stringify({
                     text: cleanText,
@@ -725,9 +779,9 @@ Return ONLY the HTML, no explanation.`;
   };
 
   const generateAudioForText = async (text: string, id: string) => {
-    const apiKey = (company?.settings as any)?.elevenLabsApiKey;
+    const apiKey = getElevenLabsApiKey();
     if (!apiKey) {
-      throw new Error('ElevenLabs API key not configured');
+      throw new Error('ElevenLabs API key not configured. Please add it in Settings and click Save.');
     }
 
     // Clean text for audio
@@ -766,9 +820,9 @@ Return ONLY the HTML, no explanation.`;
 
   // Preview voice function
   const previewVoice = async (voiceId: string) => {
-    const apiKey = (company?.settings as any)?.elevenLabsApiKey;
+    const apiKey = getElevenLabsApiKey();
     if (!apiKey) {
-      setErrors({ voice: 'ElevenLabs API key not configured. Add it in Settings.' });
+      setErrors({ voice: 'ElevenLabs API key not configured. Add it in Settings and click Save.' });
       return;
     }
 
@@ -884,8 +938,8 @@ Return ONLY the HTML, no explanation.`;
 
     try {
       // Auto-generate audio if enabled and API key exists
-      const apiKey = (company?.settings as any)?.elevenLabsApiKey;
-      if (autoGenerateAudio && apiKey && Object.keys(generatedAudios).length === 0) {
+      const elevenLabsApiKey = getElevenLabsApiKey();
+      if (autoGenerateAudio && elevenLabsApiKey && Object.keys(generatedAudios).length === 0) {
         setGenerationProgress('Generating audio for vocabulary...');
 
         // Generate audio for vocabulary (limit to 5 for speed)
@@ -1915,15 +1969,15 @@ Return ONLY the HTML, no explanation.`;
                 </div>
                 <button
                   onClick={generateAllAudio}
-                  disabled={isGeneratingAudio || !company?.settings?.elevenLabsApiKey}
+                  disabled={isGeneratingAudio || !getElevenLabsApiKey()}
                   className="px-4 py-2 bg-simmonds-olive text-white rounded-xl font-medium hover:bg-simmonds-olive-light disabled:opacity-50"
                 >
                   {isGeneratingAudio ? generationProgress || 'Generating...' : '🔊 Generate Audio'}
                 </button>
               </div>
-              {!company?.settings?.elevenLabsApiKey && (
+              {!getElevenLabsApiKey() && (
                 <p className="text-sm text-simmonds-terracotta">
-                  ElevenLabs API key required. Configure it in Settings.
+                  ElevenLabs API key required. Configure it in Settings and click Save.
                 </p>
               )}
               {Object.keys(generatedAudios).length > 0 && (
