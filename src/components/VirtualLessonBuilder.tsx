@@ -269,7 +269,7 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
 
     // 3. Fallback to localStorage (for cases where settings haven't been saved to DB yet)
     try {
-      const localSettings = localStorage.getItem('simmonds_platform_settings');
+      const localSettings = localStorage.getItem('simmonds_settings');
       if (localSettings) {
         const parsed = JSON.parse(localSettings);
         let localValue: any = parsed;
