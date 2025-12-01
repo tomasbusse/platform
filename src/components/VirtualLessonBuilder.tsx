@@ -1341,6 +1341,38 @@ Return ONLY the HTML code, no explanations or markdown.`;
 
       setGenerationProgress('Saving lesson...');
 
+      // Valid section types that match the schema
+      const validSectionTypes = [
+        'introduction', 'vocabulary', 'listening', 'comprehension', 'grammar',
+        'expressions', 'exercise', 'speaking', 'cultural', 'summary', 'homework', 'reading'
+      ] as const;
+      type ValidSectionType = typeof validSectionTypes[number];
+
+      // Map section types to valid ones (fallback to 'reading' for unknown types)
+      const mapSectionType = (type: string): ValidSectionType => {
+        if (validSectionTypes.includes(type as ValidSectionType)) {
+          return type as ValidSectionType;
+        }
+        console.warn(`Unknown section type "${type}", falling back to "reading"`);
+        return 'reading';
+      };
+
+      // Prepare sections with validated types
+      const sectionsToSave = generatedLesson.sections.map((s) => ({
+        id: s.id,
+        type: mapSectionType(s.type),
+        title: s.title,
+        content: s.visualContent || s.content || '',
+        audioScript: s.audioScript,
+        audioUrl: s.audioUrl,
+        imagePrompt: s.imagePrompt,
+        imageUrl: s.imageUrl,
+        visualContent: s.visualContent,
+        order: s.order,
+      }));
+
+      console.log('[SaveLesson] Saving sections:', sectionsToSave.map(s => ({ id: s.id, type: s.type, title: s.title })));
+
       // Create virtual lesson
       const lessonId = await createVirtualLesson({
         companyId: company._id as Id<"companies">,
@@ -1352,18 +1384,7 @@ Return ONLY the HTML code, no explanations or markdown.`;
         topic,
         language: lessonLanguage,
         explanationLanguage,
-        sections: generatedLesson.sections.map((s) => ({
-          id: s.id,
-          type: s.type,
-          title: s.title,
-          content: s.visualContent || s.content,
-          audioScript: s.audioScript,
-          audioUrl: s.audioUrl,
-          imagePrompt: s.imagePrompt,
-          imageUrl: s.imageUrl,
-          visualContent: s.visualContent,
-          order: s.order,
-        })),
+        sections: sectionsToSave,
         vocabulary: generatedLesson.vocabulary.map((v) => ({
           word: v.word,
           definition: v.definition,
@@ -1413,9 +1434,16 @@ Return ONLY the HTML code, no explanations or markdown.`;
 
       setActiveStep(3);
       onLessonCreated?.(lessonId);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Save error:', error);
-      setErrors({ save: error instanceof Error ? error.message : 'Failed to save lesson' });
+      console.error('Save error details:', {
+        message: error?.message,
+        data: error?.data,
+        stack: error?.stack,
+      });
+      // Show more detailed error message
+      const errorMessage = error?.data?.message || error?.message || 'Failed to save lesson';
+      setErrors({ save: errorMessage });
     } finally {
       setIsGenerating(false);
       setGenerationProgress('');
