@@ -344,8 +344,18 @@ const LessonPresentation: React.FC<LessonPresentationProps> = ({
 
     for (let i = 0; i < lesson.sections.length; i++) {
       const section = lesson.sections[i];
+      // Skip if audio already exists (pre-generated)
+      if ((section as any).audioUrl) {
+        setSectionAudios(prev => ({
+          ...prev,
+          [section.id]: { sectionId: section.id, audioUrl: (section as any).audioUrl, isGenerating: false }
+        }));
+        continue;
+      }
       setAudioGenerationProgress(`Generating audio for section ${i + 1}/${lesson.sections.length}: ${section.title}`);
-      await generateSectionAudio(section.id, section.visualContent || section.content);
+      // Use audioScript (the teaching content) if available, otherwise fall back to content
+      const textToSpeak = (section as any).audioScript || section.visualContent || section.content;
+      await generateSectionAudio(section.id, textToSpeak);
     }
 
     // Generate vocabulary audio
@@ -655,7 +665,7 @@ const LessonPresentation: React.FC<LessonPresentationProps> = ({
                       </span>
                     </div>
                   )}
-                  {!sidebarCollapsed && sectionAudios[section.id]?.audioUrl && (
+                  {!sidebarCollapsed && ((section as any).audioUrl || sectionAudios[section.id]?.audioUrl) && (
                     <span className="text-xs">🔊</span>
                   )}
                 </button>
@@ -821,13 +831,37 @@ const LessonPresentation: React.FC<LessonPresentationProps> = ({
                   <h2 className="text-xl font-bold text-white">{currentSection.title}</h2>
                 </div>
 
-                {/* Audio controls */}
+                {/* Audio controls - check for pre-generated audioUrl first */}
                 <div className="flex items-center gap-2">
                   {sectionAudios[currentSection.id]?.isGenerating ? (
                     <span className="text-sm text-white/70 animate-pulse">Generating...</span>
-                  ) : sectionAudios[currentSection.id]?.audioUrl ? (
+                  ) : (currentSection as any).audioUrl || sectionAudios[currentSection.id]?.audioUrl ? (
                     <button
-                      onClick={() => isPlayingAudio === currentSection.id ? stopAudio() : playAudio(currentSection.id)}
+                      onClick={() => {
+                        const audioUrl = (currentSection as any).audioUrl || sectionAudios[currentSection.id]?.audioUrl;
+                        if (isPlayingAudio === currentSection.id) {
+                          stopAudio();
+                        } else {
+                          // Use either pre-generated or on-demand audio
+                          if ((currentSection as any).audioUrl && !sectionAudios[currentSection.id]?.audioUrl) {
+                            // Store pre-generated URL in sectionAudios for playAudio to use
+                            setSectionAudios(prev => ({
+                              ...prev,
+                              [currentSection.id]: { sectionId: currentSection.id, audioUrl: (currentSection as any).audioUrl, isGenerating: false }
+                            }));
+                            // Play directly
+                            const newAudio = new Audio((currentSection as any).audioUrl);
+                            newAudio.onended = () => setIsPlayingAudio(null);
+                            newAudio.onerror = () => setIsPlayingAudio(null);
+                            if (audioRef.current) audioRef.current.pause();
+                            audioRef.current = newAudio;
+                            newAudio.play();
+                            setIsPlayingAudio(currentSection.id);
+                          } else {
+                            playAudio(currentSection.id);
+                          }
+                        }
+                      }}
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm ${
                         isPlayingAudio === currentSection.id
                           ? 'bg-simmonds-terracotta text-white'
@@ -838,10 +872,10 @@ const LessonPresentation: React.FC<LessonPresentationProps> = ({
                     </button>
                   ) : (
                     <button
-                      onClick={() => generateSectionAudio(currentSection.id, currentSection.visualContent || currentSection.content)}
+                      onClick={() => generateSectionAudio(currentSection.id, (currentSection as any).audioScript || currentSection.visualContent || currentSection.content)}
                       className="flex items-center gap-1 px-3 py-1.5 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors text-sm"
                     >
-                      🔊 Audio
+                      🔊 Generate Audio
                     </button>
                   )}
                 </div>

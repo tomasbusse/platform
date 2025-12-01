@@ -33,9 +33,13 @@ interface GrammarPoint {
 
 interface LessonSection {
   id: string;
-  type: 'introduction' | 'vocabulary' | 'grammar' | 'reading' | 'listening' | 'exercise' | 'summary';
+  type: 'introduction' | 'vocabulary' | 'listening' | 'comprehension' | 'grammar' | 'expressions' | 'exercise' | 'speaking' | 'cultural' | 'summary' | 'homework' | 'reading';
   title: string;
-  content: string;
+  content: string; // TEXT: Visual support on screen
+  audioScript?: string; // AUDIO: Teaching content (never reads the slide)
+  audioUrl?: string;
+  imagePrompt?: string; // IMAGE: Context/comprehension support
+  imageUrl?: string;
   visualContent?: string;
   order: number;
 }
@@ -617,13 +621,22 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
         ? '\n\nIMPORTANT: Explain all English content in GERMAN. Definitions, instructions, and explanations should be in German to help German speakers learn English.'
         : '';
 
-      const structurePrompt = `${systemPrompt ? systemPrompt + '\n\n' : ''}${languageContext} Level: ${level}.${explanationContext}
+      // Build the comprehensive structured lesson prompt based on the pedagogical framework
+      // Core principle: Text = Visual support | Audio = Teaching content (NEVER reads slide) | Image = Context
+      const structurePrompt = `${systemPrompt ? systemPrompt + '\n\n' : ''}You are an expert language teacher creating professional slide-based lessons.
+
+${languageContext} Level: ${level} CEFR.${explanationContext}
 
 ${transcript ? `Based on this transcript:\n${transcript}\n\n` : ''}Topic: ${topic}
 ${additionalPrompt ? `\nExtra instructions: ${additionalPrompt}\n` : ''}
 ${presentationFormat ? `\n${presentationFormat}\n` : ''}
 
-Create a CONCISE slide-based lesson. Each section = 1 slide that fits on screen without scrolling.
+CORE PRINCIPLE - CRITICAL:
+- TEXT (content): Visual support/instructions on screen - concise, scannable
+- AUDIO (audioScript): Teaching content - NEVER simply reads the slide! Provides explanations, examples, pronunciation drills, engagement
+- IMAGE (imagePrompt): Context & comprehension aids - realistic photography style
+
+Create a structured 10-12 slide lesson following this EXACT framework:
 
 JSON structure (respond ONLY with valid JSON):
 {
@@ -632,61 +645,134 @@ JSON structure (respond ONLY with valid JSON):
   "objectives": ["objective1", "objective2", "objective3"],
   "sections": [
     {
-      "id": "welcome",
+      "id": "slide1-intro",
       "type": "introduction",
-      "title": "Welcome",
-      "content": "<h2>Title</h2><ul><li>Objective 1</li><li>Objective 2</li></ul><p>[IMAGE: welcoming image related to ${topic}]</p>",
+      "title": "Today's Topic: ${topic}",
+      "content": "<h2>${topic}</h2><h3>Today you will learn:</h3><ul><li>Learning goal 1</li><li>Learning goal 2</li><li>Learning goal 3</li></ul>",
+      "audioScript": "Welcome to today's lesson! [Warm-up question to engage student]. Today we're going to learn [preview of content]. By the end, you'll be able to [main outcome]. Let's get started!",
+      "imagePrompt": "[Scene setting image], realistic photography style, natural lighting",
       "order": 1
     },
     {
-      "id": "vocab",
+      "id": "slide2-vocab",
       "type": "vocabulary",
-      "title": "Key Words",
-      "content": "<div class='vocab-grid'><div class='vocab-card'><strong>word</strong> - definition<br/><em>example</em></div></div><p>[IMAGE: vocabulary illustration]</p>",
+      "title": "Key Vocabulary",
+      "content": "<div class='vocab-list'><div class='vocab-item'><strong>word1</strong> - definition</div><div class='vocab-item'><strong>word2</strong> - definition</div></div>",
+      "audioScript": "Let's learn some key words. First: '[word]' - [pronunciation guide]. [Word] means [definition]. For example: '[example sentence]'. Repeat after me: '[word]'. Good! Now let's look at the next word...",
+      "imagePrompt": "Flat lay photo showing vocabulary items, professional photography, natural lighting, photorealistic",
       "order": 2
     },
     {
-      "id": "grammar",
-      "type": "grammar",
-      "title": "Grammar",
-      "content": "<h3>Rule</h3><p>Simple explanation</p><table><tr><th>Pattern</th></tr><tr><td>Example</td></tr></table>",
+      "id": "slide3-listening1",
+      "type": "listening",
+      "title": "Listening Practice",
+      "content": "<h3>Listen and answer:</h3><ol><li>Comprehension question 1?</li><li>Comprehension question 2?</li></ol>",
+      "audioScript": "[Full natural dialogue between speakers at appropriate level - THIS IS THE LISTENING CONTENT the student will listen to]",
+      "imagePrompt": "People in conversation in relevant setting, realistic photo, natural expressions",
       "order": 3
     },
     {
-      "id": "practice",
-      "type": "exercise",
-      "title": "Practice",
-      "content": "<h3>Try it!</h3><ol><li>Exercise 1</li><li>Exercise 2</li></ol><p>[IMAGE: practice context]</p>",
+      "id": "slide4-comprehension",
+      "type": "comprehension",
+      "title": "Let's Check",
+      "content": "<h3>Answers</h3><p>1. [Answer to question 1]</p><p>2. [Answer to question 2]</p><div class='phrase-box'><h4>Useful Phrases</h4><ul><li>Phrase 1</li><li>Phrase 2</li></ul></div>",
+      "audioScript": "Let's check your answers. [Review answers]. Did you notice the phrase '[key phrase]'? This is a [polite/common/formal] way to [purpose]. Repeat after me: '[phrase]'. Good! Now try: '[variation]'.",
+      "imagePrompt": "Close-up of relevant item from dialogue, natural lighting, photorealistic",
       "order": 4
     },
     {
-      "id": "summary",
-      "type": "summary",
-      "title": "Summary",
-      "content": "<h3>Key Points</h3><ul><li>Point 1</li><li>Point 2</li><li>Point 3</li></ul><p>[IMAGE: success/celebration]</p>",
+      "id": "slide5-grammar",
+      "type": "grammar",
+      "title": "Language Focus",
+      "content": "<h3>Pattern: [Grammar structure]</h3><table><tr><th>Structure</th><th>Example</th></tr><tr><td>[Pattern]</td><td>[Example]</td></tr></table>",
+      "audioScript": "Now let's look at an important structure. When we want to [purpose], we use '[pattern]'. Listen to these examples: '[example 1]'. '[example 2]'. '[example 3]'. Notice how [explanation]. Now you know how to [outcome].",
+      "imagePrompt": "Person demonstrating the language in context, realistic photography, casual setting",
       "order": 5
+    },
+    {
+      "id": "slide6-listening2",
+      "type": "listening",
+      "title": "More Practice",
+      "content": "<h3>Listen again:</h3><ol><li>New comprehension question 1?</li><li>New comprehension question 2?</li></ol>",
+      "audioScript": "[Continuation of dialogue or new dialogue section - natural conversation for listening practice]",
+      "imagePrompt": "New scene from the conversation context, realistic photography",
+      "order": 6
+    },
+    {
+      "id": "slide7-expressions",
+      "type": "expressions",
+      "title": "Useful Expressions",
+      "content": "<h3>How to [situation]</h3><ul><li>[Expression 1]</li><li>[Expression 2]</li><li>[Expression 3]</li></ul>",
+      "audioScript": "Here are some useful phrases for [situation]. Repeat: '[expression 1]'. Good. Now: '[expression 2]'. These phrases are [formal/informal/polite]. Use them when you want to [purpose].",
+      "imagePrompt": "Relevant scenario showing the situation, realistic photo, natural setting",
+      "order": 7
+    },
+    {
+      "id": "slide8-exercise",
+      "type": "exercise",
+      "title": "Practice Time",
+      "content": "<h3>Fill in the gaps:</h3><ol><li>Sentence with ___ blank.</li><li>Another sentence with ___ blank.</li><li>Third sentence with ___ blank.</li></ol>",
+      "audioScript": "Now let's practice. Look at the sentences and fill in the missing words. Use the phrases we've learned. I'll give you a hint for number one: [hint]. Take your time...",
+      "imagePrompt": "Person studying or writing in notebook, warm natural lighting, realistic",
+      "order": 8
+    },
+    {
+      "id": "slide9-speaking",
+      "type": "speaking",
+      "title": "Your Turn to Speak",
+      "content": "<h3>Role Play</h3><p><strong>Role A:</strong> [Instructions for role A]</p><p><strong>Role B:</strong> [Instructions for role B]</p>",
+      "audioScript": "Now it's your turn to practice speaking. Listen to this example: [short model dialogue]. Now pause and practice. Try speaking both roles yourself, or practice with a partner. Remember to use '[key phrases]'.",
+      "imagePrompt": "Two people having a conversation, natural expressions, realistic professional photo",
+      "order": 9
+    },
+    {
+      "id": "slide10-cultural",
+      "type": "cultural",
+      "title": "Cultural Tip",
+      "content": "<h3>[Cultural topic]</h3><ul><li>Key point 1</li><li>Key point 2</li><li>Key point 3</li></ul>",
+      "audioScript": "Here's something important about [culture/etiquette]. [Expanded cultural explanation with comparisons and practical advice]. This is useful to know when [context].",
+      "imagePrompt": "Image related to cultural point, realistic photography, natural setting",
+      "order": 10
+    },
+    {
+      "id": "slide11-summary",
+      "type": "summary",
+      "title": "Key Takeaways",
+      "content": "<h3>Today we learned:</h3><ul><li>Key phrase/structure 1</li><li>Key phrase/structure 2</li><li>Key phrase/structure 3</li></ul>",
+      "audioScript": "Great work today! Let's review. To [do X], say '[phrase]'. If [situation], use '[phrase]'. Can you remember how to [task]? That's right: '[answer]'. Well done!",
+      "imagePrompt": "Positive conclusion image, success theme, warm atmosphere, realistic",
+      "order": 11
+    },
+    {
+      "id": "slide12-homework",
+      "type": "homework",
+      "title": "Homework & Next Steps",
+      "content": "<h3>Your Task</h3><p>[Homework assignment description]</p><h3>Next Lesson</h3><p>[Preview of next topic]</p>",
+      "audioScript": "Before our next lesson, try [homework task]. [Detailed instructions]. If you can, practice in a real situation! Next time, we'll learn about [next topic]. See you then!",
+      "imagePrompt": "Preview image related to next topic, realistic photography, inviting atmosphere",
+      "order": 12
     }
   ],
   "vocabulary": [
     {
       "word": "example",
       "definition": "${explanationLanguage === 'german' ? 'German definition' : 'English definition'}",
-      "example": "Example sentence",
+      "example": "Example sentence using the word",
       "pronunciation": "/pronunciation/",
       "partOfSpeech": "noun"
     }
   ],
   "grammarPoints": [
     {
-      "title": "Grammar Rule",
+      "title": "Grammar Rule Name",
       "explanation": "${explanationLanguage === 'german' ? 'German explanation' : 'English explanation'}",
-      "examples": ["Example 1", "Example 2"],
+      "examples": ["Example 1", "Example 2", "Example 3"],
       "exercises": [
         {
           "question": "Fill in: She ___ yesterday.",
           "options": ["go", "went"],
           "correctAnswer": "went",
-          "explanation": "Past tense explanation"
+          "explanation": "Explanation of why"
         }
       ]
     }
@@ -695,40 +781,40 @@ JSON structure (respond ONLY with valid JSON):
     {
       "id": "q1",
       "type": "multiple_choice",
-      "questionText": "Vocabulary question about a word from the lesson",
+      "questionText": "Vocabulary question",
       "options": ["A", "B", "C", "D"],
       "correctAnswer": "B",
-      "explanation": "Why this is correct",
+      "explanation": "Why correct",
       "skill": "vocabulary",
       "points": 10
     },
     {
       "id": "q2",
       "type": "fill_in_blank",
-      "questionText": "Complete the sentence: She ___ to school yesterday.",
+      "questionText": "Complete: She ___ to school.",
       "correctAnswer": "went",
-      "explanation": "Past tense of go",
+      "explanation": "Past tense",
       "skill": "grammar",
       "points": 10
     },
     {
       "id": "q3",
       "type": "true_false",
-      "questionText": "Statement to evaluate as true or false",
+      "questionText": "Statement to evaluate",
       "options": ["True", "False"],
       "correctAnswer": "True",
-      "explanation": "Why this is true/false",
+      "explanation": "Why true/false",
       "skill": "comprehension",
       "points": 10
     },
     {
       "id": "q4",
       "type": "listening",
-      "questionText": "Listen and answer: What does the speaker say?",
-      "audioText": "Short sentence to be read aloud for the listening question",
+      "questionText": "Listen and answer",
+      "audioText": "Text for TTS generation",
       "options": ["A", "B", "C", "D"],
       "correctAnswer": "A",
-      "explanation": "What was said in the audio",
+      "explanation": "What was said",
       "skill": "listening",
       "points": 15
     }
@@ -736,18 +822,16 @@ JSON structure (respond ONLY with valid JSON):
 }
 
 STRICT REQUIREMENTS:
-- 4-5 sections ONLY (like PowerPoint slides)
-- 5-6 vocabulary items MAX
-- 1-2 grammar points
-- 5-6 test questions with VARIETY:
-  * 1-2 multiple_choice (vocabulary)
-  * 1-2 fill_in_blank (grammar)
-  * 1 true_false (comprehension)
-  * 1 listening (with audioText for TTS generation)
-- BRIEF content per section (fits one screen)
-- Include [IMAGE: description] placeholders
+- Generate 10-12 slides following the exact structure above
+- AUDIO (audioScript) must NEVER simply read the slide content - it TEACHES, EXPLAINS, MODELS, ENGAGES
+- TEXT (content) is visual reference only - concise bullet points, clear headings
+- IMAGE prompts must specify "realistic photography" - NO cartoons or illustrations
+- 5-8 vocabulary items with pronunciation
+- 1-2 grammar points with multiple examples
+- 5-6 varied test questions (multiple_choice, fill_in_blank, true_false, listening)
+- Listening slides (3, 6) contain actual dialogue in audioScript
 - ${explanationLanguage === 'german' ? 'All explanations in GERMAN' : 'All explanations in English'}
-- Level: ${level} CEFR`;
+- Level-appropriate complexity for ${level} CEFR`;
 
       // Use content model for structure generation
       const structureResponse = await generateContent(structurePrompt, 'content');
@@ -771,6 +855,69 @@ STRICT REQUIREMENTS:
         const section = lessonData.sections[i];
         setGenerationProgress(`Designing slide ${i + 1}/${lessonData.sections.length}: ${section.title}...`);
 
+        // Get slide type specific design guidance
+        const slideTypeDesigns: Record<string, string> = {
+          introduction: `
+- Hero layout with centered title
+- 3-4 learning objectives as elegant icon bullets (use ✓ or → symbols)
+- Clean, minimal design with lots of whitespace
+- Include audio player indicator (🔊 icon) at bottom`,
+          vocabulary: `
+- Grid of vocabulary cards (2-3 columns)
+- Each card: word in large bold text, definition below, example in italics
+- Cards have hover-ready shadows and rounded corners (16px)
+- Include audio indicator for pronunciation`,
+          listening: `
+- Pre-listening questions prominently displayed
+- Large audio player indicator (🎧 Listen) in center
+- Clean layout with focus on comprehension questions
+- Note: Audio will be auto-played for this slide`,
+          comprehension: `
+- Answers section clearly numbered
+- Useful Phrases box with highlighted background (#E3C6AB)
+- Key phrases in a styled callout box
+- Review indicator for audio playback`,
+          grammar: `
+- Split layout: rule on left, examples on right
+- Use a styled table with gradient header row
+- Formula/pattern in a highlighted box with border-left accent
+- Clear before/after examples`,
+          expressions: `
+- Phrase list with clear formatting
+- Each expression in its own card/row
+- Color-coded by formality level if applicable
+- Practice pronunciation indicator`,
+          exercise: `
+- Question in a prominent card
+- Answer options as clickable-looking buttons/cards
+- Gap-fill blanks clearly indicated with underlines
+- Interactive feel with hover states`,
+          speaking: `
+- Role cards side by side (Role A / Role B)
+- Clear instructions for each role
+- Model dialogue indicator
+- Practice area suggestion`,
+          cultural: `
+- Cultural tip highlighted with special icon (🌍)
+- Comparison points if relevant
+- Practical advice callout
+- Engaging cultural imagery placeholder`,
+          summary: `
+- Key takeaways as numbered items with icons
+- Quick reference box for most important points
+- "Remember" callout box with terracotta border
+- Congratulations message`,
+          homework: `
+- Task assignment clearly boxed
+- Next lesson preview section
+- Motivational closing message
+- Resources/tips if applicable`,
+          reading: `
+- Main text in elegant bordered container
+- Key vocabulary highlighted
+- Pull quote in large italic text`,
+        };
+
         const visualPrompt = `You are a professional presentation designer. Create a STUNNING PowerPoint-style HTML slide.
 
 SLIDE TYPE: "${section.type}" (Slide ${i + 1} of ${lessonData.sections.length})
@@ -790,48 +937,26 @@ DESIGN REQUIREMENTS:
 1. TITLE BAR: Bold gradient header (#003F37 to #4F5338) with white text, 32px font
 2. CONTENT CARDS: White cards with subtle shadows (box-shadow: 0 4px 15px rgba(0,0,0,0.1))
 3. ACCENT COLORS: Use #9F9D38 (lime) for highlights, #B25627 (terracotta) for callouts
+4. BACKGROUND: Cream (#E3C6AB) for special callout boxes
 4. TYPOGRAPHY:
    - Headings: 28-32px, font-weight: 700, color: #003F37
    - Body: 18-20px, line-height: 1.6, color: #333
    - Use system fonts: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif
 
-SLIDE TYPE-SPECIFIC DESIGNS:
-${section.type === 'introduction' ? `
-- Hero layout with centered title
-- 3-4 learning objectives as elegant icon bullets (use ✓ or → symbols)
-- Inspirational quote or hook if relevant
-- Clean, minimal design with lots of whitespace` : ''}
-${section.type === 'vocabulary' ? `
-- Grid of vocabulary cards (2-3 columns)
-- Each card: word in large bold text, definition below, example in italics
-- Cards have hover-ready shadows and rounded corners (16px)
-- Color-code by word type if applicable` : ''}
-${section.type === 'grammar' ? `
-- Split layout: rule on left, examples on right
-- Use a styled table with gradient header row
-- Formula/pattern in a highlighted box with border-left accent
-- Clear before/after examples if showing transformations` : ''}
-${section.type === 'reading' || section.type === 'listening' ? `
-- Main text in a elegant bordered container
-- Key vocabulary highlighted with background color
-- Pull quote or key phrase in large italic text
-- Clear visual separation between sections` : ''}
-${section.type === 'exercise' ? `
-- Question in a prominent card
-- Answer options as clickable-looking buttons/cards
-- Visual feedback indicators (icons for correct/incorrect)
-- Progress indicator style elements` : ''}
-${section.type === 'summary' ? `
-- Key takeaways as numbered items with icons
-- Quick reference box for most important points
-- "Remember" callout box with terracotta border
-- Clean closing with next steps hint` : ''}
+SLIDE TYPE-SPECIFIC DESIGN (${section.type}):
+${slideTypeDesigns[section.type] || slideTypeDesigns.reading}
 
-IMAGE PLACEHOLDERS:
-Replace [IMAGE: description] with:
-<div style="background: linear-gradient(135deg, #003F37 0%, #9F9D38 100%); height: 180px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 500;">
-  <span style="opacity: 0.9;">🖼️ description</span>
+IMAGE PLACEHOLDER (use this EXACT format for the image area):
+<div data-image-placeholder style="background: linear-gradient(135deg, #003F37 0%, #9F9D38 100%); height: 180px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 500;">
+  <span style="opacity: 0.9;">🖼️ Image will appear here</span>
 </div>
+
+AUDIO INDICATOR (include for listening slides):
+${section.type === 'listening' ? `
+<div style="background: #003F37; color: white; padding: 16px 24px; border-radius: 12px; display: flex; align-items: center; gap: 12px; margin: 16px 0;">
+  <span style="font-size: 24px;">🎧</span>
+  <span style="font-size: 18px; font-weight: 500;">Click to listen to the dialogue</span>
+</div>` : ''}
 
 ABSOLUTE REQUIREMENTS:
 - Use ONLY inline styles
@@ -840,6 +965,7 @@ ABSOLUTE REQUIREMENTS:
 - Everything must fit on ONE screen - NO scrolling
 - Generous padding (24px+) and margins
 - Modern, clean, corporate-professional aesthetic
+- Include ONE image placeholder area with data-image-placeholder attribute
 
 Return ONLY the HTML code, no explanations or markdown.`;
 
@@ -853,48 +979,62 @@ Return ONLY the HTML code, no explanations or markdown.`;
 
       // Step 3: Generate images for slides and vocabulary if image model is enabled
       if (imageModel !== 'none') {
-        // 3a: Generate images for slide placeholders
+        // 3a: Generate images for slide placeholders using imagePrompt from each section
         setGenerationProgress('Generating slide images...');
         for (let i = 0; i < lessonData.sections.length; i++) {
           const section = lessonData.sections[i];
-          const visualContent = section.visualContent || section.content;
+          let visualContent = section.visualContent || section.content;
 
-          // Find image placeholders [IMAGE: description] or 🖼️ placeholders
-          const imageMatches = visualContent.match(/\[IMAGE:\s*([^\]]+)\]|🖼️\s*([^<]+)</g);
+          // Use the imagePrompt from the section if available, otherwise extract from placeholders
+          let imageDescription = section.imagePrompt;
 
-          if (imageMatches && imageMatches.length > 0) {
-            let updatedContent = visualContent;
-
-            for (const match of imageMatches.slice(0, 2)) { // Max 2 images per slide
-              // Extract description from the match
-              const descMatch = match.match(/\[IMAGE:\s*([^\]]+)\]/) || match.match(/🖼️\s*([^<]+)/);
-              const description = descMatch?.[1]?.trim() || `${section.title} illustration`;
-
-              setGenerationProgress(`Generating image: ${description.substring(0, 40)}...`);
-
-              try {
-                const imageUrl = await generateImage(`${description} for ${topic} lesson`);
-                if (imageUrl) {
-                  // Replace placeholder with actual image
-                  const imageHtml = `<img src="${imageUrl}" alt="${description}" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 16px; margin: 12px 0;" />`;
-
-                  // Replace the placeholder div or text
-                  updatedContent = updatedContent.replace(
-                    /<div[^>]*>[\s\S]*?🖼️[\s\S]*?<\/div>/i,
-                    imageHtml
-                  );
-                  // Also try replacing text-based placeholder
-                  updatedContent = updatedContent.replace(
-                    /\[IMAGE:\s*[^\]]+\]/i,
-                    imageHtml
-                  );
-                }
-              } catch (e) {
-                console.warn(`Failed to generate image for slide ${i}:`, e);
-              }
+          if (!imageDescription) {
+            // Fallback: Find image placeholders [IMAGE: description] or 🖼️ placeholders
+            const imageMatches = visualContent.match(/\[IMAGE:\s*([^\]]+)\]|🖼️\s*([^<]+)</g);
+            if (imageMatches && imageMatches.length > 0) {
+              const descMatch = imageMatches[0].match(/\[IMAGE:\s*([^\]]+)\]/) || imageMatches[0].match(/🖼️\s*([^<]+)/);
+              imageDescription = descMatch?.[1]?.trim();
             }
+          }
 
-            lessonData.sections[i].visualContent = updatedContent;
+          if (imageDescription) {
+            // Clean up the prompt - ensure it specifies realistic photography
+            const cleanPrompt = imageDescription.includes('realistic')
+              ? imageDescription
+              : `${imageDescription}, realistic photography, natural lighting, professional photo`;
+
+            setGenerationProgress(`Generating image: ${cleanPrompt.substring(0, 50)}...`);
+
+            try {
+              const imageUrl = await generateImage(`${cleanPrompt}. Educational image for language learning about ${topic}.`);
+              if (imageUrl) {
+                // Store the image URL in the section
+                lessonData.sections[i].imageUrl = imageUrl;
+
+                // Replace placeholder with actual image
+                const imageHtml = `<img src="${imageUrl}" alt="${imageDescription}" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 16px; margin: 12px 0;" />`;
+
+                // Replace the data-image-placeholder div
+                visualContent = visualContent.replace(
+                  /<div[^>]*data-image-placeholder[^>]*>[\s\S]*?<\/div>/i,
+                  imageHtml
+                );
+                // Also try replacing the 🖼️ placeholder div
+                visualContent = visualContent.replace(
+                  /<div[^>]*>[\s\S]*?🖼️[\s\S]*?<\/div>/i,
+                  imageHtml
+                );
+                // Also try replacing text-based placeholder
+                visualContent = visualContent.replace(
+                  /\[IMAGE:\s*[^\]]+\]/gi,
+                  imageHtml
+                );
+
+                lessonData.sections[i].visualContent = visualContent;
+              }
+            } catch (e) {
+              console.warn(`Failed to generate image for slide ${i}:`, e);
+            }
           }
         }
 
@@ -918,15 +1058,55 @@ Return ONLY the HTML code, no explanations or markdown.`;
         }
       }
 
-      // Step 4: Generate audio for listening questions if API key exists
+      // Step 4: Generate audio for each slide's audioScript if API key exists
       const elevenLabsKey = getElevenLabsApiKey();
       if (elevenLabsKey) {
+        // 4a: Generate audio for slide audio scripts (the teaching content)
+        setGenerationProgress('Generating audio for lesson slides...');
+        for (let i = 0; i < lessonData.sections.length; i++) {
+          const section = lessonData.sections[i];
+          if (section.audioScript) {
+            try {
+              setGenerationProgress(`Generating audio for slide ${i + 1}/${lessonData.sections.length}: ${section.title}...`);
+              const cleanText = section.audioScript.replace(/<[^>]*>/g, '').trim();
+
+              const response = await fetch(
+                `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoice}`,
+                {
+                  method: 'POST',
+                  headers: {
+                    Accept: 'audio/mpeg',
+                    'Content-Type': 'application/json',
+                    'xi-api-key': elevenLabsKey,
+                  },
+                  body: JSON.stringify({
+                    text: cleanText,
+                    model_id: lessonLanguage === 'german' ? 'eleven_multilingual_v2' : 'eleven_monolingual_v1',
+                    voice_settings: {
+                      stability: 0.5,
+                      similarity_boost: 0.75,
+                    },
+                  }),
+                }
+              );
+
+              if (response.ok) {
+                const audioBlob = await response.blob();
+                lessonData.sections[i].audioUrl = URL.createObjectURL(audioBlob);
+              }
+            } catch (e) {
+              console.warn(`Failed to generate audio for slide ${i}:`, e);
+            }
+          }
+        }
+
+        // 4b: Generate audio for listening test questions
         const listeningQuestions = lessonData.testQuestions.filter(q => q.type === 'listening' && q.audioText);
         if (listeningQuestions.length > 0) {
           setGenerationProgress('Generating audio for listening questions...');
           for (const question of listeningQuestions) {
             try {
-              setGenerationProgress(`Generating audio: ${question.audioText?.substring(0, 30)}...`);
+              setGenerationProgress(`Generating test audio: ${question.audioText?.substring(0, 30)}...`);
               const cleanText = question.audioText!.replace(/<[^>]*>/g, '').trim();
 
               const response = await fetch(

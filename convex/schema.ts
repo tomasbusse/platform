@@ -775,22 +775,36 @@ export default defineSchema({
     // Language settings
     language: v.optional(v.union(v.literal("english"), v.literal("german"))),
     explanationLanguage: v.optional(v.union(v.literal("english"), v.literal("german"))),
-    // Generated content sections
+    // Generated content sections (slides)
+    // Following the principle: Text = Visual support | Audio = Teaching content | Image = Context
     sections: v.array(v.object({
       id: v.string(),
       type: v.union(
-        v.literal("introduction"),
-        v.literal("vocabulary"),
-        v.literal("grammar"),
-        v.literal("reading"),
-        v.literal("listening"),
-        v.literal("exercise"),
-        v.literal("summary")
+        v.literal("introduction"),      // Slide 1: Topic & objectives
+        v.literal("vocabulary"),        // Slide 2: Key vocabulary list
+        v.literal("listening"),         // Slides 3, 6: Dialogue/listening content
+        v.literal("comprehension"),     // Slide 4: Answers & key phrases
+        v.literal("grammar"),           // Slide 5: Language focus
+        v.literal("expressions"),       // Slide 7: Useful expressions/phrases
+        v.literal("exercise"),          // Slide 8: Gap fill/matching practice
+        v.literal("speaking"),          // Slide 9: Role-play/speaking practice
+        v.literal("cultural"),          // Slide 10: Cultural tip
+        v.literal("summary"),           // Slide 11: Key takeaways
+        v.literal("homework"),          // Slide 12: Homework & next steps
+        v.literal("reading")            // Legacy: reading sections
       ),
       title: v.string(),
-      content: v.string(), // HTML/Markdown content
+      // TEXT: Visual support on screen (concise, scannable)
+      content: v.string(), // HTML/Markdown content for display
+      // AUDIO: Teaching content (NEVER reads the slide - explains, models, engages)
+      audioScript: v.optional(v.string()), // Script for TTS generation
       audioId: v.optional(v.id("audioContent")), // ElevenLabs generated audio
-      visualContent: v.optional(v.string()), // Gemini generated visual HTML
+      audioUrl: v.optional(v.string()), // Direct URL if generated client-side
+      // IMAGE: Context and comprehension support
+      imagePrompt: v.optional(v.string()), // Prompt for AI image generation
+      imageUrl: v.optional(v.string()), // Generated image URL
+      // Design
+      visualContent: v.optional(v.string()), // Enhanced visual HTML design
       order: v.number(),
     })),
     // Vocabulary items extracted
