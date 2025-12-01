@@ -140,11 +140,11 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
   const [isPreviewingVoice, setIsPreviewingVoice] = useState(false);
   const [previewAudio, setPreviewAudio] = useState<HTMLAudioElement | null>(null);
 
-  // Multi-model selection for different tasks
+  // Multi-model selection for different tasks (default to OpenRouter since it's the primary configured API)
   const [contentModel, setContentModel] = useState<string>('openrouter');
-  const [designModel, setDesignModel] = useState<string>('gemini-2.0-flash');
+  const [designModel, setDesignModel] = useState<string>('openrouter');
   const [imageModel, setImageModel] = useState<string>('none');
-  const [audioScriptModel, setAudioScriptModel] = useState<string>('gemini-2.0-flash');
+  const [audioScriptModel, setAudioScriptModel] = useState<string>('openrouter');
 
   // Auto-generate audio setting
   const [autoGenerateAudio, setAutoGenerateAudio] = useState(true);
@@ -471,11 +471,11 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
         modelToUse = audioScriptModel;
         break;
       default:
-        modelToUse = contentModel === 'openrouter' ? 'openrouter' : contentModel;
+        modelToUse = contentModel;
     }
 
-    // If using OpenRouter (for content model)
-    if (modelToUse === 'openrouter' || (contentModel === 'openrouter' && taskType === 'content')) {
+    // If using OpenRouter for any task type
+    if (modelToUse === 'openrouter') {
       return generateWithAI(prompt);
     }
 
@@ -1334,10 +1334,13 @@ Return ONLY the HTML, no explanation.`;
                     onChange={(e) => setDesignModel(e.target.value)}
                     className="w-full px-3 py-2 border border-simmonds-cream rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
                   >
+                    <optgroup label="OpenRouter (Recommended)">
+                      <option value="openrouter">OpenRouter (Use selected model)</option>
+                    </optgroup>
                     <optgroup label="Gemini 3 (Latest)">
                       <option value="gemini-3-pro-preview">Gemini 3 Pro (Most Advanced)</option>
                     </optgroup>
-                    <optgroup label="Gemini 2.0 (Recommended)">
+                    <optgroup label="Gemini 2.0">
                       <option value="gemini-2.0-flash">Gemini 2.0 Flash (Fast)</option>
                       <option value="gemini-2.0-pro-exp">Gemini 2.0 Pro (Experimental)</option>
                     </optgroup>
@@ -1394,10 +1397,13 @@ Return ONLY the HTML, no explanation.`;
                     onChange={(e) => setAudioScriptModel(e.target.value)}
                     className="w-full px-3 py-2 border border-simmonds-cream rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-simmonds-primary"
                   >
+                    <optgroup label="OpenRouter (Recommended)">
+                      <option value="openrouter">OpenRouter (Use selected model)</option>
+                    </optgroup>
                     <optgroup label="Gemini 3 (Latest)">
                       <option value="gemini-3-pro-preview">Gemini 3 Pro (Most Advanced)</option>
                     </optgroup>
-                    <optgroup label="Gemini 2.0 (Recommended)">
+                    <optgroup label="Gemini 2.0">
                       <option value="gemini-2.0-flash">Gemini 2.0 Flash (Fast)</option>
                       <option value="gemini-2.0-pro-exp">Gemini 2.0 Pro (Experimental)</option>
                     </optgroup>
@@ -1410,8 +1416,8 @@ Return ONLY the HTML, no explanation.`;
                 </div>
               </div>
 
-              {/* OpenRouter Model Selection (only shown when contentModel is 'openrouter') */}
-              {contentModel === 'openrouter' && (
+              {/* OpenRouter Model Selection (shown when any model uses OpenRouter) */}
+              {(contentModel === 'openrouter' || designModel === 'openrouter' || audioScriptModel === 'openrouter') && (
                 <div className="mt-4 pt-4 border-t border-purple-100">
                   <label className="block text-sm font-medium text-simmonds-charcoal mb-2">
                     OpenRouter Model Selection
