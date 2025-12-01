@@ -1237,19 +1237,36 @@ STRICT REQUIREMENTS:
         return 'reading';
       };
 
-      // Prepare sections with validated types
-      const sectionsToSave = generatedLesson.sections.map((s) => ({
-        id: s.id,
-        type: mapSectionType(s.type),
-        title: s.title,
-        content: s.visualContent || s.content || '',
-        audioScript: s.audioScript,
-        audioUrl: s.audioUrl,
-        imagePrompt: s.imagePrompt,
-        imageUrl: s.imageUrl,
-        visualContent: s.visualContent,
-        order: s.order,
-      }));
+      // Prepare sections with validated types - only include defined values
+      const sectionsToSave = generatedLesson.sections.map((s, index) => {
+        const section: {
+          id: string;
+          type: ValidSectionType;
+          title: string;
+          content: string;
+          order: number;
+          audioScript?: string;
+          audioUrl?: string;
+          imagePrompt?: string;
+          imageUrl?: string;
+          visualContent?: string;
+        } = {
+          id: s.id || `section-${index}`,
+          type: mapSectionType(s.type),
+          title: s.title || `Slide ${index + 1}`,
+          content: s.visualContent || s.content || '',
+          order: typeof s.order === 'number' ? s.order : index + 1,
+        };
+
+        // Only add optional fields if they have values
+        if (s.audioScript) section.audioScript = s.audioScript;
+        if (s.audioUrl) section.audioUrl = s.audioUrl;
+        if (s.imagePrompt) section.imagePrompt = s.imagePrompt;
+        if (s.imageUrl) section.imageUrl = s.imageUrl;
+        if (s.visualContent) section.visualContent = s.visualContent;
+
+        return section;
+      });
 
       console.log('[SaveLesson] Saving sections:', sectionsToSave.map(s => ({ id: s.id, type: s.type, title: s.title })));
 
@@ -1265,22 +1282,49 @@ STRICT REQUIREMENTS:
         language: lessonLanguage,
         explanationLanguage,
         sections: sectionsToSave,
-        vocabulary: generatedLesson.vocabulary.map((v) => ({
-          word: v.word,
-          definition: v.definition,
-          example: v.example,
-          pronunciation: v.pronunciation,
-          partOfSpeech: v.partOfSpeech,
-        })),
-        grammarPoints: generatedLesson.grammarPoints.map((g) => ({
-          title: g.title,
-          explanation: g.explanation,
-          examples: g.examples,
-          exercises: g.exercises,
-        })),
+        vocabulary: (generatedLesson.vocabulary || []).map((v) => {
+          const vocab: {
+            word: string;
+            definition: string;
+            example: string;
+            pronunciation?: string;
+            partOfSpeech?: string;
+          } = {
+            word: v.word || '',
+            definition: v.definition || '',
+            example: v.example || '',
+          };
+          if (v.pronunciation) vocab.pronunciation = v.pronunciation;
+          if (v.partOfSpeech) vocab.partOfSpeech = v.partOfSpeech;
+          return vocab;
+        }),
+        grammarPoints: (generatedLesson.grammarPoints || []).map((g) => {
+          const grammar: {
+            title: string;
+            explanation: string;
+            examples: string[];
+            exercises?: { question: string; options?: string[]; correctAnswer: string; explanation?: string; }[];
+          } = {
+            title: g.title || '',
+            explanation: g.explanation || '',
+            examples: g.examples || [],
+          };
+          if (g.exercises && g.exercises.length > 0) {
+            grammar.exercises = g.exercises.map(ex => {
+              const exercise: { question: string; correctAnswer: string; options?: string[]; explanation?: string; } = {
+                question: ex.question || '',
+                correctAnswer: ex.correctAnswer || '',
+              };
+              if (ex.options) exercise.options = ex.options;
+              if (ex.explanation) exercise.explanation = ex.explanation;
+              return exercise;
+            });
+          }
+          return grammar;
+        }),
         estimatedDuration: Math.max(20, generatedLesson.sections.length * 2), // ~2 min per slide
-        objectives: generatedLesson.objectives,
-        tags: [topic, level],
+        objectives: generatedLesson.objectives || [],
+        tags: [topic, level].filter(Boolean),
         generatedWithModel: selectedModel || companySettings?.apis?.openrouter?.model || 'anthropic/claude-sonnet-4',
         sourceTranscript: transcript || undefined,
       });
