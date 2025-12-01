@@ -5,6 +5,7 @@ import { Id } from '../../convex/_generated/dataModel';
 import { User, Company } from '../types';
 import { exportToPowerPoint, exportToPDF } from '../utils/lessonExport';
 import AudioPlayer from './AudioPlayer';
+import { getSlideTemplate } from '../utils/slideTemplates';
 
 interface LessonPresentationProps {
   currentUser: User | null;
@@ -61,6 +62,10 @@ const LessonPresentation: React.FC<LessonPresentationProps> = ({
   // Export state
   const [isExporting, setIsExporting] = useState<'pptx' | 'pdf' | null>(null);
 
+  // Image generation state
+  const [isGeneratingImage, setIsGeneratingImage] = useState<string | null>(null);
+  const [sectionImages, setSectionImages] = useState<Record<string, string>>({});
+
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Fetch lesson
@@ -86,9 +91,16 @@ const LessonPresentation: React.FC<LessonPresentationProps> = ({
     lessonId ? { virtualLessonId: lessonId as Id<"virtualLessons"> } : 'skip'
   );
 
+  // Fetch settings for API keys
+  const settings = useQuery(
+    api.settings.getSettings,
+    company?._id ? { companyId: company._id as Id<"companies"> } : 'skip'
+  );
+
   const startProgress = useMutation(api.lessons.startLessonProgress);
   const updateProgress = useMutation(api.lessons.updateLessonProgress);
   const completeProgress = useMutation(api.lessons.completeLessonProgress);
+  const updateVirtualLesson = useMutation(api.lessons.updateVirtualLesson);
 
   // Initialize vocabulary cards
   useEffect(() => {
@@ -396,6 +408,131 @@ const LessonPresentation: React.FC<LessonPresentationProps> = ({
       audioRef.current.currentTime = 0;
     }
     setIsPlayingAudio(null);
+  };
+
+  // Image generation helpers
+  const getReplicateApiKey = (): string | null => {
+    if (!settings) return null;
+    const replicateKey = settings.find((s) => s.key === 'replicate_api_key');
+    return replicateKey?.value || null;
+  };
+
+  const generateImageForSection = async (sectionId: string, sectionType: string, topic: string) => {
+    const apiKey = getReplicateApiKey();
+    if (!apiKey) {
+      alert('Please configure Replicate API key in Settings to generate images');
+      return;
+    }
+
+    setIsGeneratingImage(sectionId);
+
+    // Create a prompt based on section type
+    const typePrompts: Record<string, string> = {
+      introduction: `Welcome scene for learning about ${topic}, warm and inviting classroom or study environment`,
+      vocabulary: `Visual representation of key vocabulary words for ${topic}, educational illustration`,
+      listening: `Two people having a conversation about ${topic}, natural setting, realistic photography`,
+      comprehension: `Person thinking or studying, educational context, realistic photography`,
+      grammar: `Educational diagram or visual aid for learning language rules, clean modern design`,
+      expressions: `People communicating using gestures and expressions, natural setting`,
+      exercise: `Student working on practice exercises, focused study, realistic photography`,
+      speaking: `Two people in role-play conversation, natural dialogue, realistic photography`,
+      cultural: `Cultural scene related to ${topic}, authentic setting, realistic photography`,
+      summary: `Achievement or success moment, celebrating learning, warm atmosphere`,
+      homework: `Study materials and notebook, preparation for practice, cozy study scene`,
+      reading: `Person reading a book in a comfortable setting, natural lighting`,
+    };
+
+    const basePrompt = typePrompts[sectionType] || `Educational scene about ${topic}`;
+    const fullPrompt = `${basePrompt}, realistic photography, natural lighting, professional photo, educational image for language learning`;
+
+    try {
+      // Use Replicate's Flux model
+      const response = await fetch('https://api.replicate.com/v1/predictions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          version: 'black-forest-labs/flux-schnell',
+          input: {
+            prompt: fullPrompt,
+            num_outputs: 1,
+            aspect_ratio: '16:9',
+            output_format: 'webp',
+            output_quality: 80,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to start image generation');
+      }
+
+      const prediction = await response.json();
+
+      // Poll for completion
+      let result = prediction;
+      while (result.status !== 'succeeded' && result.status !== 'failed') {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${result.id}`, {
+          headers: { 'Authorization': `Token ${apiKey}` },
+        });
+        result = await pollResponse.json();
+      }
+
+      if (result.status === 'failed') {
+        throw new Error('Image generation failed');
+      }
+
+      const imageUrl = Array.isArray(result.output) ? result.output[0] : result.output;
+
+      // Store locally
+      setSectionImages((prev) => ({ ...prev, [sectionId]: imageUrl }));
+
+      // Update the lesson in the database
+      if (lesson) {
+        const updatedSections = lesson.sections.map((s) => {
+          if (s.id === sectionId) {
+            // Regenerate visual content with new image
+            const newVisualContent = getSlideTemplate({
+              title: s.title,
+              content: s.content,
+              audioScript: (s as any).audioScript,
+              imageUrl: imageUrl,
+              type: s.type,
+            });
+            return {
+              ...s,
+              imageUrl,
+              visualContent: newVisualContent,
+            };
+          }
+          return s;
+        });
+
+        await updateVirtualLesson({
+          lessonId: lessonId as Id<"virtualLessons">,
+          sections: updatedSections.map((s) => ({
+            id: s.id,
+            type: s.type as any,
+            title: s.title,
+            content: s.content,
+            order: s.order,
+            audioScript: (s as any).audioScript,
+            audioUrl: (s as any).audioUrl,
+            imagePrompt: (s as any).imagePrompt,
+            imageUrl: (s as any).imageUrl,
+            visualContent: s.visualContent,
+          })),
+        });
+      }
+    } catch (error) {
+      console.error('Failed to generate image:', error);
+      alert('Failed to generate image. Please try again.');
+    } finally {
+      setIsGeneratingImage(null);
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -896,14 +1033,55 @@ const LessonPresentation: React.FC<LessonPresentationProps> = ({
                     </div>
                   )}
 
+                  {/* Image Generation Section */}
+                  <div className="mt-4 border-t border-slate-200 pt-4">
+                    <h3 className="text-sm font-semibold text-simmonds-charcoal mb-3 flex items-center gap-2">
+                      <span>🖼️</span> Slide Image
+                    </h3>
+                    {((currentSection as any).imageUrl || sectionImages[currentSection.id]) ? (
+                      <div className="rounded-lg overflow-hidden border border-slate-200">
+                        <img
+                          src={(currentSection as any).imageUrl || sectionImages[currentSection.id]}
+                          alt={currentSection.title}
+                          className="w-full h-32 object-cover"
+                        />
+                        <button
+                          onClick={() => generateImageForSection(currentSection.id, currentSection.type, lesson?.topic || '')}
+                          disabled={isGeneratingImage === currentSection.id}
+                          className="w-full px-3 py-2 text-xs text-simmonds-stone hover:text-simmonds-primary hover:bg-slate-50 transition-colors"
+                        >
+                          {isGeneratingImage === currentSection.id ? 'Regenerating...' : '🔄 Regenerate Image'}
+                        </button>
+                      </div>
+                    ) : isGeneratingImage === currentSection.id ? (
+                      <div className="bg-simmonds-cream rounded-xl p-4 text-center">
+                        <div className="animate-spin text-2xl mb-2">⏳</div>
+                        <p className="text-xs text-simmonds-stone">Generating image...</p>
+                      </div>
+                    ) : (
+                      <div className="bg-gradient-to-br from-simmonds-cream/50 to-slate-100 rounded-xl p-4 text-center border-2 border-dashed border-simmonds-cream">
+                        <div className="text-3xl mb-2">🖼️</div>
+                        <p className="text-xs text-simmonds-stone mb-3">
+                          Add an image to make this slide more engaging
+                        </p>
+                        <button
+                          onClick={() => generateImageForSection(currentSection.id, currentSection.type, lesson?.topic || '')}
+                          className="px-4 py-2 bg-simmonds-olive text-white rounded-lg text-sm font-medium hover:bg-simmonds-olive/90 transition-colors"
+                        >
+                          Generate Image
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Audio Script Preview (if available) */}
                   {(currentSection as any).audioScript && (
                     <div className="mt-4 flex-1 overflow-y-auto">
                       <h4 className="text-xs font-medium text-simmonds-stone uppercase tracking-wide mb-2">
                         Teacher Script
                       </h4>
-                      <div className="text-sm text-simmonds-charcoal bg-white rounded-lg p-3 border border-slate-200 max-h-48 overflow-y-auto">
-                        <p className="leading-relaxed">{(currentSection as any).audioScript}</p>
+                      <div className="text-sm text-simmonds-charcoal bg-white rounded-lg p-3 border border-slate-200 max-h-32 overflow-y-auto">
+                        <p className="leading-relaxed text-xs">{(currentSection as any).audioScript}</p>
                       </div>
                     </div>
                   )}

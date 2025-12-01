@@ -236,7 +236,6 @@ const LessonsPage: React.FC<LessonsPageProps> = ({ currentUser, company }) => {
           currentUser={currentUser}
           company={company}
           lessonId={selectedLessonId}
-          onComplete={() => setViewMode('dashboard')}
           onBack={() => setViewMode('view-lesson')}
         />
       </div>
