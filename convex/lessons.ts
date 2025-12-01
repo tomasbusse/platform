@@ -485,6 +485,52 @@ export const publishVirtualLesson = mutation({
   },
 });
 
+// Delete virtual lesson
+export const deleteVirtualLesson = mutation({
+  args: {
+    lessonId: v.id("virtualLessons"),
+  },
+  handler: async (ctx, args) => {
+    const lesson = await ctx.db.get(args.lessonId);
+    if (!lesson) throw new Error("Lesson not found");
+
+    // Delete related lesson progress records
+    const progressRecords = await ctx.db
+      .query("lessonProgress")
+      .withIndex("by_lesson", (q) => q.eq("virtualLessonId", args.lessonId))
+      .collect();
+
+    for (const record of progressRecords) {
+      await ctx.db.delete(record._id);
+    }
+
+    // Delete related materials
+    const materials = await ctx.db
+      .query("lessonMaterials")
+      .withIndex("by_virtual_lesson", (q) => q.eq("virtualLessonId", args.lessonId))
+      .collect();
+
+    for (const material of materials) {
+      await ctx.db.delete(material._id);
+    }
+
+    // Delete the lesson
+    await ctx.db.delete(args.lessonId);
+
+    // Audit log
+    await ctx.db.insert("auditLogs", {
+      companyId: lesson.companyId,
+      userId: lesson.createdBy,
+      action: "virtual_lesson_deleted",
+      entityType: "virtualLesson",
+      entityId: args.lessonId,
+      timestamp: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
 // Get company virtual lessons
 export const getCompanyVirtualLessons = query({
   args: {

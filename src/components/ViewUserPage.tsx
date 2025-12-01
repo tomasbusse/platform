@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { User, Company } from '../types';
 import { Id } from '../../convex/_generated/dataModel';
@@ -8,6 +8,12 @@ import RecentMaterialsWidget from './RecentMaterialsWidget';
 import LessonsDashboardWidget from './LessonsDashboardWidget';
 import LessonScheduler from './LessonScheduler';
 import VirtualLessonBuilder from './VirtualLessonBuilder';
+
+interface DeleteConfirmation {
+  lessonId: string;
+  lessonType: 'scheduled' | 'virtual';
+  lessonTitle?: string;
+}
 
 interface ViewUserPageProps {
   viewingUser: User;
@@ -18,9 +24,33 @@ interface ViewUserPageProps {
 
 const ViewUserPage: React.FC<ViewUserPageProps> = ({ viewingUser, company, onClose, onNavigateToLessons }) => {
   const [creatingLessonType, setCreatingLessonType] = useState<'scheduled' | 'virtual' | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<DeleteConfirmation | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Delete mutations
+  const deleteScheduledLesson = useMutation(api.lessons.deleteScheduledLesson);
+  const deleteVirtualLesson = useMutation(api.lessons.deleteVirtualLesson);
 
   const isStudent = viewingUser.role === 'student';
   const isTeacher = viewingUser.role === 'teacher' || viewingUser.role === 'admin' || viewingUser.role === 'corporate_admin';
+
+  const handleDeleteLesson = async () => {
+    if (!deleteConfirmation) return;
+
+    setIsDeleting(true);
+    try {
+      if (deleteConfirmation.lessonType === 'scheduled') {
+        await deleteScheduledLesson({ lessonId: deleteConfirmation.lessonId as Id<"scheduledLessons"> });
+      } else {
+        await deleteVirtualLesson({ lessonId: deleteConfirmation.lessonId as Id<"virtualLessons"> });
+      }
+      setDeleteConfirmation(null);
+    } catch (error) {
+      console.error('Failed to delete lesson:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Fetch teacher stats if viewing a teacher
   const teacherStats = useQuery(
@@ -126,11 +156,14 @@ const ViewUserPage: React.FC<ViewUserPageProps> = ({ viewingUser, company, onClo
             setCreatingLessonType(lessonType);
           }}
           onEditLesson={(lessonId, lessonType) => {
-            // For editing, navigate to lessons page
+            // For editing, navigate to lessons page (components don't support edit mode yet)
             if (onNavigateToLessons) {
               onClose();
               onNavigateToLessons();
             }
+          }}
+          onDeleteLesson={(lessonId, lessonType) => {
+            setDeleteConfirmation({ lessonId, lessonType });
           }}
         />
 
@@ -245,6 +278,53 @@ const ViewUserPage: React.FC<ViewUserPageProps> = ({ viewingUser, company, onClo
             isStudent ? renderStudentView() : renderTeacherView()
           )}
         </div>
+
+        {/* Delete Confirmation Modal */}
+        {deleteConfirmation && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+            <div className="bg-white rounded-xl shadow-xl p-6 max-w-md mx-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-simmonds-charcoal">Delete Lesson</h3>
+                  <p className="text-sm text-simmonds-stone">
+                    {deleteConfirmation.lessonType === 'scheduled' ? 'Scheduled lesson' : 'AI lesson'}
+                  </p>
+                </div>
+              </div>
+              <p className="text-simmonds-charcoal mb-6">
+                Are you sure you want to delete this lesson? This action cannot be undone.
+              </p>
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  onClick={() => setDeleteConfirmation(null)}
+                  disabled={isDeleting}
+                  className="px-4 py-2 text-sm font-medium text-simmonds-charcoal bg-simmonds-cream hover:bg-simmonds-cream/80 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteLesson}
+                  disabled={isDeleting}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isDeleting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Deleting...
+                    </>
+                  ) : (
+                    'Delete Lesson'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
