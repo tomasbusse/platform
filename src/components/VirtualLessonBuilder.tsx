@@ -684,28 +684,83 @@ STRICT REQUIREMENTS:
       }
 
       // Step 2: Generate visually stunning content for each section (using design model)
-      setGenerationProgress('Creating visual slide content...');
+      setGenerationProgress('Creating professional slide designs...');
 
       for (let i = 0; i < lessonData.sections.length; i++) {
         const section = lessonData.sections[i];
         setGenerationProgress(`Designing slide ${i + 1}/${lessonData.sections.length}: ${section.title}...`);
 
-        const visualPrompt = `Create a SINGLE SLIDE HTML for a "${section.type}" slide. Must fit on ONE SCREEN without scrolling.
+        const visualPrompt = `You are a professional presentation designer. Create a STUNNING PowerPoint-style HTML slide.
 
-Content: ${section.content}
+SLIDE TYPE: "${section.type}" (Slide ${i + 1} of ${lessonData.sections.length})
+TITLE: "${section.title}"
+CONTENT TO DESIGN: ${section.content}
 
-STRICT RULES:
-- Maximum 200 words
-- Use inline styles with colors: #003F37 (teal), #9F9D38 (lime), #B25627 (terracotta), #E3C6AB (cream)
-- Large fonts: headings 28px+, body 18px+
-- Generous spacing and padding
-- Replace [IMAGE: description] with: <div style="background: linear-gradient(135deg, #E3C6AB 0%, #9F9D38 100%); height: 150px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #003F37; font-size: 14px;">📷 description</div>
-- Use cards with shadows for vocabulary items
-- Use clean tables with colored headers for grammar
-- Add relevant emojis as visual cues
-- NO scrolling - everything visible at once
+CREATE A PROFESSIONAL PRESENTATION SLIDE with these EXACT specifications:
 
-Return ONLY the HTML, no explanation.`;
+LAYOUT STRUCTURE:
+- Full-width slide with 16:9 aspect ratio feel
+- Clean header area with title
+- Main content area with clear visual hierarchy
+- Use CSS Grid or Flexbox for professional layouts
+- Maximum 150 words of text - be concise!
+
+DESIGN REQUIREMENTS:
+1. TITLE BAR: Bold gradient header (#003F37 to #4F5338) with white text, 32px font
+2. CONTENT CARDS: White cards with subtle shadows (box-shadow: 0 4px 15px rgba(0,0,0,0.1))
+3. ACCENT COLORS: Use #9F9D38 (lime) for highlights, #B25627 (terracotta) for callouts
+4. TYPOGRAPHY:
+   - Headings: 28-32px, font-weight: 700, color: #003F37
+   - Body: 18-20px, line-height: 1.6, color: #333
+   - Use system fonts: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif
+
+SLIDE TYPE-SPECIFIC DESIGNS:
+${section.type === 'introduction' ? `
+- Hero layout with centered title
+- 3-4 learning objectives as elegant icon bullets (use ✓ or → symbols)
+- Inspirational quote or hook if relevant
+- Clean, minimal design with lots of whitespace` : ''}
+${section.type === 'vocabulary' ? `
+- Grid of vocabulary cards (2-3 columns)
+- Each card: word in large bold text, definition below, example in italics
+- Cards have hover-ready shadows and rounded corners (16px)
+- Color-code by word type if applicable` : ''}
+${section.type === 'grammar' ? `
+- Split layout: rule on left, examples on right
+- Use a styled table with gradient header row
+- Formula/pattern in a highlighted box with border-left accent
+- Clear before/after examples if showing transformations` : ''}
+${section.type === 'reading' || section.type === 'listening' ? `
+- Main text in a elegant bordered container
+- Key vocabulary highlighted with background color
+- Pull quote or key phrase in large italic text
+- Clear visual separation between sections` : ''}
+${section.type === 'exercise' ? `
+- Question in a prominent card
+- Answer options as clickable-looking buttons/cards
+- Visual feedback indicators (icons for correct/incorrect)
+- Progress indicator style elements` : ''}
+${section.type === 'summary' ? `
+- Key takeaways as numbered items with icons
+- Quick reference box for most important points
+- "Remember" callout box with terracotta border
+- Clean closing with next steps hint` : ''}
+
+IMAGE PLACEHOLDERS:
+Replace [IMAGE: description] with:
+<div style="background: linear-gradient(135deg, #003F37 0%, #9F9D38 100%); height: 180px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 500;">
+  <span style="opacity: 0.9;">🖼️ description</span>
+</div>
+
+ABSOLUTE REQUIREMENTS:
+- Use ONLY inline styles
+- NO external CSS, NO class names
+- Must look like a professional PowerPoint/Keynote slide
+- Everything must fit on ONE screen - NO scrolling
+- Generous padding (24px+) and margins
+- Modern, clean, corporate-professional aesthetic
+
+Return ONLY the HTML code, no explanations or markdown.`;
 
         try {
           const visualContent = await generateContent(visualPrompt, 'design');

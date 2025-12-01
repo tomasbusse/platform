@@ -880,77 +880,189 @@ const LessonPresentation: React.FC<LessonPresentationProps> = ({
         .backface-hidden { backface-visibility: hidden; }
         .rotate-y-180 { transform: rotateY(180deg); }
 
-        /* PowerPoint-style slide content */
+        /* PowerPoint-style slide content - Professional Design */
         .lesson-slide-content {
           display: flex;
           flex-direction: column;
-          font-size: 1.1rem;
-          line-height: 1.6;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          font-size: 1.15rem;
+          line-height: 1.7;
+          color: #333;
+          height: 100%;
         }
-        .lesson-slide-content h1, .lesson-slide-content h2 {
+
+        /* Typography - Large and readable like PowerPoint */
+        .lesson-slide-content h1 {
+          color: #003F37;
+          font-size: 2rem;
+          font-weight: 700;
+          margin-bottom: 1.25rem;
+          letter-spacing: -0.02em;
+        }
+        .lesson-slide-content h2 {
           color: #003F37;
           font-size: 1.75rem;
           font-weight: 700;
           margin-bottom: 1rem;
+          letter-spacing: -0.01em;
         }
         .lesson-slide-content h3 {
           color: #003F37;
-          font-size: 1.35rem;
+          font-size: 1.4rem;
           font-weight: 600;
           margin-bottom: 0.75rem;
         }
-        .lesson-slide-content p {
-          margin-bottom: 0.75rem;
-        }
-        .lesson-slide-content ul, .lesson-slide-content ol {
-          margin-left: 1.5rem;
-          margin-bottom: 0.75rem;
-        }
-        .lesson-slide-content li {
+        .lesson-slide-content h4 {
+          color: #4F5338;
+          font-size: 1.2rem;
+          font-weight: 600;
           margin-bottom: 0.5rem;
         }
+
+        /* Paragraphs */
+        .lesson-slide-content p {
+          margin-bottom: 1rem;
+          font-size: 1.1rem;
+        }
+
+        /* Lists - Clean bullet styling */
+        .lesson-slide-content ul, .lesson-slide-content ol {
+          margin-left: 1.75rem;
+          margin-bottom: 1rem;
+        }
+        .lesson-slide-content li {
+          margin-bottom: 0.6rem;
+          font-size: 1.1rem;
+        }
+        .lesson-slide-content ul li::marker {
+          color: #9F9D38;
+        }
+        .lesson-slide-content ol li::marker {
+          color: #003F37;
+          font-weight: 600;
+        }
+
+        /* Tables - Professional styling */
         .lesson-slide-content table {
           width: 100%;
-          border-collapse: collapse;
-          margin: 0.75rem 0;
+          border-collapse: separate;
+          border-spacing: 0;
+          margin: 1rem 0;
           font-size: 1rem;
-        }
-        .lesson-slide-content th, .lesson-slide-content td {
-          padding: 0.5rem 0.75rem;
-          border: 1px solid #E3C6AB;
-          text-align: left;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
         .lesson-slide-content th {
           background: linear-gradient(135deg, #003F37 0%, #4F5338 100%);
           color: white;
           font-weight: 600;
+          padding: 0.875rem 1rem;
+          text-align: left;
+          font-size: 1rem;
         }
+        .lesson-slide-content td {
+          padding: 0.75rem 1rem;
+          border-bottom: 1px solid #E3C6AB;
+          background: white;
+        }
+        .lesson-slide-content tr:last-child td {
+          border-bottom: none;
+        }
+        .lesson-slide-content tr:nth-child(even) td {
+          background: #fafaf8;
+        }
+
+        /* Text styling */
         .lesson-slide-content strong {
           color: #003F37;
-          font-weight: 600;
+          font-weight: 700;
         }
         .lesson-slide-content em {
           color: #9F9D38;
           font-style: italic;
         }
+        .lesson-slide-content mark {
+          background: linear-gradient(120deg, #E3C6AB55 0%, #E3C6AB55 100%);
+          padding: 0.1em 0.3em;
+          border-radius: 4px;
+        }
+
+        /* Blockquotes - Callout style */
+        .lesson-slide-content blockquote {
+          border-left: 4px solid #9F9D38;
+          padding: 1rem 1.5rem;
+          margin: 1rem 0;
+          background: linear-gradient(135deg, #fafaf8 0%, #f5f5f0 100%);
+          border-radius: 0 12px 12px 0;
+          font-style: italic;
+          color: #4F5338;
+        }
+
+        /* Code/formula styling */
+        .lesson-slide-content code {
+          background: #003F37;
+          color: #9F9D38;
+          padding: 0.2em 0.5em;
+          border-radius: 6px;
+          font-family: 'SF Mono', Monaco, monospace;
+          font-size: 0.95em;
+        }
+        .lesson-slide-content pre {
+          background: linear-gradient(135deg, #003F37 0%, #1a1a1a 100%);
+          color: #E3C6AB;
+          padding: 1.25rem;
+          border-radius: 12px;
+          overflow-x: auto;
+          margin: 1rem 0;
+        }
+
+        /* Links */
+        .lesson-slide-content a {
+          color: #003F37;
+          text-decoration: underline;
+          text-decoration-color: #9F9D38;
+          text-underline-offset: 3px;
+        }
+
+        /* Horizontal rules */
+        .lesson-slide-content hr {
+          border: none;
+          height: 2px;
+          background: linear-gradient(90deg, transparent, #E3C6AB, transparent);
+          margin: 1.5rem 0;
+        }
 
         /* Image placeholder styling */
         .lesson-slide-content [style*="background: linear-gradient"] {
-          margin: 0.75rem 0;
+          margin: 1rem 0;
+        }
+
+        /* Support for inline-styled divs from AI */
+        .lesson-slide-content > div {
+          margin-bottom: 1rem;
+        }
+        .lesson-slide-content > div:last-child {
+          margin-bottom: 0;
         }
 
         /* Vocabulary card styling */
         .vocab-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 0.75rem;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 1rem;
         }
         .vocab-card {
-          background: linear-gradient(135deg, #fff 0%, #E3C6AB22 100%);
+          background: white;
           border: 1px solid #E3C6AB;
-          border-radius: 0.75rem;
-          padding: 0.75rem;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          border-radius: 16px;
+          padding: 1.25rem;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .vocab-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(0,0,0,0.1);
         }
 
         /* Legacy lesson-content support */
