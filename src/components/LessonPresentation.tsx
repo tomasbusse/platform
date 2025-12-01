@@ -4,6 +4,7 @@ import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
 import { User, Company } from '../types';
 import { exportToPowerPoint, exportToPDF } from '../utils/lessonExport';
+import AudioPlayer from './AudioPlayer';
 
 interface LessonPresentationProps {
   currentUser: User | null;
@@ -831,61 +832,90 @@ const LessonPresentation: React.FC<LessonPresentationProps> = ({
                   <h2 className="text-xl font-bold text-white">{currentSection.title}</h2>
                 </div>
 
-                {/* Audio controls - check for pre-generated audioUrl first */}
+                {/* Audio status indicator */}
                 <div className="flex items-center gap-2">
-                  {sectionAudios[currentSection.id]?.isGenerating ? (
-                    <span className="text-sm text-white/70 animate-pulse">Generating...</span>
-                  ) : (currentSection as any).audioUrl || sectionAudios[currentSection.id]?.audioUrl ? (
-                    <button
-                      onClick={() => {
-                        const audioUrl = (currentSection as any).audioUrl || sectionAudios[currentSection.id]?.audioUrl;
-                        if (isPlayingAudio === currentSection.id) {
-                          stopAudio();
-                        } else {
-                          // Use either pre-generated or on-demand audio
-                          if ((currentSection as any).audioUrl && !sectionAudios[currentSection.id]?.audioUrl) {
-                            // Store pre-generated URL in sectionAudios for playAudio to use
-                            setSectionAudios(prev => ({
-                              ...prev,
-                              [currentSection.id]: { sectionId: currentSection.id, audioUrl: (currentSection as any).audioUrl, isGenerating: false }
-                            }));
-                            // Play directly
-                            const newAudio = new Audio((currentSection as any).audioUrl);
-                            newAudio.onended = () => setIsPlayingAudio(null);
-                            newAudio.onerror = () => setIsPlayingAudio(null);
-                            if (audioRef.current) audioRef.current.pause();
-                            audioRef.current = newAudio;
-                            newAudio.play();
-                            setIsPlayingAudio(currentSection.id);
-                          } else {
-                            playAudio(currentSection.id);
-                          }
-                        }
-                      }}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm ${
-                        isPlayingAudio === currentSection.id
-                          ? 'bg-simmonds-terracotta text-white'
-                          : 'bg-white/20 text-white hover:bg-white/30'
-                      }`}
-                    >
-                      {isPlayingAudio === currentSection.id ? '■ Stop' : '▶ Listen'}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => generateSectionAudio(currentSection.id, (currentSection as any).audioScript || currentSection.visualContent || currentSection.content)}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors text-sm"
-                    >
-                      🔊 Generate Audio
-                    </button>
+                  {((currentSection as any).audioUrl || sectionAudios[currentSection.id]?.audioUrl) && (
+                    <span className="flex items-center gap-1 text-sm text-white/70">
+                      <span className="text-lg">🎧</span>
+                      Audio ready
+                    </span>
+                  )}
+                  {sectionAudios[currentSection.id]?.isGenerating && (
+                    <span className="text-sm text-white/70 animate-pulse">Generating audio...</span>
                   )}
                 </div>
               </div>
 
-              {/* Slide Content - Scrollable when content overflows */}
-              <div
-                className="flex-1 p-8 overflow-y-auto lesson-slide-content"
-                dangerouslySetInnerHTML={{ __html: currentSection.visualContent || currentSection.content }}
-              />
+              {/* Slide Content with Audio Player */}
+              <div className="flex-1 flex overflow-hidden">
+                {/* Main Content Area */}
+                <div
+                  className="flex-1 p-6 overflow-y-auto lesson-slide-content"
+                  dangerouslySetInnerHTML={{ __html: currentSection.visualContent || currentSection.content }}
+                />
+
+                {/* Audio Player Sidebar */}
+                <div className="w-80 bg-slate-50 border-l border-slate-200 p-4 flex flex-col shrink-0">
+                  <h3 className="text-sm font-semibold text-simmonds-charcoal mb-3 flex items-center gap-2">
+                    <span>🎧</span> Listen & Learn
+                  </h3>
+
+                  {((currentSection as any).audioUrl || sectionAudios[currentSection.id]?.audioUrl) ? (
+                    <AudioPlayer
+                      audioUrl={(currentSection as any).audioUrl || sectionAudios[currentSection.id]?.audioUrl}
+                      title={currentSection.title}
+                      className="mb-4"
+                    />
+                  ) : sectionAudios[currentSection.id]?.isGenerating ? (
+                    <div className="bg-simmonds-cream rounded-xl p-6 text-center">
+                      <div className="animate-spin text-2xl mb-2">⏳</div>
+                      <p className="text-sm text-simmonds-stone">Generating audio...</p>
+                    </div>
+                  ) : (
+                    <div className="bg-simmonds-cream rounded-xl p-6 text-center">
+                      <div className="text-3xl mb-3">🔊</div>
+                      <p className="text-sm text-simmonds-stone mb-4">
+                        Generate audio narration for this slide
+                      </p>
+                      <button
+                        onClick={() => {
+                          // IMPORTANT: Use audioScript for audio, NOT the visual content
+                          const audioText = (currentSection as any).audioScript;
+                          if (audioText) {
+                            generateSectionAudio(currentSection.id, audioText);
+                          } else {
+                            // Fallback: generate from content but warn
+                            console.warn('No audioScript found, falling back to content');
+                            generateSectionAudio(currentSection.id, currentSection.content);
+                          }
+                        }}
+                        className="px-4 py-2 bg-simmonds-primary text-white rounded-lg text-sm font-medium hover:bg-simmonds-primary/90 transition-colors"
+                      >
+                        Generate Audio
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Audio Script Preview (if available) */}
+                  {(currentSection as any).audioScript && (
+                    <div className="mt-4 flex-1 overflow-y-auto">
+                      <h4 className="text-xs font-medium text-simmonds-stone uppercase tracking-wide mb-2">
+                        Teacher Script
+                      </h4>
+                      <div className="text-sm text-simmonds-charcoal bg-white rounded-lg p-3 border border-slate-200 max-h-48 overflow-y-auto">
+                        <p className="leading-relaxed">{(currentSection as any).audioScript}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tip */}
+                  <div className="mt-auto pt-4">
+                    <div className="bg-simmonds-lime/10 rounded-lg p-3 text-xs text-simmonds-olive">
+                      <strong>Tip:</strong> The audio explains the content - it doesn't just read the slide!
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {/* Slide Footer with Navigation */}
               <div className="bg-simmonds-cream/30 px-8 py-3 flex items-center justify-between shrink-0 border-t border-simmonds-cream/50">
