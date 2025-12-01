@@ -109,6 +109,7 @@ export const saveCompanySettings = mutation({
         geminiApiKey: apis.gemini?.apiKey || '',
         resendApiKey: apis.resend?.apiKey || '',
         cambridgeApiKey: apis.cambridge?.apiKey || '',
+        replicateApiKey: apis.replicate?.apiKey || '',
         testFrequency: args.settings.company?.testFrequency || 30,
         autoGrouping: args.settings.company?.autoGrouping !== undefined ? args.settings.company.autoGrouping : true,
         emailNotifications: args.settings.company?.emailNotifications !== undefined ? args.settings.company.emailNotifications : true,

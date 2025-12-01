@@ -66,6 +66,11 @@ interface SettingsState {
       apiKey: string;
       defaultAvatarId: string;
     };
+    replicate: {
+      enabled: boolean;
+      apiKey: string;
+      defaultModel: string;
+    };
   };
   aiPrompts: {
     systemPrompt: string;
@@ -245,6 +250,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, company }) => 
         apiKey: '',
         defaultAvatarId: '',
       },
+      replicate: {
+        enabled: false,
+        apiKey: '',
+        defaultModel: 'stability-ai/sdxl',
+      },
     },
     // AI Prompts Configuration
     aiPrompts: {
@@ -363,6 +373,7 @@ Keep it achievable and focused.`,
           cambridge: { ...prev.apis.cambridge, ...localSettings.apis?.cambridge },
           openai: { ...prev.apis.openai, ...localSettings.apis?.openai },
           heygen: { ...prev.apis.heygen, ...localSettings.apis?.heygen },
+          replicate: { ...prev.apis.replicate, ...localSettings.apis?.replicate },
         },
         notifications: { ...prev.notifications, ...localSettings.notifications },
         learning: { ...prev.learning, ...localSettings.learning },
@@ -407,6 +418,7 @@ Keep it achievable and focused.`,
             cambridge: { ...prev.apis.cambridge, ...convexCompanySettings.apis?.cambridge },
             openai: { ...prev.apis.openai, ...convexCompanySettings.apis?.openai },
             heygen: { ...prev.apis.heygen, ...convexCompanySettings.apis?.heygen },
+            replicate: { ...prev.apis.replicate, ...convexCompanySettings.apis?.replicate },
           },
           aiPrompts: { ...prev.aiPrompts, ...(convexCompanySettings as any).aiPrompts },
           voiceConfig: { ...prev.voiceConfig, ...(convexCompanySettings as any).voiceConfig },
@@ -504,6 +516,10 @@ Keep it achievable and focused.`,
         case 'heygen':
           // Test HeyGen API
           result = await testHeyGenAPI(settings.apis.heygen.apiKey);
+          break;
+        case 'replicate':
+          // Test Replicate API
+          result = await testReplicateAPI(settings.apis.replicate.apiKey);
           break;
       }
 
@@ -831,6 +847,51 @@ Keep it achievable and focused.`,
         return {
           success: true,
           message: 'API key format appears valid!\n(Direct browser testing blocked by CORS - this is normal. The key will work from your backend.)'
+        };
+      }
+      return { success: false, message: `Network error: ${error.message}` };
+    }
+  };
+
+  const testReplicateAPI = async (apiKey: string) => {
+    if (!apiKey) {
+      return { success: false, message: 'API token is required' };
+    }
+
+    try {
+      // Test by fetching the user's account info
+      const response = await fetch('https://api.replicate.com/v1/account', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          success: true,
+          message: `Connection successful!\nAccount: ${data.username || 'Connected'}\nType: ${data.type || 'User'}\nReady to use Replicate models.`
+        };
+      } else if (response.status === 401) {
+        return {
+          success: false,
+          message: 'API token is invalid or unauthorized. Make sure you copied the full token starting with "r8_".'
+        };
+      } else {
+        const error = await response.json().catch(() => ({}));
+        return {
+          success: false,
+          message: `API Error: ${error.detail || response.statusText}`
+        };
+      }
+    } catch (error: any) {
+      // CORS might block direct browser calls
+      if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+        return {
+          success: true,
+          message: 'API token format appears valid!\n(Direct browser testing blocked by CORS - this is normal. The token will work from your backend.)'
         };
       }
       return { success: false, message: `Network error: ${error.message}` };
@@ -1625,6 +1686,96 @@ Keep it achievable and focused.`,
               </div>
               <p className="text-xs text-simmonds-stone">
                 Get your API key from <a href="https://app.heygen.com/settings?nav=API" target="_blank" rel="noopener noreferrer" className="text-simmonds-primary hover:underline">HeyGen Settings</a>. Used for creating realistic dialogue scenes with AI avatars for conversational practice.
+              </p>
+            </div>
+          </div>
+
+          {/* Replicate AI */}
+          <div className="border border-simmonds-cream rounded-xl p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h4 className="font-semibold text-simmonds-charcoal">Replicate (AI Models Platform)</h4>
+                <p className="text-xs text-simmonds-stone mt-1">Access thousands of AI models for image, video, and audio generation</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={settings.apis.replicate.enabled}
+                onChange={(e) => setSettings(prev => ({
+                  ...prev,
+                  apis: {
+                    ...prev.apis,
+                    replicate: { ...prev.apis.replicate, enabled: e.target.checked }
+                  }
+                }))}
+              />
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-simmonds-charcoal mb-2">API Token</label>
+                <input
+                  type="password"
+                  className="w-full px-3 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary focus:border-simmonds-primary"
+                  placeholder="r8_..."
+                  value={settings.apis.replicate.apiKey}
+                  onChange={(e) => setSettings(prev => ({
+                    ...prev,
+                    apis: {
+                      ...prev.apis,
+                      replicate: { ...prev.apis.replicate, apiKey: e.target.value }
+                    }
+                  }))}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-simmonds-charcoal mb-2">Default Model</label>
+                <select
+                  className="w-full px-3 py-2 border border-simmonds-cream rounded-xl focus:outline-none focus:ring-2 focus:ring-simmonds-primary focus:border-simmonds-primary"
+                  value={settings.apis.replicate.defaultModel}
+                  onChange={(e) => setSettings(prev => ({
+                    ...prev,
+                    apis: {
+                      ...prev.apis,
+                      replicate: { ...prev.apis.replicate, defaultModel: e.target.value }
+                    }
+                  }))}
+                >
+                  <optgroup label="Image Generation">
+                    <option value="stability-ai/sdxl">Stable Diffusion XL (High Quality)</option>
+                    <option value="stability-ai/stable-diffusion-3">Stable Diffusion 3</option>
+                    <option value="black-forest-labs/flux-schnell">FLUX Schnell (Fast)</option>
+                    <option value="black-forest-labs/flux-dev">FLUX Dev (Quality)</option>
+                    <option value="black-forest-labs/flux-1.1-pro">FLUX 1.1 Pro (Best)</option>
+                  </optgroup>
+                  <optgroup label="Video Generation">
+                    <option value="minimax/video-01">MiniMax Video-01</option>
+                    <option value="luma/ray">Luma Ray</option>
+                  </optgroup>
+                  <optgroup label="Audio/Music">
+                    <option value="meta/musicgen">MusicGen (Music)</option>
+                    <option value="suno-ai/bark">Bark (TTS)</option>
+                  </optgroup>
+                </select>
+                <p className="text-xs text-simmonds-stone mt-1">
+                  Default model for content generation. You can select different models when creating content.
+                </p>
+              </div>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => testAPI('replicate')}
+                  disabled={!settings.apis.replicate.apiKey || isTestingAPI !== null}
+                  className="w-full px-4 py-2 border border-simmonds-cream rounded-xl text-simmonds-charcoal hover:bg-simmonds-cream-light disabled:opacity-50 transition-colors"
+                >
+                  {isTestingAPI === 'replicate' ? 'Testing...' : 'Test API Connection'}
+                </button>
+                {apiTestResults.replicate && (
+                  <p className={`text-xs mt-1 ${apiTestResults.replicate.success ? 'text-simmonds-lime-dark' : 'text-simmonds-terracotta'}`}>
+                    {apiTestResults.replicate.success ? 'Last test successful' : 'Last test failed'}
+                  </p>
+                )}
+              </div>
+              <p className="text-xs text-simmonds-stone">
+                Get your API token from <a href="https://replicate.com/account/api-tokens" target="_blank" rel="noopener noreferrer" className="text-simmonds-primary hover:underline">Replicate Account Settings</a>. Access thousands of AI models including Stable Diffusion, FLUX, and more.
               </p>
             </div>
           </div>

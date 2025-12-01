@@ -62,6 +62,7 @@ export default defineSchema({
       resendApiKey: v.optional(v.string()),
       cambridgeApiKey: v.optional(v.string()),
       geminiApiKey: v.optional(v.string()),
+      replicateApiKey: v.optional(v.string()),
       testFrequency: v.optional(v.number()),
       emailNotifications: v.optional(v.boolean()),
       autoGrouping: v.optional(v.boolean()),
