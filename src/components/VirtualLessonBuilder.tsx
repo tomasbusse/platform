@@ -315,6 +315,10 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
     return getApiKeyFromSources('elevenLabsApiKey', ['apis', 'elevenlabs', 'apiKey']);
   };
 
+  const getReplicateApiKey = (): string | null => {
+    return getApiKeyFromSources('replicateApiKey', ['apis', 'replicate', 'apiKey']);
+  };
+
   const generateWithAI = async (prompt: string): Promise<string> => {
     // Use OpenRouter API with selected model
     const apiKey = getOpenRouterApiKey();
@@ -470,6 +474,78 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
     }
   };
 
+  // Generate image with Replicate API
+  const generateImageWithReplicate = async (prompt: string): Promise<string | null> => {
+    const apiKey = getReplicateApiKey();
+    if (!apiKey) return null;
+
+    // Get model from settings or use default (SDXL)
+    const replicateModel = companySettings?.apis?.replicate?.defaultModel || 'stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b';
+
+    try {
+      // Create prediction
+      const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          version: replicateModel.includes(':') ? replicateModel.split(':')[1] : replicateModel,
+          input: {
+            prompt: `Educational illustration for language learning: ${prompt}. Clean, professional, colorful illustration suitable for teaching. No text in image.`,
+            negative_prompt: 'text, words, letters, watermark, signature, blurry, low quality',
+            width: 1024,
+            height: 576, // 16:9 aspect ratio
+            num_outputs: 1,
+          },
+        }),
+      });
+
+      if (!createResponse.ok) {
+        console.warn('Replicate create prediction failed:', createResponse.statusText);
+        return null;
+      }
+
+      const prediction = await createResponse.json();
+
+      // Poll for completion (max 60 seconds)
+      let result = prediction;
+      const maxAttempts = 30;
+      let attempts = 0;
+
+      while (result.status !== 'succeeded' && result.status !== 'failed' && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${result.id}`, {
+          headers: {
+            'Authorization': `Token ${apiKey}`,
+          },
+        });
+
+        if (!statusResponse.ok) {
+          console.warn('Replicate status check failed:', statusResponse.statusText);
+          return null;
+        }
+
+        result = await statusResponse.json();
+        attempts++;
+      }
+
+      if (result.status === 'succeeded' && result.output) {
+        // Replicate returns an array of URLs
+        const imageUrl = Array.isArray(result.output) ? result.output[0] : result.output;
+        return imageUrl;
+      }
+
+      console.warn('Replicate image generation did not complete:', result.status);
+      return null;
+    } catch (error) {
+      console.warn('Replicate image generation error:', error);
+      return null;
+    }
+  };
+
   // Unified generate function that uses the selected model
   const generateContent = async (prompt: string, taskType: 'content' | 'design' | 'audio' = 'content'): Promise<string> => {
     let modelToUse: string;
@@ -497,6 +573,11 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
   // Generate image based on selected image model
   const generateImage = async (prompt: string): Promise<string | null> => {
     if (imageModel === 'none') return null;
+
+    // Check if it's Replicate
+    if (imageModel === 'replicate') {
+      return generateImageWithReplicate(prompt);
+    }
 
     // Check if it's an OpenAI model
     if (imageModel.startsWith('dall-e')) {
@@ -770,8 +851,54 @@ Return ONLY the HTML code, no explanations or markdown.`;
         }
       }
 
-      // Step 3: Generate images for vocabulary if image model is enabled
+      // Step 3: Generate images for slides and vocabulary if image model is enabled
       if (imageModel !== 'none') {
+        // 3a: Generate images for slide placeholders
+        setGenerationProgress('Generating slide images...');
+        for (let i = 0; i < lessonData.sections.length; i++) {
+          const section = lessonData.sections[i];
+          const visualContent = section.visualContent || section.content;
+
+          // Find image placeholders [IMAGE: description] or 🖼️ placeholders
+          const imageMatches = visualContent.match(/\[IMAGE:\s*([^\]]+)\]|🖼️\s*([^<]+)</g);
+
+          if (imageMatches && imageMatches.length > 0) {
+            let updatedContent = visualContent;
+
+            for (const match of imageMatches.slice(0, 2)) { // Max 2 images per slide
+              // Extract description from the match
+              const descMatch = match.match(/\[IMAGE:\s*([^\]]+)\]/) || match.match(/🖼️\s*([^<]+)/);
+              const description = descMatch?.[1]?.trim() || `${section.title} illustration`;
+
+              setGenerationProgress(`Generating image: ${description.substring(0, 40)}...`);
+
+              try {
+                const imageUrl = await generateImage(`${description} for ${topic} lesson`);
+                if (imageUrl) {
+                  // Replace placeholder with actual image
+                  const imageHtml = `<img src="${imageUrl}" alt="${description}" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 16px; margin: 12px 0;" />`;
+
+                  // Replace the placeholder div or text
+                  updatedContent = updatedContent.replace(
+                    /<div[^>]*>[\s\S]*?🖼️[\s\S]*?<\/div>/i,
+                    imageHtml
+                  );
+                  // Also try replacing text-based placeholder
+                  updatedContent = updatedContent.replace(
+                    /\[IMAGE:\s*[^\]]+\]/i,
+                    imageHtml
+                  );
+                }
+              } catch (e) {
+                console.warn(`Failed to generate image for slide ${i}:`, e);
+              }
+            }
+
+            lessonData.sections[i].visualContent = updatedContent;
+          }
+        }
+
+        // 3b: Generate images for vocabulary
         setGenerationProgress('Generating vocabulary images...');
         for (let i = 0; i < Math.min(lessonData.vocabulary.length, 6); i++) {
           const vocab = lessonData.vocabulary[i];
@@ -1448,8 +1575,13 @@ Return ONLY the HTML code, no explanations or markdown.`;
                         DALL-E 3 {!companySettings?.apis?.openai?.apiKey && '(API key required)'}
                       </option>
                     </optgroup>
+                    <optgroup label="Replicate (SDXL, FLUX)">
+                      <option value="replicate" disabled={!companySettings?.apis?.replicate?.apiKey}>
+                        Replicate ({companySettings?.apis?.replicate?.defaultModel?.split(':')[0] || 'SDXL'}) {!companySettings?.apis?.replicate?.apiKey && '(API key required)'}
+                      </option>
+                    </optgroup>
                   </select>
-                  <p className="text-xs text-simmonds-stone mt-1">Generates vocabulary illustrations</p>
+                  <p className="text-xs text-simmonds-stone mt-1">Generates vocabulary illustrations & slide images</p>
                 </div>
 
                 {/* 4. Audio Script Model */}

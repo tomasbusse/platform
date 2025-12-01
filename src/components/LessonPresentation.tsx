@@ -847,9 +847,9 @@ const LessonPresentation: React.FC<LessonPresentationProps> = ({
                 </div>
               </div>
 
-              {/* Slide Content - Fixed height, no scroll */}
+              {/* Slide Content - Scrollable when content overflows */}
               <div
-                className="flex-1 p-8 overflow-hidden lesson-slide-content"
+                className="flex-1 p-8 overflow-y-auto lesson-slide-content"
                 dangerouslySetInnerHTML={{ __html: currentSection.visualContent || currentSection.content }}
               />
 
@@ -976,6 +976,22 @@ const LessonPresentation: React.FC<LessonPresentationProps> = ({
           line-height: 1.7;
           color: #333;
           height: 100%;
+        }
+
+        /* Custom scrollbar styling */
+        .lesson-slide-content::-webkit-scrollbar {
+          width: 8px;
+        }
+        .lesson-slide-content::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 4px;
+        }
+        .lesson-slide-content::-webkit-scrollbar-thumb {
+          background: #003F37;
+          border-radius: 4px;
+        }
+        .lesson-slide-content::-webkit-scrollbar-thumb:hover {
+          background: #4F5338;
         }
 
         /* Typography - Large and readable like PowerPoint */
