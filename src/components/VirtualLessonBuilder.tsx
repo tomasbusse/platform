@@ -1357,6 +1357,11 @@ Return ONLY the HTML code, no explanations or markdown.`;
           type: s.type,
           title: s.title,
           content: s.visualContent || s.content,
+          audioScript: s.audioScript,
+          audioUrl: s.audioUrl,
+          imagePrompt: s.imagePrompt,
+          imageUrl: s.imageUrl,
+          visualContent: s.visualContent,
           order: s.order,
         })),
         vocabulary: generatedLesson.vocabulary.map((v) => ({
@@ -1372,7 +1377,7 @@ Return ONLY the HTML code, no explanations or markdown.`;
           examples: g.examples,
           exercises: g.exercises,
         })),
-        estimatedDuration: 15, // Shorter lessons now
+        estimatedDuration: Math.max(20, generatedLesson.sections.length * 2), // ~2 min per slide
         objectives: generatedLesson.objectives,
         tags: [topic, level],
         generatedWithModel: selectedModel || companySettings?.apis?.openrouter?.model || 'anthropic/claude-sonnet-4',
