@@ -251,9 +251,16 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
     flatKey: string,
     nestedPath: string[]
   ): string | null => {
+    // Debug logging
+    console.log(`[API Key Lookup] Looking for ${flatKey}`, {
+      companySettings: company?.settings,
+      querySettings: companySettings,
+    });
+
     // 1. Try company.settings (flat format from database)
     const flatSettings = company?.settings as any;
     if (flatSettings?.[flatKey]) {
+      console.log(`[API Key Lookup] Found ${flatKey} in company.settings`);
       return flatSettings[flatKey];
     }
 
@@ -264,12 +271,14 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
       if (!nestedValue) break;
     }
     if (nestedValue) {
+      console.log(`[API Key Lookup] Found ${flatKey} in companySettings query`);
       return nestedValue;
     }
 
     // 3. Fallback to localStorage (for cases where settings haven't been saved to DB yet)
     try {
       const localSettings = localStorage.getItem('simmonds_settings');
+      console.log(`[API Key Lookup] localStorage simmonds_settings:`, localSettings ? 'exists' : 'null');
       if (localSettings) {
         const parsed = JSON.parse(localSettings);
         let localValue: any = parsed;
@@ -278,6 +287,7 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
           if (!localValue) break;
         }
         if (localValue) {
+          console.log(`[API Key Lookup] Found ${flatKey} in localStorage`);
           return localValue;
         }
       }
@@ -285,6 +295,7 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
       console.warn('Could not read settings from localStorage:', e);
     }
 
+    console.log(`[API Key Lookup] ${flatKey} NOT FOUND in any source`);
     return null;
   };
 
