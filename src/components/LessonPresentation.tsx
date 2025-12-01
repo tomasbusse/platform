@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useQuery, useMutation } from 'convex/react';
+import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
 import { User, Company } from '../types';
@@ -101,6 +101,7 @@ const LessonPresentation: React.FC<LessonPresentationProps> = ({
   const updateProgress = useMutation(api.lessons.updateLessonProgress);
   const completeProgress = useMutation(api.lessons.completeLessonProgress);
   const updateVirtualLesson = useMutation(api.lessons.updateVirtualLesson);
+  const generateReplicateImage = useAction(api.mediaActions.generateReplicateImage);
 
   // Initialize vocabulary cards
   useEffect(() => {
@@ -446,46 +447,18 @@ const LessonPresentation: React.FC<LessonPresentationProps> = ({
     const fullPrompt = `${basePrompt}, realistic photography, natural lighting, professional photo, educational image for language learning`;
 
     try {
-      // Use Replicate's Flux model
-      const response = await fetch('https://api.replicate.com/v1/predictions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Token ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          version: 'black-forest-labs/flux-schnell',
-          input: {
-            prompt: fullPrompt,
-            num_outputs: 1,
-            aspect_ratio: '16:9',
-            output_format: 'webp',
-            output_quality: 80,
-          },
-        }),
+      // Use Convex action to call Replicate API server-side (avoids CORS issues)
+      const result = await generateReplicateImage({
+        apiKey,
+        prompt: fullPrompt,
+        aspectRatio: '16:9',
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to start image generation');
+      if (!result.success || !result.imageUrl) {
+        throw new Error(result.message || 'Failed to generate image');
       }
 
-      const prediction = await response.json();
-
-      // Poll for completion
-      let result = prediction;
-      while (result.status !== 'succeeded' && result.status !== 'failed') {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${result.id}`, {
-          headers: { 'Authorization': `Token ${apiKey}` },
-        });
-        result = await pollResponse.json();
-      }
-
-      if (result.status === 'failed') {
-        throw new Error('Image generation failed');
-      }
-
-      const imageUrl = Array.isArray(result.output) ? result.output[0] : result.output;
+      const imageUrl = result.imageUrl;
 
       // Store locally
       setSectionImages((prev) => ({ ...prev, [sectionId]: imageUrl }));

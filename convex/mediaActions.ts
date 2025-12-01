@@ -353,6 +353,112 @@ export const getHeyGenAvatars = action({
   },
 });
 
+// Replicate Image Generation Action (for Flux model)
+export const generateReplicateImage = action({
+  args: {
+    apiKey: v.string(),
+    prompt: v.string(),
+    aspectRatio: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { apiKey, prompt, aspectRatio = "16:9" } = args;
+
+    if (!apiKey) {
+      return { success: false, message: "Replicate API key is required" };
+    }
+
+    if (!prompt) {
+      return { success: false, message: "Image prompt is required" };
+    }
+
+    try {
+      // Start the prediction
+      const response = await fetch("https://api.replicate.com/v1/predictions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Token ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          version: "black-forest-labs/flux-schnell",
+          input: {
+            prompt: prompt,
+            num_outputs: 1,
+            aspect_ratio: aspectRatio,
+            output_format: "webp",
+            output_quality: 80,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Replicate API error:", errorData);
+        return {
+          success: false,
+          message: `Failed to start image generation: ${errorData.detail || response.statusText}`,
+        };
+      }
+
+      const prediction = await response.json();
+      console.log("Prediction started:", prediction.id);
+
+      // Poll for completion
+      let result = prediction;
+      let attempts = 0;
+      const maxAttempts = 60; // Max 60 seconds
+
+      while (result.status !== "succeeded" && result.status !== "failed" && attempts < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        attempts++;
+
+        const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${result.id}`, {
+          headers: { "Authorization": `Token ${apiKey}` },
+        });
+
+        if (!pollResponse.ok) {
+          return {
+            success: false,
+            message: "Failed to check prediction status",
+          };
+        }
+
+        result = await pollResponse.json();
+        console.log(`Poll attempt ${attempts}: ${result.status}`);
+      }
+
+      if (result.status === "failed") {
+        console.error("Prediction failed:", result.error);
+        return {
+          success: false,
+          message: `Image generation failed: ${result.error || "Unknown error"}`,
+        };
+      }
+
+      if (result.status !== "succeeded") {
+        return {
+          success: false,
+          message: "Image generation timed out",
+        };
+      }
+
+      const imageUrl = Array.isArray(result.output) ? result.output[0] : result.output;
+
+      return {
+        success: true,
+        message: "Image generated successfully",
+        imageUrl: imageUrl,
+      };
+    } catch (error: any) {
+      console.error("Error generating image with Replicate:", error);
+      return {
+        success: false,
+        message: `Network error: ${error.message || "Unknown error"}`,
+      };
+    }
+  },
+});
+
 // Create dialogue scene with two avatars
 export const createDialogueScene = action({
   args: {

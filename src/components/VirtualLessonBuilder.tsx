@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation } from 'convex/react';
+import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
 import { User, Company } from '../types';
@@ -185,6 +185,7 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
 
   const createVirtualLesson = useMutation(api.lessons.createVirtualLesson);
   const createLessonTest = useMutation(api.lessons.createLessonTest);
+  const generateReplicateImageAction = useAction(api.mediaActions.generateReplicateImage);
 
   // Fetch OpenRouter models on mount
   useEffect(() => {
@@ -479,71 +480,25 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
     }
   };
 
-  // Generate image with Replicate API
+  // Generate image with Replicate API (using server-side Convex action to avoid CORS)
   const generateImageWithReplicate = async (prompt: string): Promise<string | null> => {
     const apiKey = getReplicateApiKey();
     if (!apiKey) return null;
 
-    // Get model from settings or use default (SDXL)
-    const replicateModel = companySettings?.apis?.replicate?.defaultModel || 'stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b';
-
     try {
-      // Create prediction
-      const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Token ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          version: replicateModel.includes(':') ? replicateModel.split(':')[1] : replicateModel,
-          input: {
-            prompt: `Educational illustration for language learning: ${prompt}. Clean, professional, colorful illustration suitable for teaching. No text in image.`,
-            negative_prompt: 'text, words, letters, watermark, signature, blurry, low quality',
-            width: 1024,
-            height: 576, // 16:9 aspect ratio
-            num_outputs: 1,
-          },
-        }),
+      const fullPrompt = `Educational illustration for language learning: ${prompt}. Clean, professional, colorful illustration suitable for teaching. No text in image.`;
+
+      const result = await generateReplicateImageAction({
+        apiKey,
+        prompt: fullPrompt,
+        aspectRatio: '16:9',
       });
 
-      if (!createResponse.ok) {
-        console.warn('Replicate create prediction failed:', createResponse.statusText);
-        return null;
+      if (result.success && result.imageUrl) {
+        return result.imageUrl;
       }
 
-      const prediction = await createResponse.json();
-
-      // Poll for completion (max 60 seconds)
-      let result = prediction;
-      const maxAttempts = 30;
-      let attempts = 0;
-
-      while (result.status !== 'succeeded' && result.status !== 'failed' && attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${result.id}`, {
-          headers: {
-            'Authorization': `Token ${apiKey}`,
-          },
-        });
-
-        if (!statusResponse.ok) {
-          console.warn('Replicate status check failed:', statusResponse.statusText);
-          return null;
-        }
-
-        result = await statusResponse.json();
-        attempts++;
-      }
-
-      if (result.status === 'succeeded' && result.output) {
-        // Replicate returns an array of URLs
-        const imageUrl = Array.isArray(result.output) ? result.output[0] : result.output;
-        return imageUrl;
-      }
-
-      console.warn('Replicate image generation did not complete:', result.status);
+      console.warn('Replicate image generation failed:', result.message);
       return null;
     } catch (error) {
       console.warn('Replicate image generation error:', error);
