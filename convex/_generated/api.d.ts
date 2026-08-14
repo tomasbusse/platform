@@ -8,8 +8,11 @@
  * @module
  */
 
+import type * as ai_generateBlocks from "../ai/generateBlocks.js";
 import type * as ai_generateQuizAudio from "../ai/generateQuizAudio.js";
 import type * as ai_generateQuizQuestions from "../ai/generateQuizQuestions.js";
+import type * as ai_lessonDbLogic from "../ai/lessonDbLogic.js";
+import type * as ai_openRouterClient from "../ai/openRouterClient.js";
 import type * as aiContent from "../aiContent.js";
 import type * as analytics from "../analytics.js";
 import type * as apiIntegrations from "../apiIntegrations.js";
@@ -28,6 +31,7 @@ import type * as emailCampaigns from "../emailCampaigns.js";
 import type * as emailTemplates from "../emailTemplates.js";
 import type * as groups from "../groups.js";
 import type * as http from "../http.js";
+import type * as lessonDb from "../lessonDb.js";
 import type * as lessons from "../lessons.js";
 import type * as materials from "../materials.js";
 import type * as mediaActions from "../mediaActions.js";
@@ -46,8 +50,11 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "ai/generateBlocks": typeof ai_generateBlocks;
   "ai/generateQuizAudio": typeof ai_generateQuizAudio;
   "ai/generateQuizQuestions": typeof ai_generateQuizQuestions;
+  "ai/lessonDbLogic": typeof ai_lessonDbLogic;
+  "ai/openRouterClient": typeof ai_openRouterClient;
   aiContent: typeof aiContent;
   analytics: typeof analytics;
   apiIntegrations: typeof apiIntegrations;
@@ -66,6 +73,7 @@ declare const fullApi: ApiFromModules<{
   emailTemplates: typeof emailTemplates;
   groups: typeof groups;
   http: typeof http;
+  lessonDb: typeof lessonDb;
   lessons: typeof lessons;
   materials: typeof materials;
   mediaActions: typeof mediaActions;

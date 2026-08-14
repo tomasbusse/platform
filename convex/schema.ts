@@ -494,6 +494,9 @@ export default defineSchema({
       v.literal("approved"),
       v.literal("rejected")
     ),
+    publishedOutput: v.optional(v.string()),
+    publishedAt: v.optional(v.number()),
+    editDistance: v.optional(v.number()),
     isUsed: v.boolean(),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -1150,4 +1153,115 @@ export default defineSchema({
     .index("by_material", ["materialId"])
     .index("by_company", ["companyId"])
     .index("by_is_read", ["isRead"]),
+
+  // Atomized lesson-content library. Added additively for the lesson DB loop.
+  contentBlocks: defineTable({
+    companyId: v.optional(v.union(v.id("companies"), v.string())),
+    blockType: v.union(
+      v.literal("vocabSet"),
+      v.literal("sentencePair"),
+      v.literal("dialogue"),
+      v.literal("grammarExplainer"),
+      v.literal("exerciseAtom"),
+      v.literal("readingPassage"),
+      v.literal("listeningScript"),
+      v.literal("culturalNote"),
+      v.literal("imagePromptTemplate"),
+      v.literal("speakingPrompt")
+    ),
+    level: v.union(
+      v.literal("A1"),
+      v.literal("A2"),
+      v.literal("B1"),
+      v.literal("B2"),
+      v.literal("C1"),
+      v.literal("C2")
+    ),
+    skill: v.union(
+      v.literal("grammar"),
+      v.literal("vocabulary"),
+      v.literal("reading"),
+      v.literal("listening"),
+      v.literal("writing"),
+      v.literal("speaking"),
+      v.literal("pronunciation"),
+      v.literal("mixed")
+    ),
+    topic: v.string(),
+    title: v.string(),
+    body: v.any(),
+    source: v.union(v.literal("human"), v.literal("model"), v.literal("seed_corpus")),
+    provenance: v.optional(v.string()),
+    rightsStatus: v.union(
+      v.literal("proprietary"),
+      v.literal("public_domain"),
+      v.literal("cc_by"),
+      v.literal("cc_by_sa"),
+      v.literal("unknown")
+    ),
+    attribution: v.optional(v.string()),
+    reviewStatus: v.union(
+      v.literal("unreviewed"),
+      v.literal("ai_approved"),
+      v.literal("teacher_approved"),
+      v.literal("rejected")
+    ),
+    graderScores: v.optional(v.object({
+      pedagogy: v.number(),
+      cefrFit: v.number(),
+      voice: v.number(),
+      judgeModel: v.string(),
+      notes: v.optional(v.string()),
+    })),
+    exemplarEligible: v.boolean(),
+    contentHash: v.string(),
+    generationRunId: v.optional(v.id("generationRuns")),
+    usageCount: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_level_skill_type", ["level", "skill", "blockType"])
+    .index("by_type_level", ["blockType", "level"])
+    .index("by_review_status", ["reviewStatus"])
+    .index("by_hash", ["contentHash"])
+    .index("by_run", ["generationRunId"])
+    .index("by_exemplar", ["exemplarEligible", "level", "skill"]),
+
+  generationRuns: defineTable({
+    companyId: v.union(v.id("companies"), v.string()),
+    status: v.union(v.literal("running"), v.literal("completed"), v.literal("failed")),
+    target: v.object({
+      level: v.string(),
+      skill: v.string(),
+      blockType: v.string(),
+      topic: v.optional(v.string()),
+    }),
+    promptVersion: v.number(),
+    generatorModel: v.string(),
+    judgeModel: v.string(),
+    requested: v.number(),
+    generated: v.number(),
+    admitted: v.number(),
+    rejected: v.number(),
+    rejectionReasons: v.array(v.string()),
+    tokensUsed: v.optional(v.number()),
+    error: v.optional(v.string()),
+    startedAt: v.number(),
+    finishedAt: v.optional(v.number()),
+  }).index("by_status", ["status"])
+    .index("by_started", ["startedAt"]),
+
+  generationPrompts: defineTable({
+    purpose: v.literal("contentBlock"),
+    version: v.number(),
+    template: v.string(),
+    active: v.boolean(),
+    parentVersion: v.optional(v.number()),
+    changeNotes: v.optional(v.string()),
+    stats: v.optional(v.object({
+      runs: v.number(),
+      admitRate: v.number(),
+    })),
+    createdAt: v.number(),
+  }).index("by_purpose_active", ["purpose", "active"])
+    .index("by_purpose_version", ["purpose", "version"]),
 });

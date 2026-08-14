@@ -2,6 +2,7 @@
 
 import { action } from "../_generated/server";
 import { v } from "convex/values";
+import { callOpenRouter } from "./openRouterClient";
 
 /**
  * Available question types for AI quiz generation
@@ -86,45 +87,14 @@ export const generateQuestionsWithClaude = action({
         audioWordLimit,
         documentContent,
       });
-      // Call OpenRouter API which supports multiple models
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`,
-          "HTTP-Referer": "https://simmonds-platform.vercel.app",
-          "X-Title": "Simmonds LMS Quiz Generator",
-        },
-        body: JSON.stringify({
-          model: selectedModel,
-          max_tokens: 8000,
-          messages: [
-            {
-              role: "user",
-              content: prompt,
-            },
-          ],
-        }),
+      const response = await callOpenRouter({
+        apiKey,
+        model: selectedModel,
+        maxTokens: 8000,
+        messages: [{ role: "user", content: prompt }],
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMsg = errorData.error?.message || response.statusText;
-        console.error("OpenRouter API error response:", JSON.stringify(errorData));
-        throw new Error(
-          `OpenRouter API error (${response.status}): ${errorMsg}`
-        );
-      }
-
-      const data = await response.json();
-      console.log("OpenRouter response received, model:", data.model);
-
-      // Extract text from OpenRouter response format
-      const content = data.choices?.[0]?.message?.content;
-      if (!content) {
-        console.error("Unexpected response format:", JSON.stringify(data).substring(0, 500));
-        throw new Error("Unexpected response format from AI model - no content in response");
-      }
+      if (!response.success) throw new Error(response.error);
+      const content = response.content;
 
       // Parse JSON from response
       const jsonText = extractJSON(content);
@@ -199,40 +169,14 @@ export const regenerateSingleQuestion = action({
         questionType,
         audioWordLimit,
       });
-      // Call OpenRouter API which supports multiple models
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`,
-          "HTTP-Referer": "https://simmonds-platform.vercel.app",
-          "X-Title": "Simmonds LMS Quiz Generator",
-        },
-        body: JSON.stringify({
-          model: selectedModel,
-          max_tokens: 2000,
-          messages: [
-            {
-              role: "user",
-              content: prompt,
-            },
-          ],
-        }),
+      const response = await callOpenRouter({
+        apiKey,
+        model: selectedModel,
+        maxTokens: 2000,
+        messages: [{ role: "user", content: prompt }],
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          `OpenRouter API error: ${errorData.error?.message || response.statusText}`
-        );
-      }
-
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content;
-
-      if (!content) {
-        throw new Error("Unexpected response format from AI model");
-      }
+      if (!response.success) throw new Error(response.error);
+      const content = response.content;
 
       const jsonText = extractJSON(content);
       const question = JSON.parse(jsonText);
