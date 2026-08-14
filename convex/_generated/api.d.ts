@@ -13,6 +13,7 @@ import type * as ai_generateQuizAudio from "../ai/generateQuizAudio.js";
 import type * as ai_generateQuizQuestions from "../ai/generateQuizQuestions.js";
 import type * as ai_lessonDbLogic from "../ai/lessonDbLogic.js";
 import type * as ai_openRouterClient from "../ai/openRouterClient.js";
+import type * as ai_podcast from "../ai/podcast.js";
 import type * as aiContent from "../aiContent.js";
 import type * as analytics from "../analytics.js";
 import type * as apiIntegrations from "../apiIntegrations.js";
@@ -56,6 +57,7 @@ declare const fullApi: ApiFromModules<{
   "ai/generateQuizQuestions": typeof ai_generateQuizQuestions;
   "ai/lessonDbLogic": typeof ai_lessonDbLogic;
   "ai/openRouterClient": typeof ai_openRouterClient;
+  "ai/podcast": typeof ai_podcast;
   aiContent: typeof aiContent;
   analytics: typeof analytics;
   apiIntegrations: typeof apiIntegrations;

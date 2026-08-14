@@ -455,6 +455,32 @@ export function shouldActivateCandidate(
   return canaryAdmitRate > 0 && canaryAdmitRate >= baselineAdmitRate;
 }
 
+export type PodcastSegment = { speaker: "host" | "guest"; text: string };
+
+export function parsePodcastScript(rawJsonText: string): {
+  title: string;
+  segments: PodcastSegment[];
+} {
+  let cleaned = rawJsonText.trim();
+  const codeBlock = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (codeBlock) cleaned = codeBlock[1].trim();
+  const parsed = JSON.parse(cleaned) as { title?: string; segments: unknown[] };
+  if (!Array.isArray(parsed.segments) || parsed.segments.length === 0) {
+    throw new Error("Podcast script must contain at least one segment");
+  }
+  const segments = parsed.segments.map((value, position) => {
+    if (
+      !isRecord(value) ||
+      (value.speaker !== "host" && value.speaker !== "guest") ||
+      !isNonEmptyString(value.text)
+    ) {
+      throw new Error(`Invalid podcast segment at position ${position}`);
+    }
+    return { speaker: value.speaker, text: value.text } as PodcastSegment;
+  });
+  return { title: parsed.title ?? "Simmonds English Podcast", segments };
+}
+
 export function parseProviderModel(model: string): {
   provider: "cerebras" | "openrouter";
   model: string;

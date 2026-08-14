@@ -14,6 +14,7 @@ import {
   parseDistilledPrompt,
   parseGeneratedBlocks,
   parseJudgeVerdicts,
+  parsePodcastScript,
   parseProviderModel,
   pickLeastCoveredCell,
   resolvePromptTemplate,
@@ -370,6 +371,19 @@ describe("shouldActivateCandidate", () => {
 
   it("refuses a zero-admit canary regardless of baseline", () => {
     expect(shouldActivateCandidate(0, 0)).toBe(false);
+  });
+});
+
+describe("parsePodcastScript", () => {
+  it("parses a titled two-speaker segment list and rejects empty or malformed scripts", () => {
+    const parsed = parsePodcastScript(
+      '```json\n{"title":"Small Talk im Büro","segments":[{"speaker":"host","text":"Welcome back!"},{"speaker":"guest","text":"Thanks!"}]}\n```',
+    );
+    expect(parsed.title).toBe("Small Talk im Büro");
+    expect(parsed.segments).toHaveLength(2);
+    expect(parsed.segments[0]).toEqual({ speaker: "host", text: "Welcome back!" });
+    expect(() => parsePodcastScript('{"title":"x","segments":[]}')).toThrow(/segment/i);
+    expect(() => parsePodcastScript('{"segments":[{"speaker":"alien","text":"hi"}]}')).toThrow();
   });
 });
 

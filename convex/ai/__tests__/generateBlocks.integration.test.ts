@@ -138,6 +138,68 @@ describe("runGenerationBatch templateOverride canary support", () => {
   });
 });
 
+describe("generatePodcast", () => {
+  beforeEach(() => vi.unstubAllGlobals());
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("turns DB dialogue blocks into a Hume-voiced mp3 in storage", async () => {
+    const t = convexTest(schema, modules);
+    const companyId = await seedCompanyAndRuns(t);
+    await t.run(async (ctx) => {
+      await ctx.db.insert("contentBlocks", {
+        blockType: "dialogue",
+        level: "A2",
+        skill: "speaking",
+        topic: "Office small talk",
+        title: "Monday morning chat",
+        body: { turns: [{ speaker: "A", text: "How was your weekend?" }, { speaker: "B", text: "Great, thanks!" }] },
+        source: "seed_corpus",
+        rightsStatus: "public_domain",
+        reviewStatus: "unreviewed",
+        exemplarEligible: true,
+        contentHash: "podcasttesthash1",
+        usageCount: 0,
+        createdAt: 1,
+        updatedAt: 1,
+      });
+    });
+    vi.stubEnv("CEREBRAS_API_KEY", "csk-test");
+    vi.stubEnv("HUME_API_KEY", "hume-test");
+    const scriptJson = JSON.stringify({
+      title: "Small Talk am Montag",
+      segments: [
+        { speaker: "host", text: "Welcome to the Simmonds podcast!" },
+        { speaker: "guest", text: "How was your weekend?" },
+      ],
+    });
+    const mp3Bytes = new Uint8Array([0x49, 0x44, 0x33, 0x04]).buffer;
+    const calls: Array<[string, { headers: Record<string, string> }]> = [];
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init: { headers: Record<string, string> }) => {
+      calls.push([url, init]);
+      if (calls.length === 1) {
+        return { ok: true, json: async () => ({ choices: [{ message: { content: scriptJson } }], usage: { total_tokens: 50 } }) };
+      }
+      return { ok: true, arrayBuffer: async () => mp3Bytes };
+    }));
+
+    const result = await t.action(internal.ai.podcast.generatePodcast, {
+      companyId,
+      level: "A2",
+      topic: "Office small talk",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.title).toBe("Small Talk am Montag");
+      expect(result.audioUrl).toMatch(/^https?:\/\//);
+      expect(result.segments).toBe(2);
+    }
+    expect(calls[0][0]).toBe("https://api.cerebras.ai/v1/chat/completions");
+    expect(calls[1][0]).toBe("https://api.hume.ai/v0/tts/file");
+    expect(calls[1][1].headers["X-Hume-Api-Key"]).toBe("hume-test");
+  });
+});
+
 describe("Cerebras provider routing", () => {
   beforeEach(() => vi.unstubAllGlobals());
   afterEach(() => vi.unstubAllGlobals());
