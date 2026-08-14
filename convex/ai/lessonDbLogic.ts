@@ -174,7 +174,10 @@ const BLOCK_SHAPE_INSTRUCTIONS: Record<string, string> = {
   sentencePair: '{ "en": "English sentence", "de": "German translation", "attribution"?: "source" }',
   dialogue: '{ "turns": [non-empty ordered dialogue turns] }',
   grammarExplainer: '{ "explanation": "clear explanation", "examples": [non-empty examples] }',
-  exerciseAtom: '{ "exerciseType": "type", "prompt": "prompt", "answerKey": "value or zero-based index", "options"?: [] }',
+  exerciseAtom:
+    '{ "exerciseType": "multiple_choice", "prompt": "She ___ to work every day.", "options": ["go", "goes", "going"], "answerKey": "goes" } — ' +
+    "answerKey MUST be exactly one of the options strings, copied verbatim from options (never a letter label, never an object); " +
+    "if the exercise has no options, answerKey is the exact expected answer string.",
   readingPassage: '{ "text": "passage", "questions": [non-empty questions] }',
   listeningScript: '{ "script": "script", "questions": [non-empty questions] }',
   culturalNote: '{ "note": "cultural note" }',
@@ -220,7 +223,9 @@ export function buildGeneratorPrompt(args: {
 - Design for adult German-L1 learners in a professional tone; never childish.
 - Use English content with German hints only where pedagogically useful.
 - Keep vocabulary CEFR-strict for ${args.level}; do not leak substantially harder vocabulary.
-- Make every item reusable, self-contained, accurate, and free of copied exemplar wording.`,
+- Make every item reusable, self-contained, accurate, and free of copied exemplar wording.
+- Learner-facing content must be written in English; German appears only in short optional hints.`,
+    `The "Required body shape" and "Fixed Simmonds constraints" sections above are authoritative and override any conflicting instruction elsewhere in this prompt, including the template section.`,
   ]
     .filter((part): part is string => Boolean(part))
     .join("\n\n");
@@ -419,4 +424,55 @@ export function validatePromptTemplate(template: string): {
     (placeholder) => !template.includes(`{{${placeholder}}}`),
   );
   return { valid: missing.length === 0, missing: [...missing] };
+}
+
+const MAX_DISTILLED_TEMPLATE_CHARS = 6000;
+
+export function validateDistilledTemplate(template: string): {
+  valid: boolean;
+  reason?: string;
+} {
+  const placeholders = validatePromptTemplate(template);
+  if (!placeholders.valid) {
+    return {
+      valid: false,
+      reason: `missing placeholders: ${placeholders.missing.join(", ")}`,
+    };
+  }
+  if (template.length > MAX_DISTILLED_TEMPLATE_CHARS) {
+    return {
+      valid: false,
+      reason: `template exceeds the ${MAX_DISTILLED_TEMPLATE_CHARS}-character size cap`,
+    };
+  }
+  return { valid: true };
+}
+
+export function shouldActivateCandidate(
+  canaryAdmitRate: number,
+  baselineAdmitRate: number,
+): boolean {
+  return canaryAdmitRate > 0 && canaryAdmitRate >= baselineAdmitRate;
+}
+
+export function resolvePromptTemplate(args: {
+  activePrompt: { version: number; template: string } | null;
+  templateOverride?: string;
+  promptVersionOverride?: number;
+}): { template: string; version: number; needsSeed: boolean } {
+  if (args.templateOverride) {
+    return {
+      template: args.templateOverride,
+      version: args.promptVersionOverride ?? args.activePrompt?.version ?? 1,
+      needsSeed: false,
+    };
+  }
+  if (args.activePrompt) {
+    return {
+      template: args.activePrompt.template,
+      version: args.activePrompt.version,
+      needsSeed: false,
+    };
+  }
+  return { template: DEFAULT_PROMPT_TEMPLATE, version: 1, needsSeed: true };
 }

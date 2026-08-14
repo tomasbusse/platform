@@ -21,9 +21,11 @@ import {
   parseGeneratedBlocks,
   parseJudgeVerdicts,
   pickLeastCoveredCell,
+  resolvePromptTemplate,
+  shouldActivateCandidate,
   validateBlockBody,
+  validateDistilledTemplate,
   validateGeneratedBlockCandidate,
-  validatePromptTemplate,
 } from "./lessonDbLogic";
 import { callOpenRouter } from "./openRouterClient";
 
@@ -77,6 +79,7 @@ type DistillPromptResult =
       version: number;
       activated: boolean;
       admitRate: number;
+      canary?: { generated: number; admitted: number };
     };
 
 // Spell these out for compatibility with the Convex 1.16 validator API.
@@ -126,6 +129,8 @@ export const runGenerationBatch = internalAction({
     generatorModel: v.optional(v.string()),
     judgeModel: v.optional(v.string()),
     apiKey: v.optional(v.string()),
+    templateOverride: v.optional(v.string()),
+    promptVersionOverride: v.optional(v.number()),
   },
   handler: async (ctx, args): Promise<GenerationBatchResult> => {
     const requested = clampBatchCount(args.count);
@@ -154,21 +159,23 @@ export const runGenerationBatch = internalAction({
       if (!apiKey) return { success: false, error: "no api key" };
 
       const activePrompt = await ctx.runQuery(internal.lessonDb.getActivePrompt, {});
-      let promptVersion: number;
-      let promptTemplate: string;
-      if (activePrompt) {
-        promptVersion = activePrompt.version;
-        promptTemplate = activePrompt.template;
-      } else {
+      const resolvedPrompt = resolvePromptTemplate({
+        activePrompt,
+        ...(args.templateOverride ? { templateOverride: args.templateOverride } : {}),
+        ...(args.promptVersionOverride !== undefined
+          ? { promptVersionOverride: args.promptVersionOverride }
+          : {}),
+      });
+      if (resolvedPrompt.needsSeed) {
         await ctx.runMutation(internal.lessonDb.insertPromptVersion, {
           version: 1,
           template: DEFAULT_PROMPT_TEMPLATE,
           active: true,
           changeNotes: "Built-in initial content-block prompt",
         });
-        promptVersion = 1;
-        promptTemplate = DEFAULT_PROMPT_TEMPLATE;
       }
+      const promptVersion = resolvedPrompt.version;
+      const promptTemplate = resolvedPrompt.template;
 
       let target: TargetCell;
       if (args.level && args.skill && args.blockType) {
@@ -318,7 +325,7 @@ ${JSON.stringify(survivors.map(({ index, title, topic, body }) => ({ index, titl
             body: survivor.body,
             source: "model",
             provenance: `generator=${generatorModel}; judge=${judgeModel}; promptVersion=${promptVersion}`,
-            rightsStatus: "unknown",
+            rightsStatus: "proprietary",
             reviewStatus: "ai_approved",
             graderScores: {
               pedagogy: verdict.pedagogy,
@@ -425,11 +432,9 @@ ${JSON.stringify(rejectionReasons)}`;
 
     try {
       const distilled = parseDistilledPrompt(response.content);
-      const templateValidation = validatePromptTemplate(distilled.template);
+      const templateValidation = validateDistilledTemplate(distilled.template);
       if (!templateValidation.valid) {
-        throw new Error(
-          `Distilled template is missing placeholders: ${templateValidation.missing.join(", ")}`,
-        );
+        throw new Error(`Distilled template rejected: ${templateValidation.reason}`);
       }
       const version = (latestPrompt?.version ?? activePrompt.version) + 1;
       const promptId = await ctx.runMutation(internal.lessonDb.insertPromptVersion, {
@@ -440,15 +445,45 @@ ${JSON.stringify(rejectionReasons)}`;
         ...(distilled.changeNotes ? { changeNotes: distilled.changeNotes } : {}),
         stats: { runs: completedRuns.length, admitRate },
       });
+
+      // Canary gate: a candidate template earns activation by beating the current
+      // admit rate on a real (small) batch — never activate on the distiller's word alone.
+      let activated = false;
+      let canary: { generated: number; admitted: number } | undefined;
       if (args.autoActivate ?? false) {
-        await ctx.runMutation(internal.lessonDb.activatePromptVersion, { version });
+        const canaryResult: GenerationBatchResult = await ctx.runAction(
+          internal.ai.generateBlocks.runGenerationBatch,
+          {
+            companyId: args.companyId,
+            count: 6,
+            level: "A2",
+            skill: "grammar",
+            blockType: "exerciseAtom",
+            topic: "Small talk and office communication",
+            templateOverride: distilled.template,
+            promptVersionOverride: version,
+            ...(args.apiKey ? { apiKey: args.apiKey } : {}),
+          },
+        );
+        if (canaryResult.success && canaryResult.generated > 0) {
+          canary = {
+            generated: canaryResult.generated,
+            admitted: canaryResult.admitted,
+          };
+          const canaryRate = canaryResult.admitted / canaryResult.generated;
+          if (shouldActivateCandidate(canaryRate, admitRate)) {
+            await ctx.runMutation(internal.lessonDb.activatePromptVersion, { version });
+            activated = true;
+          }
+        }
       }
       return {
         success: true,
         promptId,
         version,
-        activated: args.autoActivate ?? false,
+        activated,
         admitRate,
+        ...(canary ? { canary } : {}),
       };
     } catch (error) {
       return {

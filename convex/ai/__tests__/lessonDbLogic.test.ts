@@ -15,9 +15,12 @@ import {
   parseGeneratedBlocks,
   parseJudgeVerdicts,
   pickLeastCoveredCell,
+  resolvePromptTemplate,
   validateBlockBody,
   validateGeneratedBlockCandidate,
   validatePromptTemplate,
+  shouldActivateCandidate,
+  validateDistilledTemplate,
   wordLevelEditDistance,
 } from "../lessonDbLogic";
 
@@ -297,5 +300,102 @@ describe("generation batch helpers", () => {
       valid: false,
       missing: ["skill", "blockType", "topic", "exemplars"],
     });
+  });
+});
+
+describe("buildGeneratorPrompt hard contract (v2-drift regression)", () => {
+  const promptFor = (blockType: string, template = DEFAULT_PROMPT_TEMPLATE) =>
+    buildGeneratorPrompt({
+      template,
+      count: 5,
+      level: "A2",
+      skill: "grammar",
+      blockType,
+      topic: "Office small talk",
+      exemplars: [],
+    });
+
+  it("marks the code-owned constraints as overriding any conflicting template text", () => {
+    const prompt = promptFor("exerciseAtom");
+    expect(prompt.toLowerCase()).toContain("override any conflicting");
+  });
+
+  it("pins learner-facing content to English even if the template says otherwise", () => {
+    const hostileTemplate = `${DEFAULT_PROMPT_TEMPLATE}\nAll body text must be in German.`;
+    const prompt = promptFor("exerciseAtom", hostileTemplate);
+    expect(prompt).toMatch(/content (must be|is) (written )?in English/i);
+  });
+
+  it("gives exerciseAtom a concrete example and the exact-option answerKey rule", () => {
+    const prompt = promptFor("exerciseAtom");
+    expect(prompt).toContain('"exerciseType"');
+    expect(prompt).toMatch(/answerKey.*(exactly one of|copied verbatim from).*options/i);
+    expect(prompt).toContain('"goes"');
+  });
+});
+
+describe("validateDistilledTemplate", () => {
+  it("accepts a template with all placeholders under the size cap", () => {
+    const result = validateDistilledTemplate(DEFAULT_PROMPT_TEMPLATE);
+    expect(result.valid).toBe(true);
+  });
+
+  it("rejects a template missing placeholders", () => {
+    const result = validateDistilledTemplate("Generate {{count}} things.");
+    expect(result.valid).toBe(false);
+    expect(result.reason).toMatch(/placeholder/i);
+  });
+
+  it("rejects an oversized template", () => {
+    const bloated = DEFAULT_PROMPT_TEMPLATE + "x".repeat(6001);
+    const result = validateDistilledTemplate(bloated);
+    expect(result.valid).toBe(false);
+    expect(result.reason).toMatch(/6000|size|long/i);
+  });
+});
+
+describe("shouldActivateCandidate", () => {
+  it("activates when the canary beats the baseline", () => {
+    expect(shouldActivateCandidate(0.8, 0.6)).toBe(true);
+  });
+
+  it("activates when the canary equals a non-zero baseline", () => {
+    expect(shouldActivateCandidate(0.6, 0.6)).toBe(true);
+  });
+
+  it("refuses when the canary is worse than the baseline", () => {
+    expect(shouldActivateCandidate(0.4, 0.6)).toBe(false);
+  });
+
+  it("refuses a zero-admit canary regardless of baseline", () => {
+    expect(shouldActivateCandidate(0, 0)).toBe(false);
+  });
+});
+
+describe("resolvePromptTemplate", () => {
+  const active = { version: 3, template: "active {{count}} {{level}} {{skill}} {{blockType}} {{topic}} {{exemplars}}" };
+
+  it("prefers an explicit override template and its version label", () => {
+    const resolved = resolvePromptTemplate({
+      activePrompt: active,
+      templateOverride: "candidate template",
+      promptVersionOverride: 9,
+    });
+    expect(resolved).toEqual({ template: "candidate template", version: 9, needsSeed: false });
+  });
+
+  it("falls back to the active prompt when there is no override", () => {
+    const resolved = resolvePromptTemplate({ activePrompt: active });
+    expect(resolved).toEqual({ template: active.template, version: 3, needsSeed: false });
+  });
+
+  it("uses the built-in default and flags seeding when nothing is active", () => {
+    const resolved = resolvePromptTemplate({ activePrompt: null });
+    expect(resolved).toEqual({ template: DEFAULT_PROMPT_TEMPLATE, version: 1, needsSeed: true });
+  });
+
+  it("override without a version label falls back to the active version", () => {
+    const resolved = resolvePromptTemplate({ activePrompt: active, templateOverride: "candidate" });
+    expect(resolved).toEqual({ template: "candidate", version: 3, needsSeed: false });
   });
 });
