@@ -25,6 +25,7 @@ import LessonsPage from './LessonsPage';
 import StudentDashboard from './StudentDashboard';
 import MaterialsPage from './MaterialsPage';
 import TestsPage from './TestsPage'; // New unified Tests page
+import BlockReview from '../components/admin/BlockReview';
 
 interface DashboardProps {
   currentUser: User | null;
@@ -103,6 +104,12 @@ const MaterialsIcon = () => (
 const MenuIcon = () => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+);
+
+const ReviewIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
   </svg>
 );
 
@@ -296,6 +303,9 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout })
       case 'test-results':
         return <TestResults currentUser={currentUser} company={company} />;
 
+      case 'block-review':
+        return <BlockReview currentUser={currentUser} company={company} />;
+
       case 'learning-mgmt':
         return <LearningManagement currentUser={currentUser} company={company} />;
 
@@ -336,6 +346,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, company, onLogout })
     { id: 'tests', name: 'Tests', icon: TestIcon, show: true }, // Consolidated: replaces 'test-taking' and 'teacher-tools'
     { id: 'learning-mgmt', name: 'Learning', icon: LearnIcon, show: true },
     { id: 'test-results', name: 'Results', icon: ChartIcon, show: isTeacher },
+    { id: 'block-review', name: 'Inhaltsprüfung', icon: ReviewIcon, show: isTeacher },
     { id: 'email-system', name: 'Messages', icon: EmailIcon, show: isTeacher },
     { id: 'employees', name: 'Users', icon: UsersIcon, show: isAdmin },
     { id: 'companies', name: 'Companies', icon: BuildingIcon, show: isSuperAdmin },

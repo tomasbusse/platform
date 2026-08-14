@@ -343,6 +343,37 @@ export const listBlocks = query({
   },
 });
 
+export const reviewBlock = mutation({
+  args: {
+    blockId: v.id("contentBlocks"),
+    verdict: v.union(v.literal("teacher_approved"), v.literal("rejected")),
+  },
+  handler: async (ctx, args) => {
+    const block = await ctx.db.get(args.blockId);
+    if (!block) throw new Error("Content block not found");
+
+    await ctx.db.patch(args.blockId, {
+      reviewStatus: args.verdict,
+      exemplarEligible: computeExemplarEligible(block.source, args.verdict),
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+export const blocksForReview = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+    level: v.optional(levelValidator),
+  },
+  handler: async (ctx, args) => {
+    let indexed = ctx.db
+      .query("contentBlocks")
+      .withIndex("by_review_status", (q) => q.eq("reviewStatus", "ai_approved"));
+    if (args.level) indexed = indexed.filter((q) => q.eq(q.field("level"), args.level));
+    return await indexed.paginate(args.paginationOpts);
+  },
+});
+
 export const recordPublishedOutput = mutation({
   args: { aiContentId: v.id("aiContent"), publishedOutput: v.string() },
   handler: async (ctx, args) => {

@@ -115,6 +115,7 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState('');
   const [generatedLesson, setGeneratedLesson] = useState<GeneratedLesson | null>(null);
+  const [aiContentId, setAiContentId] = useState<Id<"aiContent"> | null>(null);
   const [selectedVoice, setSelectedVoice] = useState(ENGLISH_VOICES[0].id);
   const [generatedAudios, setGeneratedAudios] = useState<Record<string, string>>({});
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
@@ -185,6 +186,8 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
 
   const createVirtualLesson = useMutation(api.lessons.createVirtualLesson);
   const createLessonTest = useMutation(api.lessons.createLessonTest);
+  const createAiContent = useMutation(api.aiContent.createAIContent);
+  const recordPublishedOutput = useMutation(api.lessonDb.recordPublishedOutput);
   const generateReplicateImageAction = useAction(api.mediaActions.generateReplicateImage);
 
   // Fetch OpenRouter models on mount
@@ -554,6 +557,7 @@ const VirtualLessonBuilder: React.FC<VirtualLessonBuilderProps> = ({
       return;
     }
 
+    setAiContentId(null);
     setIsGenerating(true);
     setErrors({});
 
@@ -984,6 +988,28 @@ STRICT REQUIREMENTS:
 
       setGeneratedLesson(lessonData);
       setActiveStep(2);
+
+      try {
+        const generatedContent = JSON.stringify(lessonData);
+        const contentId = await createAiContent({
+          companyId: company!._id as Id<"companies">,
+          createdBy: currentUser!._id as Id<"users">,
+          type: 'lesson',
+          level,
+          topic,
+          prompt: structurePrompt,
+          generatedContent,
+          model: selectedModel || companySettings?.apis?.openrouter?.model || 'anthropic/claude-sonnet-4',
+          wordCount: generatedContent.split(/\s+/).filter(Boolean).length,
+          topics: [topic].filter(Boolean),
+          reviewStatus: 'pending',
+          isUsed: false,
+        });
+        setAiContentId(contentId);
+      } catch (captureError) {
+        console.warn('Failed to capture AI lesson draft:', captureError);
+      }
+
       setGenerationProgress('');
     } catch (error) {
       console.error('Generation error:', error);
@@ -1290,6 +1316,17 @@ STRICT REQUIREMENTS:
         generatedWithModel: selectedModel || companySettings?.apis?.openrouter?.model || 'anthropic/claude-sonnet-4',
         sourceTranscript: transcript || undefined,
       });
+
+      if (aiContentId) {
+        try {
+          await recordPublishedOutput({
+            aiContentId,
+            publishedOutput: JSON.stringify(generatedLesson),
+          });
+        } catch (captureError) {
+          console.warn('Failed to capture published lesson output:', captureError);
+        }
+      }
 
       // Create test - with robust validation
       if (generatedLesson.testQuestions && generatedLesson.testQuestions.length > 0) {
@@ -2368,6 +2405,7 @@ STRICT REQUIREMENTS:
                 onClick={() => {
                   setActiveStep(1);
                   setGeneratedLesson(null);
+                  setAiContentId(null);
                   setTopic('');
                   setTranscript('');
                 }}
