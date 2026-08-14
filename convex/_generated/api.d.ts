@@ -24,6 +24,7 @@ import type * as authLegacy from "../authLegacy.js";
 import type * as authUtils from "../authUtils.js";
 import type * as companies from "../companies.js";
 import type * as companyInvitations from "../companyInvitations.js";
+import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
 import type * as debug from "../debug.js";
 import type * as emailActions from "../emailActions.js";
@@ -66,6 +67,7 @@ declare const fullApi: ApiFromModules<{
   authUtils: typeof authUtils;
   companies: typeof companies;
   companyInvitations: typeof companyInvitations;
+  crons: typeof crons;
   dashboard: typeof dashboard;
   debug: typeof debug;
   emailActions: typeof emailActions;

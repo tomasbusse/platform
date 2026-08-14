@@ -387,6 +387,35 @@ ${JSON.stringify(survivors.map(({ index, title, topic, body }) => ({ index, titl
   },
 });
 
+export const nightlyGeneration = internalAction({
+  args: {},
+  handler: async (ctx): Promise<GenerationBatchResult> => {
+    const companyId = process.env.SIMMONDS_COMPANY_ID;
+    if (!companyId) {
+      return { success: false, error: "SIMMONDS_COMPANY_ID env var is not set" };
+    }
+    return await ctx.runAction(internal.ai.generateBlocks.runGenerationBatch, {
+      companyId,
+      count: 15,
+      blockType: "exerciseAtom",
+    });
+  },
+});
+
+export const weeklyDistill = internalAction({
+  args: {},
+  handler: async (ctx): Promise<DistillPromptResult> => {
+    const companyId = process.env.SIMMONDS_COMPANY_ID;
+    if (!companyId) {
+      return { success: false, error: "SIMMONDS_COMPANY_ID env var is not set" };
+    }
+    return await ctx.runAction(internal.ai.generateBlocks.distillPrompt, {
+      companyId,
+      autoActivate: true,
+    });
+  },
+});
+
 export const distillPrompt = internalAction({
   args: {
     companyId: v.union(v.id("companies"), v.string()),

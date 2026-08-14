@@ -138,6 +138,39 @@ describe("runGenerationBatch templateOverride canary support", () => {
   });
 });
 
+describe("nightlyGeneration cron wrapper", () => {
+  beforeEach(() => vi.unstubAllGlobals());
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("resolves the company from SIMMONDS_COMPANY_ID and runs one batch", async () => {
+    const t = convexTest(schema, modules);
+    const companyId = await seedCompanyAndRuns(t);
+    vi.stubEnv("SIMMONDS_COMPANY_ID", companyId);
+    stubFetchQueue([VALID_EXERCISE_BLOCKS, PASSING_VERDICTS]);
+
+    const result = await t.action(internal.ai.generateBlocks.nightlyGeneration, {});
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.admitted).toBe(2);
+    }
+  });
+
+  it("weeklyDistill resolves the company from SIMMONDS_COMPANY_ID and distills with canary", async () => {
+    const t = convexTest(schema, modules);
+    const companyId = await seedCompanyAndRuns(t);
+    vi.stubEnv("SIMMONDS_COMPANY_ID", companyId);
+    stubFetchQueue([DISTILLED_TEMPLATE, VALID_EXERCISE_BLOCKS, PASSING_VERDICTS]);
+
+    const result = await t.action(internal.ai.generateBlocks.weeklyDistill, {});
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.activated).toBe(true);
+    }
+  });
+});
+
 const DISTILLED_TEMPLATE = JSON.stringify({
   template:
     "Improved: {{count}} blocks at {{level}} for {{skill}} / {{blockType}} on {{topic}}.\nExemplars: {{exemplars}}\nReturn a JSON array of objects with title, topic, body.",
