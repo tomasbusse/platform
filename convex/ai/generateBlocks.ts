@@ -20,6 +20,7 @@ import {
   parseDistilledPrompt,
   parseGeneratedBlocks,
   parseJudgeVerdicts,
+  parseProviderModel,
   pickLeastCoveredCell,
   resolvePromptTemplate,
   shouldActivateCandidate,
@@ -232,11 +233,19 @@ export const runGenerationBatch = internalAction({
         requested,
       });
 
+      const generatorProvider = parseProviderModel(generatorModel);
+      const generatorApiKey = generatorProvider.keyEnvVar
+        ? process.env[generatorProvider.keyEnvVar]
+        : apiKey;
+      if (!generatorApiKey) {
+        throw new Error(`${generatorProvider.keyEnvVar} env var is not set`);
+      }
       const generatorResponse = await callOpenRouter({
-        apiKey,
-        model: generatorModel,
+        apiKey: generatorApiKey,
+        model: generatorProvider.model,
         messages: [{ role: "user", content: prompt }],
         maxTokens: 12_000,
+        endpoint: generatorProvider.endpoint,
       });
       if (!generatorResponse.success) throw new Error(generatorResponse.error);
       tokensUsed += generatorResponse.usage?.total_tokens ?? 0;
@@ -292,11 +301,19 @@ Return ONLY a JSON array with exactly one object per candidate using this shape:
 
 Candidates:
 ${JSON.stringify(survivors.map(({ index, title, topic, body }) => ({ index, title, topic, body })))}`;
+        const judgeProvider = parseProviderModel(judgeModel);
+        const judgeApiKey = judgeProvider.keyEnvVar
+          ? process.env[judgeProvider.keyEnvVar]
+          : apiKey;
+        if (!judgeApiKey) {
+          throw new Error(`${judgeProvider.keyEnvVar} env var is not set`);
+        }
         const judgeResponse = await callOpenRouter({
-          apiKey,
-          model: judgeModel,
+          apiKey: judgeApiKey,
+          model: judgeProvider.model,
           messages: [{ role: "user", content: judgePrompt }],
           maxTokens: 6_000,
+          endpoint: judgeProvider.endpoint,
         });
         if (!judgeResponse.success) throw new Error(judgeResponse.error);
         tokensUsed += judgeResponse.usage?.total_tokens ?? 0;

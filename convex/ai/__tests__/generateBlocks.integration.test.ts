@@ -138,6 +138,58 @@ describe("runGenerationBatch templateOverride canary support", () => {
   });
 });
 
+describe("Cerebras provider routing", () => {
+  beforeEach(() => vi.unstubAllGlobals());
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("sends a cerebras/ generator model to the Cerebras endpoint with the env key", async () => {
+    const t = convexTest(schema, modules);
+    const companyId = await seedCompanyAndRuns(t);
+    vi.stubEnv("CEREBRAS_API_KEY", "csk-test");
+    const fetchMock = stubFetchQueue([VALID_EXERCISE_BLOCKS, PASSING_VERDICTS]);
+
+    const result = await t.action(internal.ai.generateBlocks.runGenerationBatch, {
+      companyId,
+      count: 2,
+      level: "A2",
+      skill: "grammar",
+      blockType: "exerciseAtom",
+      generatorModel: "cerebras/gemma-4-31b",
+    });
+
+    expect(result.success).toBe(true);
+    const generatorCall = fetchMock.mock.calls[0] as unknown as [string, { headers: Record<string, string>; body: string }];
+    expect(generatorCall[0]).toBe("https://api.cerebras.ai/v1/chat/completions");
+    expect(generatorCall[1].headers.Authorization).toBe("Bearer csk-test");
+    expect(JSON.parse(generatorCall[1].body).model).toBe("gemma-4-31b");
+    // Judge stays on OpenRouter.
+    const judgeCall = fetchMock.mock.calls[1] as unknown as [string];
+    expect(judgeCall[0]).toBe("https://openrouter.ai/api/v1/chat/completions");
+  });
+
+  it("routes an explicit cerebras/ judge model to the Cerebras endpoint too", async () => {
+    const t = convexTest(schema, modules);
+    const companyId = await seedCompanyAndRuns(t);
+    vi.stubEnv("CEREBRAS_API_KEY", "csk-test");
+    const fetchMock = stubFetchQueue([VALID_EXERCISE_BLOCKS, PASSING_VERDICTS]);
+
+    const result = await t.action(internal.ai.generateBlocks.runGenerationBatch, {
+      companyId,
+      count: 2,
+      level: "A2",
+      skill: "grammar",
+      blockType: "exerciseAtom",
+      generatorModel: "cerebras/gemma-4-31b",
+      judgeModel: "cerebras/gpt-oss-120b",
+    });
+
+    expect(result.success).toBe(true);
+    const judgeCall = fetchMock.mock.calls[1] as unknown as [string, { headers: Record<string, string>; body: string }];
+    expect(judgeCall[0]).toBe("https://api.cerebras.ai/v1/chat/completions");
+    expect(JSON.parse(judgeCall[1].body).model).toBe("gpt-oss-120b");
+  });
+});
+
 describe("nightlyGeneration cron wrapper", () => {
   beforeEach(() => vi.unstubAllGlobals());
   afterEach(() => vi.unstubAllGlobals());

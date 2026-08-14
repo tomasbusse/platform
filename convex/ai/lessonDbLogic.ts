@@ -455,6 +455,28 @@ export function shouldActivateCandidate(
   return canaryAdmitRate > 0 && canaryAdmitRate >= baselineAdmitRate;
 }
 
+export function parseProviderModel(model: string): {
+  provider: "cerebras" | "openrouter";
+  model: string;
+  endpoint: string;
+  keyEnvVar: string | null;
+} {
+  if (model.startsWith("cerebras/")) {
+    return {
+      provider: "cerebras",
+      model: model.slice("cerebras/".length),
+      endpoint: "https://api.cerebras.ai/v1/chat/completions",
+      keyEnvVar: "CEREBRAS_API_KEY",
+    };
+  }
+  return {
+    provider: "openrouter",
+    model,
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    keyEnvVar: null,
+  };
+}
+
 export function resolvePromptTemplate(args: {
   activePrompt: { version: number; template: string } | null;
   templateOverride?: string;

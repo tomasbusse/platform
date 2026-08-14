@@ -14,6 +14,7 @@ import {
   parseDistilledPrompt,
   parseGeneratedBlocks,
   parseJudgeVerdicts,
+  parseProviderModel,
   pickLeastCoveredCell,
   resolvePromptTemplate,
   validateBlockBody,
@@ -369,6 +370,17 @@ describe("shouldActivateCandidate", () => {
 
   it("refuses a zero-admit canary regardless of baseline", () => {
     expect(shouldActivateCandidate(0, 0)).toBe(false);
+  });
+});
+
+describe("parseProviderModel", () => {
+  it("routes a cerebras/ prefixed model to the Cerebras endpoint", () => {
+    expect(parseProviderModel("cerebras/gemma-4-31b")).toEqual({
+      provider: "cerebras",
+      model: "gemma-4-31b",
+      endpoint: "https://api.cerebras.ai/v1/chat/completions",
+      keyEnvVar: "CEREBRAS_API_KEY",
+    });
   });
 });
 
