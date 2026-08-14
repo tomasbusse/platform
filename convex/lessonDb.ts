@@ -6,6 +6,8 @@ import {
   internalQuery,
   mutation,
   query,
+  type MutationCtx,
+  type QueryCtx,
 } from "./_generated/server";
 import {
   capRejectionReasons,
@@ -343,12 +345,27 @@ export const listBlocks = query({
   },
 });
 
+// Same identity pattern as convex/materials.ts, but via the by_clerk_id index.
+async function requireTeacher(ctx: QueryCtx | MutationCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) throw new Error("Not authenticated");
+  const user = await ctx.db
+    .query("users")
+    .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+    .first();
+  const role = user?.role;
+  if (role !== "teacher" && role !== "admin" && role !== "corporate_admin") {
+    throw new Error("Insufficient permissions: teacher role required");
+  }
+}
+
 export const reviewBlock = mutation({
   args: {
     blockId: v.id("contentBlocks"),
     verdict: v.union(v.literal("teacher_approved"), v.literal("rejected")),
   },
   handler: async (ctx, args) => {
+    await requireTeacher(ctx);
     const block = await ctx.db.get(args.blockId);
     if (!block) throw new Error("Content block not found");
 
@@ -366,6 +383,7 @@ export const blocksForReview = query({
     level: v.optional(levelValidator),
   },
   handler: async (ctx, args) => {
+    await requireTeacher(ctx);
     let indexed = ctx.db
       .query("contentBlocks")
       .withIndex("by_review_status", (q) => q.eq("reviewStatus", "ai_approved"));
@@ -377,6 +395,7 @@ export const blocksForReview = query({
 export const recordPublishedOutput = mutation({
   args: { aiContentId: v.id("aiContent"), publishedOutput: v.string() },
   handler: async (ctx, args) => {
+    await requireTeacher(ctx);
     const content = await ctx.db.get(args.aiContentId);
     if (!content) throw new Error("AI content not found");
 
