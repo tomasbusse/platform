@@ -1,0 +1,162 @@
+[
+  {
+    "blockType": "vocabSet",
+    "id": "eval-t01-A1-vocabSet",
+    "level": "A1",
+    "skill": "vocabulary",
+    "topic": "everyday office objects and greetings",
+    "userPrompt": "Create one vocabSet content block for CEFR A1 (vocabulary). Topic: everyday office objects and greetings. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  },
+  {
+    "blockType": "dialogue",
+    "id": "eval-t02-A1-dialogue",
+    "level": "A1",
+    "skill": "speaking",
+    "topic": "introducing yourself on the first day at a new job",
+    "userPrompt": "Create one dialogue content block for CEFR A1 (speaking). Topic: introducing yourself on the first day at a new job. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  },
+  {
+    "blockType": "grammarExplainer",
+    "id": "eval-t03-A1-grammarExplainer",
+    "level": "A1",
+    "skill": "grammar",
+    "topic": "present tense verbs for describing your daily work routine",
+    "userPrompt": "Create one grammarExplainer content block for CEFR A1 (grammar). Topic: present tense verbs for describing your daily work routine. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  },
+  {
+    "blockType": "exerciseAtom",
+    "id": "eval-t04-A1-exerciseAtom",
+    "level": "A1",
+    "skill": "writing",
+    "topic": "filling in a simple company sign-in sheet",
+    "userPrompt": "Create one exerciseAtom content block for CEFR A1 (writing). Topic: filling in a simple company sign-in sheet. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  },
+  {
+    "blockType": "readingPassage",
+    "id": "eval-t05-A1-readingPassage",
+    "level": "A1",
+    "skill": "reading",
+    "topic": "reading a short office notice about lunch break times",
+    "userPrompt": "Create one readingPassage content block for CEFR A1 (reading). Topic: reading a short office notice about lunch break times. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  },
+  {
+    "blockType": "vocabSet",
+    "id": "eval-t06-A2-vocabSet",
+    "level": "A2",
+    "skill": "vocabulary",
+    "topic": "booking a business trip: flights, hotels, taxis",
+    "userPrompt": "Create one vocabSet content block for CEFR A2 (vocabulary). Topic: booking a business trip: flights, hotels, taxis. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  },
+  {
+    "blockType": "dialogue",
+    "id": "eval-t07-A2-dialogue",
+    "level": "A2",
+    "skill": "speaking",
+    "topic": "small talk before a client call",
+    "userPrompt": "Create one dialogue content block for CEFR A2 (speaking). Topic: small talk before a client call. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  },
+  {
+    "blockType": "grammarExplainer",
+    "id": "eval-t08-A2-grammarExplainer",
+    "level": "A2",
+    "skill": "grammar",
+    "topic": "past tense for describing what happened at a meeting",
+    "userPrompt": "Create one grammarExplainer content block for CEFR A2 (grammar). Topic: past tense for describing what happened at a meeting. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  },
+  {
+    "blockType": "exerciseAtom",
+    "id": "eval-t09-A2-exerciseAtom",
+    "level": "A2",
+    "skill": "writing",
+    "topic": "writing a short email to reschedule a meeting",
+    "userPrompt": "Create one exerciseAtom content block for CEFR A2 (writing). Topic: writing a short email to reschedule a meeting. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  },
+  {
+    "blockType": "readingPassage",
+    "id": "eval-t10-A2-readingPassage",
+    "level": "A2",
+    "skill": "reading",
+    "topic": "reading a hotel booking confirmation for a work trip",
+    "userPrompt": "Create one readingPassage content block for CEFR A2 (reading). Topic: reading a hotel booking confirmation for a work trip. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  },
+  {
+    "blockType": "vocabSet",
+    "id": "eval-t11-B1-vocabSet",
+    "level": "B1",
+    "skill": "vocabulary",
+    "topic": "vocabulary for giving constructive feedback in a meeting",
+    "userPrompt": "Create one vocabSet content block for CEFR B1 (vocabulary). Topic: vocabulary for giving constructive feedback in a meeting. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  },
+  {
+    "blockType": "dialogue",
+    "id": "eval-t12-B1-dialogue",
+    "level": "B1",
+    "skill": "speaking",
+    "topic": "explaining a project delay to a manager",
+    "userPrompt": "Create one dialogue content block for CEFR B1 (speaking). Topic: explaining a project delay to a manager. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  },
+  {
+    "blockType": "grammarExplainer",
+    "id": "eval-t13-B1-grammarExplainer",
+    "level": "B1",
+    "skill": "grammar",
+    "topic": "modal verbs for making polite requests to colleagues",
+    "userPrompt": "Create one grammarExplainer content block for CEFR B1 (grammar). Topic: modal verbs for making polite requests to colleagues. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  },
+  {
+    "blockType": "exerciseAtom",
+    "id": "eval-t14-B1-exerciseAtom",
+    "level": "B1",
+    "skill": "writing",
+    "topic": "requesting a deadline extension by email",
+    "userPrompt": "Create one exerciseAtom content block for CEFR B1 (writing). Topic: requesting a deadline extension by email. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  },
+  {
+    "blockType": "readingPassage",
+    "id": "eval-t15-B1-readingPassage",
+    "level": "B1",
+    "skill": "listening",
+    "topic": "a transcript of a voicemail about a delayed shipment",
+    "userPrompt": "Create one readingPassage content block for CEFR B1 (listening). Topic: a transcript of a voicemail about a delayed shipment. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  },
+  {
+    "blockType": "vocabSet",
+    "id": "eval-t16-B2-vocabSet",
+    "level": "B2",
+    "skill": "vocabulary",
+    "topic": "vocabulary for negotiating contract terms with a supplier",
+    "userPrompt": "Create one vocabSet content block for CEFR B2 (vocabulary). Topic: vocabulary for negotiating contract terms with a supplier. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  },
+  {
+    "blockType": "dialogue",
+    "id": "eval-t17-B2-dialogue",
+    "level": "B2",
+    "skill": "speaking",
+    "topic": "disagreeing diplomatically with a colleague's proposal",
+    "userPrompt": "Create one dialogue content block for CEFR B2 (speaking). Topic: disagreeing diplomatically with a colleague's proposal. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  },
+  {
+    "blockType": "grammarExplainer",
+    "id": "eval-t18-B2-grammarExplainer",
+    "level": "B2",
+    "skill": "grammar",
+    "topic": "conditional sentences for discussing hypothetical business scenarios",
+    "userPrompt": "Create one grammarExplainer content block for CEFR B2 (grammar). Topic: conditional sentences for discussing hypothetical business scenarios. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  },
+  {
+    "blockType": "exerciseAtom",
+    "id": "eval-t19-B2-exerciseAtom",
+    "level": "B2",
+    "skill": "writing",
+    "topic": "drafting a formal complaint about a late delivery",
+    "userPrompt": "Create one exerciseAtom content block for CEFR B2 (writing). Topic: drafting a formal complaint about a late delivery. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  },
+  {
+    "blockType": "vocabSet",
+    "id": "eval-t20-C1-vocabSet",
+    "level": "C1",
+    "skill": "vocabulary",
+    "topic": "advanced vocabulary for presenting quarterly results to executives",
+    "userPrompt": "Create one vocabSet content block for CEFR C1 (vocabulary). Topic: advanced vocabulary for presenting quarterly results to executives. Write for adult German-L1 learners in a professional, business-appropriate voice appropriate to a corporate language school. Return ONLY JSON with keys \"title\", \"topic\", and \"body\". No markdown, no code fences, no commentary — JSON only."
+  }
+]

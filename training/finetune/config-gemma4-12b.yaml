@@ -1,0 +1,81 @@
+# LoRA fine-tune config — Gemma 4 12B (instruction-tuned), English-school lesson model.
+#
+# Verified live 2026-08-14:
+#   * HF id google/gemma-4-12B-it exists (note the capital "B"):
+#     https://huggingface.co/google/gemma-4-12B-it — model card uses
+#     MODEL_ID = "google/gemma-4-12B-it".
+#   * We use the unsloth mirror unsloth/gemma-4-12b-it (same weights, NOT gated —
+#     the google/ repo requires accepting Gemma license terms first). The mirror
+#     id is the one used in the official Unsloth notebook nb/Gemma4_(12B)_Text.ipynb
+#     (github.com/unslothai/notebooks): FastModel.from_pretrained(model_name =
+#     "unsloth/gemma-4-12b-it", ...).
+#   * Unsloth Gemma 4 fine-tuning guide: https://unsloth.ai/docs/models/gemma-4/train
+#     — "Unsloth supports all vision, text, audio and RL fine-tuning for Gemma 4".
+
+model_name: "unsloth/gemma-4-12b-it"
+model_family: "gemma4"
+max_seq_length: 4096            # per spec; 12B context is 256K, we cap at 4K for cost
+load_in_4bit: true              # QLoRA 4-bit (spec for gemma). 12B QLoRA fits easily
+                                # in 48GB: 4-bit weights ~7GB + LoRA grads/optim + 4K
+                                # activations. (Unsloth cites E4B LoRA = 17GB and 31B
+                                # QLoRA = 22GB; exact 12B-QLoRA figure UNVERIFIED —
+                                # interpolated estimate ~10-14GB, far under 48GB.)
+
+lora:                           # spec: QLoRA r=16 alpha=32 lr=2e-4 cosine
+  r: 16
+  lora_alpha: 32
+  lora_dropout: 0.0             # official notebooks use lora_dropout = 0
+
+training:
+  num_train_epochs: 2           # epoch cap (spec)
+  max_steps: 400                # absolute step ceiling (spec); at ~1000 examples and
+                                # effective batch 16 the 2-epoch plan is ~125 steps,
+                                # so the epoch cap binds and max_steps is only a guard.
+                                # train.py runs min(2-epoch plan, max_steps).
+  per_device_train_batch_size: 2  # Sized for a single L40S 48GB (recommended GPU —
+                                  # cheapest option that fits, $0.99/hr vs A100-PCIe
+                                  # $1.39/hr; 12B QLoRA @4K seq needs far less than
+                                  # 48GB. Gemma 4's 262K vocab makes per-token logits
+                                  # the memory driver; if you still OOM, drop to 1 and
+                                  # double gradient_accumulation_steps.) Also fits
+                                  # A100 80GB trivially.
+  gradient_accumulation_steps: 8  # effective batch = 2 x 8 = 16
+  learning_rate: 2.0e-4
+  lr_scheduler_type: "cosine"
+  warmup_steps: 10
+  weight_decay: 0.01
+  optim: "adamw_8bit"           # official notebook default
+  logging_steps: 5
+  seed: 3407                    # official notebook default
+
+data:
+  train_path: "training/data/train.jsonl"   # relative to repo root; schema:
+  val_path: "training/data/val.jsonl"       # {"messages":[{"role","content"}...]}
+
+chat:
+  # Unsloth guide (https://unsloth.ai/docs/models/gemma-4/train):
+  # "Use `gemma-4` for the non thinking chat-template and `gemma-4-thinking` for the
+  # thinking variant." Lesson model wants direct answers -> non-thinking template.
+  template_name: "gemma-4"
+  # Markers verified live in unsloth chat_templates.py (gemma4_template):
+  # turns render as "<|turn>user\n...<turn|>\n<|turn>model\n...<turn|>\n".
+  # Same doc page renders: <|turn>user\nWhat is 2+2?<turn|>\n<|turn>model\n
+  instruction_part: "<|turn>user\n"
+  response_part: "<|turn>model\n"
+
+budget:
+  # max_hours back-derived from the $10 cap and the recommended GPU's actual price.
+  # Recommended GPU: RunPod L40S 48GB @ $0.99/hr (https://www.runpod.io/pricing,
+  # "Updated July 27, 2026": "L40S $0.99/hr 48 GB VRAM").
+  #   $10.00 / $0.99 per hr = 10.10h -> round DOWN to 10.0h
+  #   worst case = 10.0h x $0.99/hr = $9.90 <= $10.00  (fits with $0.10 headroom)
+  # If you switch to A100 PCIe 80GB ($1.39/hr) instead, you MUST lower max_hours:
+  #   $10.00 / $1.39 per hr = 7.19h -> max_hours: 7.0 -> worst case $9.73.
+  max_hours: 10.0
+  gpu_usd_per_hour: 0.99
+  budget_usd: 10.0
+
+output:
+  output_dir: "outputs/gemma4-12b-lora"
+  save_merged_16bit: false      # true = also write merged bf16 model (needs ~25GB
+                                # disk/CPU RAM; not needed for LoRA-adapter deploy)

@@ -1,0 +1,82 @@
+# LoRA fine-tune config — Qwen3.5 9B, English-school lesson model.
+#
+# Verified live 2026-08-14:
+#   * HF id Qwen/Qwen3.5-9B exists: https://huggingface.co/Qwen/Qwen3.5-9B —
+#     "Number of Parameters: 9B", post-trained, context 262,144. Unsloth mirror
+#     unsloth/Qwen3.5-9B also exists; we use the mirror (fast, ungated), same as
+#     the official notebook nb/Qwen3_5_(4B)_Vision.ipynb uses "unsloth/Qwen3.5-4B".
+#   * Unsloth Qwen3.5 guide https://unsloth.ai/docs/models/qwen3.5/fine-tune
+#     (updated 2026-08-13):
+#       - "It is not recommended to do QLoRA (4-bit) training on the Qwen3.5
+#         models, no matter MoE or dense, due to higher than normal quantization
+#         differences."  => this config uses bf16 LoRA (load_in_4bit: false).
+#       - "Qwen3.5 bf16 LoRA VRAM use: ... 9B: 22GB" => fits L40S 48GB with
+#         headroom; also fits A100 80GB.
+#       - "Please use transformers v5 for Qwen3.5. Older versions will not work."
+#       - Qwen3.5 uses Gated DeltaNet (Mamba-style) layers: needs
+#         flash-linear-attention + causal_conv1d==1.6.0 (see requirements.txt /
+#         RUNBOOK.md; first compile can take extra minutes on slower GPUs).
+
+model_name: "unsloth/Qwen3.5-9B"
+model_family: "qwen35"
+max_seq_length: 4096            # per spec; native context is 262K, capped for cost
+load_in_4bit: false             # bf16 LoRA — QLoRA NOT recommended for Qwen3.5
+                                # (see citation above)
+
+lora:                           # bf16-LoRA equivalent of the gemma config (spec)
+  r: 16
+  lora_alpha: 32
+  lora_dropout: 0.0
+
+training:
+  num_train_epochs: 2           # epoch cap (spec)
+  max_steps: 400                # absolute step ceiling (spec); ~1000 examples at
+                                # effective batch 16 => ~125 steps for 2 epochs, so
+                                # max_steps is only a guard. train.py runs the min.
+  per_device_train_batch_size: 2  # Sized for a single L40S 48GB (recommended:
+                                  # cheapest GPU that fits — Unsloth cites 22GB for
+                                  # 9B bf16 LoRA; $0.99/hr vs A100-PCIe $1.39/hr).
+                                  # 248K-vocab logits dominate memory at 4K seq; if
+                                  # OOM, drop to 1 and double grad accumulation.
+  gradient_accumulation_steps: 8  # effective batch = 16
+  learning_rate: 2.0e-4
+  lr_scheduler_type: "cosine"
+  warmup_steps: 10
+  weight_decay: 0.01
+  optim: "adamw_8bit"
+  logging_steps: 5
+  seed: 3407
+
+data:
+  train_path: "training/data/train.jsonl"   # relative to repo root; schema:
+  val_path: "training/data/val.jsonl"       # {"messages":[{"role","content"}...]}
+
+chat:
+  # null => keep the model's OWN chat template (Qwen/Qwen3.5-9B ships one in
+  # tokenizer_config.json — verified live 2026-08-14). Assistant turns render as
+  # "<|im_start|>assistant\n<think>\n\n</think>\n\n<content><|im_end|>\n" for the
+  # final turn (empty think block when training non-thinking data) and plain
+  # "<|im_start|>assistant\n<content><|im_end|>\n" for earlier turns — matching
+  # enable_thinking=False inference, which is what a lesson model wants.
+  template_name: null
+  # Markers verified live in Qwen/Qwen3.5-9B tokenizer_config.json chat_template:
+  #   user:      '<|im_start|>' + role + '\n' + content + '<|im_end|>' + '\n'
+  #   gen prompt: {{- '<|im_start|>assistant\n' }}
+  instruction_part: "<|im_start|>user\n"
+  response_part: "<|im_start|>assistant\n"
+
+budget:
+  # max_hours back-derived from the $10 cap and the recommended GPU's actual price.
+  # Recommended GPU: RunPod L40S 48GB @ $0.99/hr (https://www.runpod.io/pricing,
+  # "Updated July 27, 2026": "L40S $0.99/hr 48 GB VRAM").
+  #   $10.00 / $0.99 per hr = 10.10h -> round DOWN to 10.0h
+  #   worst case = 10.0h x $0.99/hr = $9.90 <= $10.00  (fits with $0.10 headroom)
+  # If you switch to A100 PCIe 80GB ($1.39/hr) instead, you MUST lower max_hours:
+  #   $10.00 / $1.39 per hr = 7.19h -> max_hours: 7.0 -> worst case $9.73.
+  max_hours: 10.0
+  gpu_usd_per_hour: 0.99
+  budget_usd: 10.0
+
+output:
+  output_dir: "outputs/qwen35-9b-lora"
+  save_merged_16bit: false

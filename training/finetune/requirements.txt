@@ -1,0 +1,51 @@
+# RunPod fine-tuning dependencies — verified live 2026-08-14 against:
+#   * unsloth 2026.8.16 PyPI metadata (pypi.org/pypi/unsloth/json):
+#       torch>=2.4.0,<2.12.0 · transformers>=4.51.3,<=5.5.0 (!=5.0.0,!=5.1.0,...) ·
+#       trl>=0.18.2,<=0.24.0,!=0.19.0 · peft>=0.18.0 · datasets>=3.4.1,<4.4.0 ·
+#       bitsandbytes>=0.45.5 (!=0.46.0,!=0.48.0) · accelerate>=0.34.1
+#   * official notebook nb/Gemma4_(12B)_Text.ipynb (github.com/unslothai/notebooks):
+#       pip install unsloth
+#       pip install --no-deps transformers==5.10.1 "tokenizers>=0.22.0,<=0.23.0"
+#       pip install "huggingface_hub>=1.5.0,<2.0" ; pip install torchcodec ; timm
+#   * official notebook nb/Qwen3_5_(4B)_Vision.ipynb:
+#       torch==2.8.0, trl==0.22.2, transformers==5.2.0, flash-linear-attention,
+#       causal_conv1d==1.6.0 (--no-build-isolation; "supported only on torch==2.8.0")
+#
+# IMPORTANT — install order matters; a bare `pip install -r requirements.txt`
+# cannot express it. Use the RUNBOOK.md commands (they mirror the notebooks):
+# unsloth is installed FIRST (its resolver picks transformers<=5.5.0), then
+# transformers==5.10.1 is forced with --no-deps (the Gemma 4 notebook does exactly
+# this; unsloth's PyPI metadata still says <=5.5.0 while its own current notebook
+# pins 5.10.1 — we follow the notebook, which is the newer artifact, and 5.10.1
+# also satisfies Unsloth's "use transformers v5 for Qwen3.5" requirement).
+#
+# Base image assumed: runpod/pytorch:2.8.0-py3.11-cuda12.8.1-cudnn-devel-ubuntu22.04
+# (tag verified on Docker Hub 2026-08-14) — ships torch 2.8.0 + CUDA 12.8, which is
+# what causal_conv1d==1.6.0 and the Qwen3.5 notebook require. torch is therefore
+# intentionally NOT pinned here.
+
+unsloth==2026.8.16
+unsloth_zoo>=2026.8.6
+
+# Forced AFTER unsloth with --no-deps (see note above):
+transformers==5.10.1
+tokenizers>=0.22.0,<=0.23.0
+huggingface_hub>=1.5.0,<2.0
+
+trl==0.22.2
+peft>=0.18.0
+accelerate>=0.34.1
+datasets==4.3.0
+bitsandbytes>=0.45.5,!=0.46.0,!=0.48.0   # 4-bit quant for the gemma QLoRA config
+xformers==0.0.32.post2                    # matches torch 2.8.0 (Qwen3.5 notebook)
+
+sentencepiece
+protobuf
+torchcodec                                # gemma-4 unified (audio) deps, per notebook
+timm                                      # gemma-4 vision tower dep, per notebook
+
+# Qwen3.5 Gated DeltaNet (Mamba-style) kernels — per the Qwen3.5 notebook.
+# causal_conv1d MUST be installed with: pip install --no-build-isolation causal_conv1d==1.6.0
+# (source build against the image's torch 2.8.0; skip only if training gemma only)
+flash-linear-attention
+causal_conv1d==1.6.0
