@@ -1,0 +1,460 @@
+[
+  {
+    "task_id": "eval-t01-A1-vocabSet",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 2,
+    "parse_failed": true,
+    "failure_kind": "format",
+    "final_error": "Expecting ',' delimiter: line 47 column 62 (char 2707)",
+    "output": null,
+    "raw_content": "{\n  \"title\": \"Everyday Office Objects and Greetings\",\n  \"topic\": \"A1 vocabulary\",\n  \"body\": {\n    \"words\": [\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"office\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"desk\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"chair\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"table\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"computer\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"laptop\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"monitor\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"keyboard\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"mouse\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"printer\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"phone\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"fax\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"paper\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"folder\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"file\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"pen\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"pencil\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"notebook\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"stapler\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"staple\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"staple remover\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"paperclip\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"scissors\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"tape\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"calendar\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"clock\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"calendar\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"calendar\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"calendar\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"calendar\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"calendar\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"calendar\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"calendar\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"calendar\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"calendar\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"calendar\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"calendar\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"calendar\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"calendar\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"calendar\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"calendar\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"calendar\"},\n      {\"germanHint\": null, \"pos\": \"noun\", \"word\": \"calendar"
+  },
+  {
+    "task_id": "eval-t02-A1-dialogue",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Introducing yourself on your first day",
+      "topic": "A1 speaking",
+      "body": {
+        "dialogue": [
+          {
+            "speaker": "Anna",
+            "text": "Hello! Is this seat free?"
+          },
+          {
+            "speaker": "Tom",
+            "text": "Yes, it is. Please, sit down."
+          },
+          {
+            "speaker": "Anna",
+            "text": "Thank you. I'm Anna. I'm the new marketing assistant."
+          },
+          {
+            "speaker": "Tom",
+            "text": "Nice to meet you, Anna. I'm Tom. I work in sales."
+          },
+          {
+            "speaker": "Anna",
+            "text": "Nice to meet you, too. Is this your first day here?"
+          },
+          {
+            "speaker": "Tom",
+            "text": "No, I've been here for three months. Are you from Berlin?"
+          },
+          {
+            "speaker": "Anna",
+            "text": "No, I'm from Munich. But I live in Berlin now."
+          },
+          {
+            "speaker": "Tom",
+            "text": "Oh, I see. Do you speak French?"
+          },
+          {
+            "speaker": "Anna",
+            "text": "A little bit. I studied it in university."
+          },
+          {
+            "speaker": "Tom",
+            "text": "That's great. Well, welcome to the team!"
+          },
+          {
+            "speaker": "Anna",
+            "text": "Thank you very much."
+          }
+        ]
+      }
+    },
+    "raw_content": "{\n  \"title\": \"Introducing yourself on your first day\",\n  \"topic\": \"A1 speaking\",\n  \"body\": {\n    \"dialogue\": [\n      {\n        \"speaker\": \"Anna\",\n        \"text\": \"Hello! Is this seat free?\"\n      },\n      {\n        \"speaker\": \"Tom\",\n        \"text\": \"Yes, it is. Please, sit down.\"\n      },\n      {\n        \"speaker\": \"Anna\",\n        \"text\": \"Thank you. I'm Anna. I'm the new marketing assistant.\"\n      },\n      {\n        \"speaker\": \"Tom\",\n        \"text\": \"Nice to meet you, Anna. I'm Tom. I work in sales.\"\n      },\n      {\n        \"speaker\": \"Anna\",\n        \"text\": \"Nice to meet you, too. Is this your first day here?\"\n      },\n      {\n        \"speaker\": \"Tom\",\n        \"text\": \"No, I've been here for three months. Are you from Berlin?\"\n      },\n      {\n        \"speaker\": \"Anna\",\n        \"text\": \"No, I'm from Munich. But I live in Berlin now.\"\n      },\n      {\n        \"speaker\": \"Tom\",\n        \"text\": \"Oh, I see. Do you speak French?\"\n      },\n      {\n        \"speaker\": \"Anna\",\n        \"text\": \"A little bit. I studied it in university.\"\n      },\n      {\n        \"speaker\": \"Tom\",\n        \"text\": \"That's great. Well, welcome to the team!\"\n      },\n      {\n        \"speaker\": \"Anna\",\n        \"text\": \"Thank you very much.\"\n      }\n    ]\n  }\n}"
+  },
+  {
+    "task_id": "eval-t03-A1-grammarExplainer",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Present tense verbs for describing your daily work routine",
+      "topic": "grammar",
+      "body": "When describing your daily work routine in English, you will primarily use the present simple tense. This tense is used for habits, regular actions, and facts. In a professional context, it helps you describe your responsibilities and typical workday clearly.\n\nVerb forms for daily routines\n\nFor most verbs, the base form remains the same for all subjects, except for the third person singular (he/she/it), where you add an -s or -es ending.\n\nI start work at 9:00.\n\nHe starts work at 9:00.\n\nWe finish work at 6:00.\n\nThey finish work at 6:00.\n\nCommon verbs for work routines:\n\nstart / begin: I start work at 8:30.\n\nfinish / end: We finish work at 5:30.\n\ncheck: I check my emails every morning.\n\nreply / answer: She replies to customers.\n\ncall / phone: He calls his team every Monday.\n\nmeet: We meet with clients on Tuesdays.\n\norganise / organize: She organises the weekly meetings.\n\nwrite: I write reports every Friday.\n\nread: He reads the news every morning.\n\n\nAdverbs of frequency\n\nTo make your descriptions more precise, use adverbs of frequency. These usually go before the main verb.\n\nI always start work at 8:30.\n\nWe usually finish work at 6:00.\n\nShe often checks her emails.\n\nHe never works on weekends.\n\n\nCommon time expressions\n\nWhen describing a routine, we often use time expressions at the end of the sentence.\n\nI check my emails every morning.\n\nWe meet with clients on Tuesdays.\n\nHe writes reports every Friday.\n\nI start work at 8:30.\n\nWe finish work at 6:00.\n\n\nPractice\n\nTry to describe your own work day using the verbs and structures above. Remember to use the -s ending for he/she/it.\n\nExample:\n\nI start work at 9:00. I check my emails and then I start my daily tasks. I usually have lunch at 12:30. In the afternoon, I meet with my team. I finish work at 6:00.\n\nMy colleague starts work at 9:30. She checks her emails and then she starts her daily tasks. She usually has lunch at 1:00. In the afternoon, she meets with her team. She finishes work at 6:30."
+    },
+    "raw_content": "{\n  \"title\": \"Present tense verbs for describing your daily work routine\",\n  \"topic\": \"grammar\",\n  \"body\": \"When describing your daily work routine in English, you will primarily use the present simple tense. This tense is used for habits, regular actions, and facts. In a professional context, it helps you describe your responsibilities and typical workday clearly.\\n\\nVerb forms for daily routines\\n\\nFor most verbs, the base form remains the same for all subjects, except for the third person singular (he/she/it), where you add an -s or -es ending.\\n\\nI start work at 9:00.\\n\\nHe starts work at 9:00.\\n\\nWe finish work at 6:00.\\n\\nThey finish work at 6:00.\\n\\nCommon verbs for work routines:\\n\\nstart / begin: I start work at 8:30.\\n\\nfinish / end: We finish work at 5:30.\\n\\ncheck: I check my emails every morning.\\n\\nreply / answer: She replies to customers.\\n\\ncall / phone: He calls his team every Monday.\\n\\nmeet: We meet with clients on Tuesdays.\\n\\norganise / organize: She organises the weekly meetings.\\n\\nwrite: I write reports every Friday.\\n\\nread: He reads the news every morning.\\n\\n\\nAdverbs of frequency\\n\\nTo make your descriptions more precise, use adverbs of frequency. These usually go before the main verb.\\n\\nI always start work at 8:30.\\n\\nWe usually finish work at 6:00.\\n\\nShe often checks her emails.\\n\\nHe never works on weekends.\\n\\n\\nCommon time expressions\\n\\nWhen describing a routine, we often use time expressions at the end of the sentence.\\n\\nI check my emails every morning.\\n\\nWe meet with clients on Tuesdays.\\n\\nHe writes reports every Friday.\\n\\nI start work at 8:30.\\n\\nWe finish work at 6:00.\\n\\n\\nPractice\\n\\nTry to describe your own work day using the verbs and structures above. Remember to use the -s ending for he/she/it.\\n\\nExample:\\n\\nI start work at 9:00. I check my emails and then I start my daily tasks. I usually have lunch at 12:30. In the afternoon, I meet with my team. I finish work at 6:00.\\n\\nMy colleague starts work at 9:30. She checks her emails and then she starts her daily tasks. She usually has lunch at 1:00. In the afternoon, she meets with her team. She finishes work at 6:30.\"\n}"
+  },
+  {
+    "task_id": "eval-t04-A1-exerciseAtom",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Company Sign-in Sheet",
+      "topic": "writing",
+      "body": {
+        "instructions": "Complete the sign-in sheet for your first day at the company. Use the information provided in the text below.",
+        "text": "Welcome to the team! Please complete the sign-in sheet below to register your arrival for the induction program.\n\nName: ________________________________________________\n\nJob Title: __________________________________________\n\nDepartment: ________________________________________\n\nPhone Number: ______________________________________\n\nEmail Address: ______________________________________\n\nEmergency Contact Name: ____________________________\n\nEmergency Contact Phone: ____________________________\n\nDate: ____________________________________________\n\nSignature: ________________________________________"
+      }
+    },
+    "raw_content": "{\n  \"title\": \"Company Sign-in Sheet\",\n  \"topic\": \"writing\",\n  \"body\": {\n    \"instructions\": \"Complete the sign-in sheet for your first day at the company. Use the information provided in the text below.\",\n    \"text\": \"Welcome to the team! Please complete the sign-in sheet below to register your arrival for the induction program.\\n\\nName: ________________________________________________\\n\\nJob Title: __________________________________________\\n\\nDepartment: ________________________________________\\n\\nPhone Number: ______________________________________\\n\\nEmail Address: ______________________________________\\n\\nEmergency Contact Name: ____________________________\\n\\nEmergency Contact Phone: ____________________________\\n\\nDate: ____________________________________________\\n\\nSignature: ________________________________________\"\n  }\n}"
+  },
+  {
+    "task_id": "eval-t05-A1-readingPassage",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Lunch Break Schedule",
+      "topic": "reading a short office notice about lunch break times",
+      "body": "Dear Team,\n\nTo improve our office workflow and ensure better communication, we are implementing a new lunch break schedule starting next Monday, October 2nd.\n\nFrom now on, please take your lunch break between 12:00 and 13:30. We ask that you coordinate with your team members to ensure that there is always someone available to answer phone calls and emails during this time.\n\nIf you need to take a longer break or have a different schedule, please inform your department manager at least 24 hours in advance.\n\nThank you for your cooperation.\n\nBest regards,\n\nOffice Management"
+    },
+    "raw_content": "{\n  \"title\": \"Lunch Break Schedule\",\n  \"topic\": \"reading a short office notice about lunch break times\",\n  \"body\": \"Dear Team,\\n\\nTo improve our office workflow and ensure better communication, we are implementing a new lunch break schedule starting next Monday, October 2nd.\\n\\nFrom now on, please take your lunch break between 12:00 and 13:30. We ask that you coordinate with your team members to ensure that there is always someone available to answer phone calls and emails during this time.\\n\\nIf you need to take a longer break or have a different schedule, please inform your department manager at least 24 hours in advance.\\n\\nThank you for your cooperation.\\n\\nBest regards,\\n\\nOffice Management\"\n}"
+  },
+  {
+    "task_id": "eval-t06-A2-vocabSet",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 2,
+    "parse_failed": true,
+    "failure_kind": "format",
+    "final_error": "Expecting ',' delimiter: line 115 column 9 (char 2267)",
+    "output": null,
+    "raw_content": "{\n  \"title\": \"Booking a business trip: flights, hotels, taxis\",\n  \"topic\": \"A2 vocabulary\",\n  \"body\": {\n    \"words\": [\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"booking\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"business trip\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"confirmation\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"confirmation email\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"departure\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"destination\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"direct flight\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"early bird\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"flight attendant\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"gate\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"ground floor\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"hand luggage / carry-on\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"layover\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"lounge\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"overnight stay\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"passenger\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"pick-up\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"reception\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"reservation\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"seat\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"single room\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"twin room\"\n        \"word\": \"double room\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"taxi\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"transfer\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"voucher\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"verb\",\n        \"word\": \"book\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"verb\",\n        \"word\": \"check in\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"verb\",\n"
+  },
+  {
+    "task_id": "eval-t07-A2-dialogue",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Small talk before a client call",
+      "topic": "speaking",
+      "body": {
+        "dialogue": [
+          {
+            "speaker": "Sarah",
+            "text": "Hi, Tom. Are you ready for the call with the team from Berlin?"
+          },
+          {
+            "speaker": "Tom",
+            "text": "Yes, I think so. I just need to grab my notes. How have you been?"
+          },
+          {
+            "speaker": "Sarah",
+            "text": "I'm doing well, thanks. I had a busy morning, but I'm looking forward to the weekend."
+          },
+          {
+            "speaker": "Tom",
+            "text": "Me too. Do you have any plans?"
+          },
+          {
+            "speaker": "Sarah",
+            "text": "I'm going hiking with some friends. The weather should be nice."
+          },
+          {
+            "speaker": "Tom",
+            "text": "That sounds lovely. By the way, have you seen the agenda for today's meeting?"
+          },
+          {
+            "speaker": "Sarah",
+            "text": "Yes, I have. It looks pretty straightforward. We'll be discussing the new marketing strategy."
+          },
+          {
+            "speaker": "Tom",
+            "text": "Right. And I'll be presenting the quarterly results."
+          },
+          {
+            "speaker": "Sarah",
+            "text": "Great. Oh, I think I hear them joining the call now."
+          },
+          {
+            "speaker": "Tom",
+            "text": "Okay, let's get started."
+          }
+        ]
+      }
+    },
+    "raw_content": "{\n  \"title\": \"Small talk before a client call\",\n  \"topic\": \"speaking\",\n  \"body\": {\n    \"dialogue\": [\n      {\n        \"speaker\": \"Sarah\",\n        \"text\": \"Hi, Tom. Are you ready for the call with the team from Berlin?\"\n      },\n      {\n        \"speaker\": \"Tom\",\n        \"text\": \"Yes, I think so. I just need to grab my notes. How have you been?\"\n      },\n      {\n        \"speaker\": \"Sarah\",\n        \"text\": \"I'm doing well, thanks. I had a busy morning, but I'm looking forward to the weekend.\"\n      },\n      {\n        \"speaker\": \"Tom\",\n        \"text\": \"Me too. Do you have any plans?\"\n      },\n      {\n        \"speaker\": \"Sarah\",\n        \"text\": \"I'm going hiking with some friends. The weather should be nice.\"\n      },\n      {\n        \"speaker\": \"Tom\",\n        \"text\": \"That sounds lovely. By the way, have you seen the agenda for today's meeting?\"\n      },\n      {\n        \"speaker\": \"Sarah\",\n        \"text\": \"Yes, I have. It looks pretty straightforward. We'll be discussing the new marketing strategy.\"\n      },\n      {\n        \"speaker\": \"Tom\",\n        \"text\": \"Right. And I'll be presenting the quarterly results.\"\n      },\n      {\n        \"speaker\": \"Sarah\",\n        \"text\": \"Great. Oh, I think I hear them joining the call now.\"\n      },\n      {\n        \"speaker\": \"Tom\",\n        \"text\": \"Okay, let's get started.\"\n      }\n    ]\n  }\n}"
+  },
+  {
+    "task_id": "eval-t08-A2-grammarExplainer",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 2,
+    "parse_failed": true,
+    "failure_kind": "format",
+    "final_error": "Unterminated string starting at: line 4 column 11 (char 129)",
+    "output": null,
+    "raw_content": "{\n  \"title\": \"Describing past meetings and events\",\n  \"topic\": \"past tense for describing what happened at a meeting\",\n  \"body\": \"When reporting on a past meeting, you will primarily use the Past Simple to describe completed actions and the Past Continuous to set the scene or describe ongoing actions in the past.\\n\\nPast Simple (e.g., started, discussed, agreed, finished)\\nUse the Past Simple to describe the main events of the meeting in chronological order.\\n\\nExamples:\\n\\nWe started the meeting at 9:00 am.\\n\\nThey discussed the new marketing strategy.\\n\\nWe agreed to increase the budget for the next quarter.\\n\\nThey finished the presentation and opened a Q&A session.\\n\\nPast Continuous (e.g., was discussing, were reviewing)\\nUse the Past Continuous to describe actions that were in progress at a specific time in the past, or to set the scene.\\n\\nExamples:\\n\\nWhen I arrived, they were discussing the budget.\\n\\nWe were reviewing the sales figures when the CEO entered the room.\\n\\nPast Simple vs. Past Continuous\\nWe often use both tenses together to show that one action interrupted another.\\n\\nPast Simple = the interruption\\nPast Continuous = the action in progress\\n\\nExample: We were discussing the project when the fire alarm went off.\\n\\nReporting verbs\\nWhen reporting what was said or done during a meeting, use these common reporting verbs:\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n"
+  },
+  {
+    "task_id": "eval-t09-A2-exerciseAtom",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Rescheduling a Meeting",
+      "topic": "writing a short email to reschedule a meeting",
+      "body": "Dear [Name],\n\nI am writing to you regarding our meeting scheduled for tomorrow at 10:00 AM. Unfortunately, an urgent matter has arisen, and I am no longer able to attend at that time.\n\nWould it be possible to reschedule our meeting for later this week? I am available on Thursday at 2:00 PM or Friday morning at 10:30 AM. Please let me know if either of these times works for you, or suggest an alternative.\n\nI apologize for any inconvenience this may cause and look forward to hearing from you.\n\nBest regards,\n\n[Your Name]"
+    },
+    "raw_content": "{\n  \"title\": \"Rescheduling a Meeting\",\n  \"topic\": \"writing a short email to reschedule a meeting\",\n  \"body\": \"Dear [Name],\\n\\nI am writing to you regarding our meeting scheduled for tomorrow at 10:00 AM. Unfortunately, an urgent matter has arisen, and I am no longer able to attend at that time.\\n\\nWould it be possible to reschedule our meeting for later this week? I am available on Thursday at 2:00 PM or Friday morning at 10:30 AM. Please let me know if either of these times works for you, or suggest an alternative.\\n\\nI apologize for any inconvenience this may cause and look forward to hearing from you.\\n\\nBest regards,\\n\\n[Your Name]\"\n}"
+  },
+  {
+    "task_id": "eval-t10-A2-readingPassage",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Hotel Booking Confirmation - Berlin Business Trip",
+      "topic": "reading a hotel booking confirmation for a work trip",
+      "body": "Dear Mr. Schneider,\n\nThank you for choosing the Grand Berlin Hotel for your upcoming business trip. We are pleased to confirm your reservation. Please find your booking details below:\n\nConfirmation Number: 8829104\n\nGuest Name: Herr Max Schneider\nCheck-in Date: Tuesday, October 12, 2024\nCheck-out Date: Friday, October 15, 2024\n\nRoom Type: Standard Double Room (Non-smoking)\n\nRate: €185.00 per night (including breakfast)\n\nCancellation Policy:\nYour reservation can be cancelled free of charge until 48 hours before the arrival date. Cancellations made after this period will incur a charge of 50% of the first night's stay. No-shows will be charged 100% of the total booking cost.\n\nCheck-in and Check-out Times:\nCheck-in: 3:00 PM (15:00)\nCheck-out: 11:00 AM (11:00)\n\nAdditional Information:\n\nParking: We offer secure parking for our guests at a rate of €20 per day. Please inform us in advance if you require a parking space.\n\nInternet Access: High-speed Wi-Fi is complimentary for all guests. Please provide your email address at the reception desk to receive your access code.\n\nBreakfast: A continental breakfast is served in the hotel restaurant from 7:00 AM to 10:00 AM.\n\nWe look forward to welcoming you to Berlin. If you have any questions or require further assistance, please do not hesitate to contact us.\n\nBest regards,\n\nAnna Schmidt\nReservations Department\nGrand Berlin Hotel"
+    },
+    "raw_content": "{\n  \"title\": \"Hotel Booking Confirmation - Berlin Business Trip\",\n  \"topic\": \"reading a hotel booking confirmation for a work trip\",\n  \"body\": \"Dear Mr. Schneider,\\n\\nThank you for choosing the Grand Berlin Hotel for your upcoming business trip. We are pleased to confirm your reservation. Please find your booking details below:\\n\\nConfirmation Number: 8829104\\n\\nGuest Name: Herr Max Schneider\\nCheck-in Date: Tuesday, October 12, 2024\\nCheck-out Date: Friday, October 15, 2024\\n\\nRoom Type: Standard Double Room (Non-smoking)\\n\\nRate: €185.00 per night (including breakfast)\\n\\nCancellation Policy:\\nYour reservation can be cancelled free of charge until 48 hours before the arrival date. Cancellations made after this period will incur a charge of 50% of the first night's stay. No-shows will be charged 100% of the total booking cost.\\n\\nCheck-in and Check-out Times:\\nCheck-in: 3:00 PM (15:00)\\nCheck-out: 11:00 AM (11:00)\\n\\nAdditional Information:\\n\\nParking: We offer secure parking for our guests at a rate of €20 per day. Please inform us in advance if you require a parking space.\\n\\nInternet Access: High-speed Wi-Fi is complimentary for all guests. Please provide your email address at the reception desk to receive your access code.\\n\\nBreakfast: A continental breakfast is served in the hotel restaurant from 7:00 AM to 10:00 AM.\\n\\nWe look forward to welcoming you to Berlin. If you have any questions or require further assistance, please do not hesitate to contact us.\\n\\nBest regards,\\n\\nAnna Schmidt\\nReservations Department\\nGrand Berlin Hotel\"\n}"
+  },
+  {
+    "task_id": "eval-t11-B1-vocabSet",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 2,
+    "parse_failed": true,
+    "failure_kind": "format",
+    "final_error": "Expecting ',' delimiter: line 140 column 8 (char 2947)",
+    "output": null,
+    "raw_content": "{\n  \"title\": \"Vocabulary for giving constructive feedback in a meeting\",\n  \"topic\": \"business\",\n  \"body\": {\n    \"words\": [\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"on the one hand / on the other hand\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"in terms of\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"with regard to\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"with respect to\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"in relation to\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"in spite of\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"despite\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"due to\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"owing to\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"thanks to\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"regardless of\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"apart from\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"aside from\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"besides\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"except for\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"excepting\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"excluding\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"excluding\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"excluding\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"excluding\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"excluding\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"excluding\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"excluding\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"excluding\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"excluding\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"excluding\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"preposition\",\n        \"word\": \"excluding\"\n      },\n"
+  },
+  {
+    "task_id": "eval-t12-B1-dialogue",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Explaining a project delay to a manager",
+      "topic": "speaking",
+      "body": {
+        "dialogue": [
+          {
+            "speaker": "Manager",
+            "text": "Hi, Sarah. Do you have a moment? I wanted to check in on the status of the new marketing campaign. Is everything on track for the launch next week?"
+          },
+          {
+            "speaker": "Sarah",
+            "text": "Actually, I’m afraid I have some news. We’re going to need to push back the launch date."
+          },
+          {
+            "speaker": "Manager",
+            "text": "Oh? That’s not what I expected to hear. What’s the reason for the delay?"
+          },
+          {
+            "speaker": "Sarah",
+            "text": "Well, we’ve run into a bit of a snag with the website design. The external agency we hired is behind schedule, and they haven't finished the mobile-responsive layout yet."
+          },
+          {
+            "speaker": "Manager",
+            "text": "I see. How much of a delay are we talking about? A few days or a few weeks?"
+          },
+          {
+            "speaker": "Sarah",
+            "text": "I think we’ll need at least two weeks. We want to make sure the user experience is seamless before we go live. If we launch now, it could hurt our brand image."
+          },
+          {
+            "speaker": "Manager",
+            "text": "I understand. Quality is important. Have you discussed this with the stakeholders?"
+          },
+          {
+            "speaker": "Sarah",
+            "text": "Yes, I’ve already briefed the department heads. They’re aware of the situation and agree that a short delay is better than a buggy launch."
+          },
+          {
+            "speaker": "Manager",
+            "text": "Alright. What’s the plan to get us back on track as quickly as possible?"
+          },
+          {
+            "speaker": "Sarah",
+            "text": "I’ve scheduled a daily check-in with the agency’s project manager starting tomorrow. I’ll also be overseeing the final QA testing personally to ensure there are no further hold-ups."
+          },
+          {
+            "speaker": "Manager",
+            "text": "Thanks for being proactive about this, Sarah. Keep me updated on the progress. I’ll let the executive team know."
+          }
+        ]
+      }
+    },
+    "raw_content": "{\n  \"title\": \"Explaining a project delay to a manager\",\n  \"topic\": \"speaking\",\n  \"body\": {\n    \"dialogue\": [\n      {\n        \"speaker\": \"Manager\",\n        \"text\": \"Hi, Sarah. Do you have a moment? I wanted to check in on the status of the new marketing campaign. Is everything on track for the launch next week?\"\n      },\n      {\n        \"speaker\": \"Sarah\",\n        \"text\": \"Actually, I’m afraid I have some news. We’re going to need to push back the launch date.\"\n      },\n      {\n        \"speaker\": \"Manager\",\n        \"text\": \"Oh? That’s not what I expected to hear. What’s the reason for the delay?\"\n      },\n      {\n        \"speaker\": \"Sarah\",\n        \"text\": \"Well, we’ve run into a bit of a snag with the website design. The external agency we hired is behind schedule, and they haven't finished the mobile-responsive layout yet.\"\n      },\n      {\n        \"speaker\": \"Manager\",\n        \"text\": \"I see. How much of a delay are we talking about? A few days or a few weeks?\"\n      },\n      {\n        \"speaker\": \"Sarah\",\n        \"text\": \"I think we’ll need at least two weeks. We want to make sure the user experience is seamless before we go live. If we launch now, it could hurt our brand image.\"\n      },\n      {\n        \"speaker\": \"Manager\",\n        \"text\": \"I understand. Quality is important. Have you discussed this with the stakeholders?\"\n      },\n      {\n        \"speaker\": \"Sarah\",\n        \"text\": \"Yes, I’ve already briefed the department heads. They’re aware of the situation and agree that a short delay is better than a buggy launch.\"\n      },\n      {\n        \"speaker\": \"Manager\",\n        \"text\": \"Alright. What’s the plan to get us back on track as quickly as possible?\"\n      },\n      {\n        \"speaker\": \"Sarah\",\n        \"text\": \"I’ve scheduled a daily check-in with the agency’s project manager starting tomorrow. I’ll also be overseeing the final QA testing personally to ensure there are no further hold-ups.\"\n      },\n      {\n        \"speaker\": \"Manager\",\n        \"text\": \"Thanks for being proactive about this, Sarah. Keep me updated on the progress. I’ll let the executive team know.\"\n      }\n    ]\n  }\n}"
+  },
+  {
+    "task_id": "eval-t13-B1-grammarExplainer",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 2,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Polite Requests in the Workplace: Modal Verbs",
+      "topic": "grammar",
+      "body": "When making requests in a professional environment, the choice of modal verb significantly impacts the level of politeness and formality. In English, direct requests can sometimes sound demanding or rude, so modal verbs are essential for softening your tone.\n\n1. Can you / Could you\n\n“Can you” is common and appropriate for colleagues you know well or for routine tasks. However, “Could you” is the standard for professional requests as it sounds more polite and less demanding.\n\n• Can you send me the agenda for tomorrow’s meeting?\n• Could you please let me know when the report is finished?\n\n2. May I / Could I\n\nUse “May I” or “Could I” when asking for permission to do something. This is more formal than “Can I.”\n\n• May I borrow your stapler for a moment?\n• Could I leave a few minutes early today?\n\n3. Would you mind / Would it be possible\n\nThese structures are highly polite and are ideal for making requests that might inconvenience the other person. They are often followed by a gerund (verb + -ing).\n\n• Would you mind checking this draft for me?\n• Would it be possible to reschedule our call to Friday?\n\n4. Would you be able to / Would you be willing to\n\nThese are useful when you are unsure if the other person has the time or desire to help.\n\n• Would you be able to take a look at this proposal?\n• Would you be willing to lead the presentation next week?\n\nKey Tips:\n\n• Add “please” to any request to increase politeness.\n• Use “I was wondering if you could...” to make a request sound even softer and less direct.\n• Avoid using “I want” or “I need” directly (e.g., “I need you to do this”), as these can sound aggressive. Instead, use “I would appreciate it if you could...”"
+    },
+    "raw_content": "{\n  \"title\": \"Polite Requests in the Workplace: Modal Verbs\",\n  \"topic\": \"grammar\",\n  \"body\": \"When making requests in a professional environment, the choice of modal verb significantly impacts the level of politeness and formality. In English, direct requests can sometimes sound demanding or rude, so modal verbs are essential for softening your tone.\\n\\n1. Can you / Could you\\n\\n“Can you” is common and appropriate for colleagues you know well or for routine tasks. However, “Could you” is the standard for professional requests as it sounds more polite and less demanding.\\n\\n• Can you send me the agenda for tomorrow’s meeting?\\n• Could you please let me know when the report is finished?\\n\\n2. May I / Could I\\n\\nUse “May I” or “Could I” when asking for permission to do something. This is more formal than “Can I.”\\n\\n• May I borrow your stapler for a moment?\\n• Could I leave a few minutes early today?\\n\\n3. Would you mind / Would it be possible\\n\\nThese structures are highly polite and are ideal for making requests that might inconvenience the other person. They are often followed by a gerund (verb + -ing).\\n\\n• Would you mind checking this draft for me?\\n• Would it be possible to reschedule our call to Friday?\\n\\n4. Would you be able to / Would you be willing to\\n\\nThese are useful when you are unsure if the other person has the time or desire to help.\\n\\n• Would you be able to take a look at this proposal?\\n• Would you be willing to lead the presentation next week?\\n\\nKey Tips:\\n\\n• Add “please” to any request to increase politeness.\\n• Use “I was wondering if you could...” to make a request sound even softer and less direct.\\n• Avoid using “I want” or “I need” directly (e.g., “I need you to do this”), as these can sound aggressive. Instead, use “I would appreciate it if you could...”\"\n}"
+  },
+  {
+    "task_id": "eval-t14-B1-exerciseAtom",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Requesting a deadline extension",
+      "topic": "writing",
+      "body": {
+        "instructions": "You are working on a project for your company and need to request a deadline extension. Write an email to your manager, Mr. Miller, explaining your situation and proposing a new deadline. Use the following information:\n\nProject: Quarterly Marketing Report\n\nReason for delay: You are waiting for final sales figures from the regional team in Berlin, and they have been delayed by a week.\n\nProposed new deadline: Friday, November 15th.\n\nWrite a professional email (100-120 words).",
+        "prompt": ""
+      }
+    },
+    "raw_content": "{\n  \"title\": \"Requesting a deadline extension\",\n  \"topic\": \"writing\",\n  \"body\": {\n    \"instructions\": \"You are working on a project for your company and need to request a deadline extension. Write an email to your manager, Mr. Miller, explaining your situation and proposing a new deadline. Use the following information:\\n\\nProject: Quarterly Marketing Report\\n\\nReason for delay: You are waiting for final sales figures from the regional team in Berlin, and they have been delayed by a week.\\n\\nProposed new deadline: Friday, November 15th.\\n\\nWrite a professional email (100-120 words).\",\n    \"prompt\": \"\"\n  }\n}"
+  },
+  {
+    "task_id": "eval-t15-B1-readingPassage",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Voicemail regarding a delayed shipment",
+      "topic": "business",
+      "body": "Hello, this is Sarah Jenkins from Global Logistics Solutions. I'm calling regarding your order number 45902, which was scheduled for delivery this morning. Unfortunately, there has been a slight delay due to a transportation issue at our regional sorting facility. We expect your shipment to arrive by the end of the day tomorrow instead. I apologize for any inconvenience this may cause. We are doing everything we can to get your order to you as quickly as possible. If you have any questions, please feel free to contact me at extension 402. Thank you for your patience and understanding. Have a great day."
+    },
+    "raw_content": "{\n  \"title\": \"Voicemail regarding a delayed shipment\",\n  \"topic\": \"business\",\n  \"body\": \"Hello, this is Sarah Jenkins from Global Logistics Solutions. I'm calling regarding your order number 45902, which was scheduled for delivery this morning. Unfortunately, there has been a slight delay due to a transportation issue at our regional sorting facility. We expect your shipment to arrive by the end of the day tomorrow instead. I apologize for any inconvenience this may cause. We are doing everything we can to get your order to you as quickly as possible. If you have any questions, please feel free to contact me at extension 402. Thank you for your patience and understanding. Have a great day.\"\n}"
+  },
+  {
+    "task_id": "eval-t16-B2-vocabSet",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 2,
+    "parse_failed": true,
+    "failure_kind": "format",
+    "final_error": "Expecting ',' delimiter: line 140 column 8 (char 2752)",
+    "output": null,
+    "raw_content": "{\n  \"title\": \"Negotiating Contract Terms with a Supplier\",\n  \"topic\": \"vocabulary for negotiating contract terms with a supplier\",\n  \"body\": {\n    \"words\": [\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"agreement\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"annex\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"appendix\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"arbitration\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"award\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"binding\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"breach\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"buy-back\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"capacity\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"clause\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"commission\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"concession\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"confidentiality\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"contractor\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"deliverables\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"dispute\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"disclaimer\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"discretion\"\n      },\n        {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"downtime\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"earnest money\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"escalation\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"exclusivity\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"expiration\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"fee\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"force majeure\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"goodwill\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \"gross margin\"\n      },\n      {\n        \"germanHint\": null,\n        \"pos\": \"noun\",\n        \"word\": \""
+  },
+  {
+    "task_id": "eval-t17-B2-dialogue",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Disagreeing Diplomatically in a Business Context",
+      "topic": "speaking",
+      "body": {
+        "dialogue": [
+          {
+            "speaker": "Sarah",
+            "text": "I think we should consider launching the new product line in the UK market as soon as possible. The sooner we start, the sooner we can establish a foothold."
+          },
+          {
+            "speaker": "Mark",
+            "text": "I see your point, Sarah, and I agree that we need to be proactive. However, I'm not sure that launching right now is the best move."
+          },
+          {
+            "speaker": "Sarah",
+            "text": "Why do you say that? We've already done the market research."
+          },
+          {
+            "speaker": "Mark",
+            "text": "Well, while the research is solid, I'm concerned about our current production capacity. If we launch now, we might struggle to keep up with demand, which could hurt our reputation."
+          },
+          {
+            "speaker": "Sarah",
+            "text": "That's a valid concern. But wouldn't it be better to risk a slow start than to delay the launch indefinitely?"
+          },
+          {
+            "speaker": "Mark",
+            "text": "I don't think it's an either-or situation. Perhaps we could consider a phased rollout? We could launch in a few key cities first to test the waters before going nationwide."
+          },
+          {
+            "speaker": "Sarah",
+            "text": "That's an interesting idea. It would allow us to manage our resources more effectively while still making progress."
+          },
+          {
+            "speaker": "Mark",
+            "text": "Exactly. It's a way to mitigate the risks while still moving forward with the launch."
+          }
+        ],
+        "notes": "This dialogue demonstrates how to disagree politely by acknowledging the other person's point before presenting a counter-argument. Key phrases include 'I see your point,' 'I'm not sure that... is the best move,' and 'That's a valid concern.'"
+      }
+    },
+    "raw_content": "{\n  \"title\": \"Disagreeing Diplomatically in a Business Context\",\n  \"topic\": \"speaking\",\n  \"body\": {\n    \"dialogue\": [\n      {\n        \"speaker\": \"Sarah\",\n        \"text\": \"I think we should consider launching the new product line in the UK market as soon as possible. The sooner we start, the sooner we can establish a foothold.\"\n      },\n      {\n        \"speaker\": \"Mark\",\n        \"text\": \"I see your point, Sarah, and I agree that we need to be proactive. However, I'm not sure that launching right now is the best move.\"\n      },\n      {\n        \"speaker\": \"Sarah\",\n        \"text\": \"Why do you say that? We've already done the market research.\"\n      },\n      {\n        \"speaker\": \"Mark\",\n        \"text\": \"Well, while the research is solid, I'm concerned about our current production capacity. If we launch now, we might struggle to keep up with demand, which could hurt our reputation.\"\n      },\n      {\n        \"speaker\": \"Sarah\",\n        \"text\": \"That's a valid concern. But wouldn't it be better to risk a slow start than to delay the launch indefinitely?\"\n      },\n      {\n        \"speaker\": \"Mark\",\n        \"text\": \"I don't think it's an either-or situation. Perhaps we could consider a phased rollout? We could launch in a few key cities first to test the waters before going nationwide.\"\n      },\n      {\n        \"speaker\": \"Sarah\",\n        \"text\": \"That's an interesting idea. It would allow us to manage our resources more effectively while still making progress.\"\n      },\n      {\n        \"speaker\": \"Mark\",\n        \"text\": \"Exactly. It's a way to mitigate the risks while still moving forward with the launch.\"\n      }\n    ],\n    \"notes\": \"This dialogue demonstrates how to disagree politely by acknowledging the other person's point before presenting a counter-argument. Key phrases include 'I see your point,' 'I'm not sure that... is the best move,' and 'That's a valid concern.'\"\n  }\n}"
+  },
+  {
+    "task_id": "eval-t18-B2-grammarExplainer",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Conditional Sentences for Hypothetical Business Scenarios",
+      "topic": "grammar",
+      "body": "In a professional context, conditional sentences are essential for discussing possibilities, risks, and hypothetical outcomes. They allow you to explore different scenarios without committing to a specific action. There are three main types of conditionals used in business, each serving a distinct purpose.\n\n1. The First Conditional (Real Possibilities)\n\nWe use the first conditional to talk about real possibilities in the future. It describes a situation that is likely to happen if a specific condition is met. \n\nStructure: If + present simple, will + infinitive.\n\nExample: If we sign the contract by Friday, we will start the project next month.\n\nNote: You can also use modal verbs like 'can', 'may', or 'might' instead of 'will' to express varying degrees of certainty.\n\nExample: If the market trends continue, we might increase our market share by 5%.\n\n2. The Second Conditional (Hypothetical Scenarios)\n\nWe use the second conditional to talk about imaginary or unlikely situations in the present or future. It is often used for brainstorming, brainstorming, or discussing 'what if' scenarios.\n\nStructure: If + past simple, would + infinitive.\n\nExample: If we had a larger marketing budget, we would hire more specialists.\n\nNote: In formal writing, 'were' is preferred over 'was' for the verb 'to be' in the if-clause.\n\nExample: If the CEO were here, she would approve the proposal immediately.\n\n3. The Third Conditional (Past Regrets and Analysis)\n\nWe use the third conditional to talk about the past. It describes a situation that did not happen and explores the hypothetical consequences of that past event. This is frequently used in post-project reviews or when analyzing past mistakes.\n\nStructure: If + past perfect, would have + past participle.\n\nExample: If we had invested earlier, we would have secured a better price.\n\n4. Mixed Conditionals\n\nSometimes, the condition and the result occur in different time frames. The most common mixed conditional combines a past condition with a present result.\n\nStructure: If + past perfect, would + infinitive.\n\nExample: If we had hired the right consultant last year, our current situation would be much better.\n\nKey Vocabulary for Business Conditionals:\n\n- Provided that / Providing that (more formal than 'if'): If we provide the training, they will be able to use the software.\n- As long as / So long as: We will support the project as long as we meet our quarterly targets.\n- Unless (if not): Unless we increase production, we will lose market share.\n\nPractice Tip:\nWhen discussing strategy, try to move from the first conditional (discussing likely outcomes) to the second conditional (exploring alternative strategies) to show a range of possibilities."
+    },
+    "raw_content": "{\n  \"title\": \"Conditional Sentences for Hypothetical Business Scenarios\",\n  \"topic\": \"grammar\",\n  \"body\": \"In a professional context, conditional sentences are essential for discussing possibilities, risks, and hypothetical outcomes. They allow you to explore different scenarios without committing to a specific action. There are three main types of conditionals used in business, each serving a distinct purpose.\\n\\n1. The First Conditional (Real Possibilities)\\n\\nWe use the first conditional to talk about real possibilities in the future. It describes a situation that is likely to happen if a specific condition is met. \\n\\nStructure: If + present simple, will + infinitive.\\n\\nExample: If we sign the contract by Friday, we will start the project next month.\\n\\nNote: You can also use modal verbs like 'can', 'may', or 'might' instead of 'will' to express varying degrees of certainty.\\n\\nExample: If the market trends continue, we might increase our market share by 5%.\\n\\n2. The Second Conditional (Hypothetical Scenarios)\\n\\nWe use the second conditional to talk about imaginary or unlikely situations in the present or future. It is often used for brainstorming, brainstorming, or discussing 'what if' scenarios.\\n\\nStructure: If + past simple, would + infinitive.\\n\\nExample: If we had a larger marketing budget, we would hire more specialists.\\n\\nNote: In formal writing, 'were' is preferred over 'was' for the verb 'to be' in the if-clause.\\n\\nExample: If the CEO were here, she would approve the proposal immediately.\\n\\n3. The Third Conditional (Past Regrets and Analysis)\\n\\nWe use the third conditional to talk about the past. It describes a situation that did not happen and explores the hypothetical consequences of that past event. This is frequently used in post-project reviews or when analyzing past mistakes.\\n\\nStructure: If + past perfect, would have + past participle.\\n\\nExample: If we had invested earlier, we would have secured a better price.\\n\\n4. Mixed Conditionals\\n\\nSometimes, the condition and the result occur in different time frames. The most common mixed conditional combines a past condition with a present result.\\n\\nStructure: If + past perfect, would + infinitive.\\n\\nExample: If we had hired the right consultant last year, our current situation would be much better.\\n\\nKey Vocabulary for Business Conditionals:\\n\\n- Provided that / Providing that (more formal than 'if'): If we provide the training, they will be able to use the software.\\n- As long as / So long as: We will support the project as long as we meet our quarterly targets.\\n- Unless (if not): Unless we increase production, we will lose market share.\\n\\nPractice Tip:\\nWhen discussing strategy, try to move from the first conditional (discussing likely outcomes) to the second conditional (exploring alternative strategies) to show a range of possibilities.\"\n}"
+  },
+  {
+    "task_id": "eval-t19-B2-exerciseAtom",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Formal Complaint: Late Delivery of Goods",
+      "topic": "writing",
+      "body": {
+        "instructions": "You are a purchasing manager for a medium-sized manufacturing company. You ordered a large shipment of industrial components from a supplier, 'Global Parts Inc.', which was due to arrive last Friday. The shipment has not arrived, and you have received no communication regarding a delay. Write a formal letter of complaint to the supplier. In your letter, you should:\n\n- State clearly what the problem is and refer to your original order.\n\n- Explain the negative impact the delay is having on your production schedule.\n\n- Request an immediate update on the status of the shipment.\n\n- State what action you expect the supplier to take to rectify the situation.\n\n- Maintain a professional and firm tone throughout.",
+        "prompt": ""
+      }
+    },
+    "raw_content": "{\n  \"title\": \"Formal Complaint: Late Delivery of Goods\",\n  \"topic\": \"writing\",\n  \"body\": {\n    \"instructions\": \"You are a purchasing manager for a medium-sized manufacturing company. You ordered a large shipment of industrial components from a supplier, 'Global Parts Inc.', which was due to arrive last Friday. The shipment has not arrived, and you have received no communication regarding a delay. Write a formal letter of complaint to the supplier. In your letter, you should:\\n\\n- State clearly what the problem is and refer to your original order.\\n\\n- Explain the negative impact the delay is having on your production schedule.\\n\\n- Request an immediate update on the status of the shipment.\\n\\n- State what action you expect the supplier to take to rectify the situation.\\n\\n- Maintain a professional and firm tone throughout.\",\n    \"prompt\": \"\"\n  }\n}"
+  },
+  {
+    "task_id": "eval-t20-C1-vocabSet",
+    "candidate": "finetune",
+    "model": "gemma4-12b-lora-v0",
+    "attempts": 2,
+    "parse_failed": true,
+    "failure_kind": "format",
+    "final_error": "Expecting ',' delimiter: line 89 column 8 (char 3571)",
+    "output": null,
+    "raw_content": "{\n  \"title\": \"Advanced Vocabulary for Presenting Quarterly Results\",\n  \"topic\": \"C1 Business English\",\n  \"body\": {\n    \"words\": [\n      {\n        \"word\": \"outperform\",\n        \"germanHint\": null,\n        \"definition\": \"to perform better than another person or thing, especially in a competition or comparison.\",\n        \"example\": \"Our sales team outperformed all expectations this quarter.\"\n      },\n      {\n        \"word\": \"underperform\",\n        \"germanHint\": null,\n        \"definition\": \"to perform less well than expected or than others.\",\n        \"example\": \"The marketing department underperformed in the first half of the year.\"\n      },\n      {\n        \"word\": \"bottom line\",\n        \"germanHint\": null,\n        \"definition\": \"the final total amount after all expenses have been deducted; the most important factor.\",\n        \"example\": \"Our main goal this quarter is to improve the bottom line.\"\n      },\n      {\n        \"word\": \"revenue stream\",\n        \"germanHint\": null,\n        \"definition\": \"a source of income for a company.\",\n        \"example\": \"We need to diversify our revenue streams to reduce risk.\"\n      },\n      {\n        \"word\": \"profit margin\",\n        \"germanHint\": null,\n        \"definition\": \"the amount by which revenue exceeds costs.\",\n        \"example\": \"We managed to increase our profit margin by 5% this quarter.\"\n      },\n      {\n        \"word\": \"year-on-year (YoY)\",\n        \"germanHint\": null,\n        \"definition\": \"a comparison of data from one period to the same period in the previous year.\",\n        \"example\": \"Our year-on-year growth has been steady.\"\n      },\n      {\n        \"word\": \"quarter-on-quarter (QoQ)\",\n        \"germanHint\": null,\n        \"definition\": \"a comparison of data from one quarter to the previous quarter.\",\n        \"example\": \"The quarter-on-quarter growth was slightly lower than expected.\"\n      },\n      {\n        \"word\": \"fiscal year\",\n        \"germanHint\": null,\n        \"definition\": \"a one-year period used for accounting and financial reporting.\",\n        \"example\": \"We are approaching the end of the fiscal year.\"\n      },\n      {\n        \"word\": \"break-even point\",\n        \"germanHint\": null,\n        \"definition\": \"the point at which total costs and total revenue are equal.\",\n        \"example\": \"We expect to reach the break-even point by the third quarter.\"\n      },\n      {\n        \"word\": \"overhead\",\n        \"germanHint\": null,\n        \"definition\": \"the ongoing costs of running a business, such as rent and utilities.\",\n        \"example\": \"We need to find ways to reduce our overhead costs.\"\n      },\n      {\n        \"word\": \"market share\",\n        \"germanHint\": null,\n        \"definition\": \"the percentage of sales in an industry or market that is held by a company.\",\n        \"example\": \"We have gained significant market share in the European region.\"\n      },\n      {\n        \"word\": \"forecast\",\n        \"germanHint\": null,\n        \"definition\": \"a prediction of future events or trends.\",\n        \"example\": \"The sales forecast for next quarter looks promising.\"\n      },\n      {\n        \"word\": \"discrepancy\",\n        \"germanHint\": null,\n        \"definition\": \"a lack of compatibility or similarity between two or more facts.\",\n        \"example\": \"There is a discrepancy between the reported sales and the actual revenue.\"\n      },\n      {\n        \"word\": \"mitigate\",\n        \"germanHint\": null,\n        \"definition\": \"to make something less severe, serious, or painful.\",\n        \"example\": \"We need to implement strategies to mitigate the risks of market volatility.\"\n      },\n      {\n        \"word\": \"leverage\",\n        \"germanHint\": null,\n        "
+  }
+]

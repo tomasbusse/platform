@@ -38,6 +38,14 @@ describe("validateBlockBody", () => {
     culturalNote: { note: "Punctuality expectations vary by workplace." },
     imagePromptTemplate: { prompt: "A professional team meeting in Berlin" },
     speakingPrompt: { prompt: "Describe how you organise your workday." },
+    offerLetter: {
+      betreff: "Englischtraining für Ihr Vertriebsteam",
+      anschreiben: "Vielen Dank für Ihr Interesse an unserem Kurskonzept.",
+    },
+    offerSection: {
+      heading: "Leistungsumfang",
+      text: "Der Kurs umfasst wöchentliche Unterrichtseinheiten.",
+    },
   } as const;
 
   for (const [blockType, body] of Object.entries(validBodies)) {
@@ -56,7 +64,36 @@ describe("validateBlockBody", () => {
     expect(validateBlockBody("culturalNote", { note: "" }).valid).toBe(false);
     expect(validateBlockBody("imagePromptTemplate", { prompt: 1 }).valid).toBe(false);
     expect(validateBlockBody("speakingPrompt", {}).valid).toBe(false);
+    expect(validateBlockBody("offerLetter", { anschreiben: "Text" }).valid).toBe(false);
+    expect(validateBlockBody("offerLetter", { betreff: "Betreff", anschreiben: 1 }).valid).toBe(false);
+    expect(validateBlockBody("offerSection", { heading: "", text: "Text" }).valid).toBe(false);
+    expect(validateBlockBody("offerSection", { heading: "Heading", text: false }).valid).toBe(false);
     expect(validateBlockBody("unknown", {}).valid).toBe(false);
+  });
+
+  it("accepts an offerLetter with or without an optional non-empty signatur", () => {
+    expect(validateBlockBody("offerLetter", {
+      betreff: "Business English Training",
+      anschreiben: "Gern unterbreiten wir Ihnen folgendes Angebot.",
+    })).toEqual({ valid: true, errors: [] });
+    expect(validateBlockBody("offerLetter", {
+      betreff: "Business English Training",
+      anschreiben: "Gern unterbreiten wir Ihnen folgendes Angebot.",
+      signatur: "Ihr Simmonds Team",
+    })).toEqual({ valid: true, errors: [] });
+  });
+
+  it("rejects an offerLetter with an invalid optional signatur", () => {
+    expect(validateBlockBody("offerLetter", {
+      betreff: "Business English Training",
+      anschreiben: "Gern unterbreiten wir Ihnen folgendes Angebot.",
+      signatur: "",
+    }).errors).toContain("signatur must be a non-empty string when present");
+    expect(validateBlockBody("offerLetter", {
+      betreff: "Business English Training",
+      anschreiben: "Gern unterbreiten wir Ihnen folgendes Angebot.",
+      signatur: 42,
+    }).valid).toBe(false);
   });
 
   it("accepts an exercise answerKey matching an option value", () => {

@@ -41,7 +41,7 @@ const SKILLS = [
   "pronunciation",
   "mixed",
 ] as const;
-const BLOCK_TYPES = [
+export const ALL_BLOCK_TYPES = [
   "vocabSet",
   "sentencePair",
   "dialogue",
@@ -52,11 +52,16 @@ const BLOCK_TYPES = [
   "culturalNote",
   "imagePromptTemplate",
   "speakingPrompt",
+  "offerLetter",
+  "offerSection",
 ] as const;
+export const SAMPLING_BLOCK_TYPES = ALL_BLOCK_TYPES.filter(
+  (blockType) => blockType !== "offerLetter" && blockType !== "offerSection",
+);
 
 type Level = (typeof LEVELS)[number];
 type Skill = (typeof SKILLS)[number];
-type BlockType = (typeof BLOCK_TYPES)[number];
+type BlockType = (typeof ALL_BLOCK_TYPES)[number];
 type TargetCell = { level: Level; skill: Skill; blockType: BlockType };
 
 type GenerationBatchResult =
@@ -113,6 +118,8 @@ const blockTypeValidator = v.union(
   v.literal("culturalNote"),
   v.literal("imagePromptTemplate"),
   v.literal("speakingPrompt"),
+  v.literal("offerLetter"),
+  v.literal("offerSection"),
 );
 
 function hashNormalizedContent(blockType: string, body: unknown): string {
@@ -184,7 +191,7 @@ export const runGenerationBatch = internalAction({
       } else {
         const levels = args.level ? [args.level] : [...LEVELS];
         const skills = args.skill ? [args.skill] : [...SKILLS];
-        const blockTypes = args.blockType ? [args.blockType] : [...BLOCK_TYPES];
+        const blockTypes = args.blockType ? [args.blockType] : [...SAMPLING_BLOCK_TYPES];
         const allCandidates: TargetCell[] = [];
         for (const level of levels) {
           for (const skill of skills) {

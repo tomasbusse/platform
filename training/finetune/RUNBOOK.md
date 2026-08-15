@@ -167,3 +167,29 @@ cd /workspace && runpodctl send outputs/gemma4-12b-lora
 `python3 training/finetune/smoke_test.py` — validates both configs, the JSONL
 schema, the budget guard, and the step planner on a bare CPU machine (stdlib +
 pyyaml only). Run this before spending anything.
+
+---
+
+## 9. FIELD-VERIFIED PINS (v0 run, 2026-08-14, L40S)
+
+The §2 install order hit three real conflicts on the run. Working combination:
+
+```bash
+pip install unsloth==2026.8.16
+pip install --no-deps transformers==5.10.1 "tokenizers>=0.22.0,<=0.23.0"
+pip install "huggingface_hub>=1.5.0,<2.0" "peft>=0.18.0" "accelerate>=0.34.1" \
+    "datasets==4.3.0" "bitsandbytes>=0.45.5,!=0.46.0,!=0.48.0" \
+    "xformers==0.0.32.post2" sentencepiece protobuf
+pip install --no-deps --upgrade timm
+pip install --no-deps torchao==0.14.1 trl==0.23.1        # NOT trl 0.22.2 (breaks vs tf 5.10.1); NOT default torchao (needs torch 2.9)
+pip install --no-deps --force-reinstall --index-url https://download.pytorch.org/whl/cu128 torchvision==0.23.0
+# do NOT install torchcodec (needs torch 2.9; text-only training doesn't use it)
+```
+
+Notes: transformers 5.9.x does not exist on PyPI; 5.5.x lacks Gemma 4. trl>=0.23
+renamed SFTTrainer's `tokenizer=` to `processing_class=` (train.py updated).
+Pod SSH: pass `--env PUBLIC_KEY="$(cat ~/.runpod/ssh/runpodctl-ssh-key.pub)"` at
+`runpodctl create pod` — account-level key injection alone did not start sshd.
+v0 actuals: 400 steps, 43 min wall, train loss 1.01 / eval 0.686, total ≈ $2.9
+including all retries. Bake-off v0: KEEP BASELINE (37–42% win rate, 6 format
+losses, all vocabSet-heavy — expected from the sentence-pair-skewed v0 dataset).

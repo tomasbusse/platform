@@ -47,6 +47,8 @@ const blockTypeValidator = v.union(
   v.literal("culturalNote"),
   v.literal("imagePromptTemplate"),
   v.literal("speakingPrompt"),
+  v.literal("offerLetter"),
+  v.literal("offerSection"),
 );
 
 const sourceValidator = v.union(
@@ -292,13 +294,15 @@ const COVERAGE_BLOCK_TYPES = [
   "culturalNote",
   "imagePromptTemplate",
   "speakingPrompt",
+  "offerLetter",
+  "offerSection",
 ] as const;
 
 export const coverage = query({
   args: {},
   handler: async (ctx) => {
     const result: Array<{ level: (typeof COVERAGE_LEVELS)[number]; blockType: (typeof COVERAGE_BLOCK_TYPES)[number]; count: number; capped: boolean }> = [];
-    // All 60 requested level/type cells are retained, with every index read hard-capped at 250.
+    // All 72 requested level/type cells are retained, with every index read hard-capped at 250.
     for (const level of COVERAGE_LEVELS) {
       for (const blockType of COVERAGE_BLOCK_TYPES) {
         const rows = await ctx.db

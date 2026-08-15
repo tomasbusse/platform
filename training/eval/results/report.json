@@ -1,0 +1,264 @@
+{
+  "baseline": "baseline",
+  "by_block_type": {
+    "dialogue": {
+      "baseline": 1,
+      "error": 0,
+      "finetune": 3,
+      "tie": 0
+    },
+    "exerciseAtom": {
+      "baseline": 2,
+      "error": 1,
+      "finetune": 1,
+      "tie": 0
+    },
+    "grammarExplainer": {
+      "baseline": 2,
+      "error": 0,
+      "finetune": 2,
+      "tie": 0
+    },
+    "readingPassage": {
+      "baseline": 2,
+      "error": 0,
+      "finetune": 1,
+      "tie": 0
+    },
+    "vocabSet": {
+      "baseline": 5,
+      "error": 0,
+      "finetune": 0,
+      "tie": 0
+    }
+  },
+  "by_level": {
+    "A1": {
+      "baseline": 2,
+      "error": 0,
+      "finetune": 3,
+      "tie": 0
+    },
+    "A2": {
+      "baseline": 3,
+      "error": 1,
+      "finetune": 1,
+      "tie": 0
+    },
+    "B1": {
+      "baseline": 3,
+      "error": 0,
+      "finetune": 2,
+      "tie": 0
+    },
+    "B2": {
+      "baseline": 3,
+      "error": 0,
+      "finetune": 1,
+      "tie": 0
+    },
+    "C1": {
+      "baseline": 1,
+      "error": 0,
+      "finetune": 0,
+      "tie": 0
+    }
+  },
+  "decision": "INCOMPLETE",
+  "error_task_ids": [
+    "eval-t09-A2-exerciseAtom"
+  ],
+  "errors": 1,
+  "non_tie_total": 19,
+  "seed": 42,
+  "ties": 0,
+  "treatment": "finetune",
+  "treatment_format_losses": 6,
+  "treatment_win_rate": 0.3684210526315789,
+  "verdicts": [
+    {
+      "auto": true,
+      "reasons": "finetune failed to parse output (automatic loss)",
+      "slot_a_candidate": "baseline",
+      "slot_b_candidate": "finetune",
+      "task_id": "eval-t01-A1-vocabSet",
+      "winner_candidate": "baseline",
+      "winner_slot": "A"
+    },
+    {
+      "auto": false,
+      "reasons": "Output A best matches the A1 dialogue shape and simple language appropriate for adult German-L1 learners, while Output B uses a plain text body instead of the required dialogue structure and includes slightly more complex workplace phrasing.",
+      "slot_a_candidate": "finetune",
+      "slot_b_candidate": "baseline",
+      "task_id": "eval-t02-A1-dialogue",
+      "winner_candidate": "finetune",
+      "winner_slot": "A"
+    },
+    {
+      "auto": false,
+      "reasons": "Output A gives clearer, A1-appropriate explanations with more controlled examples and a practice prompt that better supports adult German-speaking learners; both are valid JSON and professional, but A offers stronger scaffolding for this skill level.",
+      "slot_a_candidate": "finetune",
+      "slot_b_candidate": "baseline",
+      "task_id": "eval-t03-A1-grammarExplainer",
+      "winner_candidate": "finetune",
+      "winner_slot": "A"
+    },
+    {
+      "auto": false,
+      "reasons": "Output A uses clear, professional English and presents a well-structured, simple sign-in form suitable for adult A1 learners; its JSON body is cleanly structured. Output B mixes languages and is less consistent in voice and format for a corporate training context.",
+      "slot_a_candidate": "finetune",
+      "slot_b_candidate": "baseline",
+      "task_id": "eval-t04-A1-exerciseAtom",
+      "winner_candidate": "finetune",
+      "winner_slot": "A"
+    },
+    {
+      "auto": false,
+      "reasons": "A matches the A1 level with short, clear sentences and a helpful German term (Mittagspause). B uses more complex structures and vocabulary, making it slightly above A1 for adult German-L1 learners.",
+      "slot_a_candidate": "baseline",
+      "slot_b_candidate": "finetune",
+      "task_id": "eval-t05-A1-readingPassage",
+      "winner_candidate": "baseline",
+      "winner_slot": "A"
+    },
+    {
+      "auto": true,
+      "reasons": "finetune failed to parse output (automatic loss)",
+      "slot_a_candidate": "baseline",
+      "slot_b_candidate": "finetune",
+      "task_id": "eval-t06-A2-vocabSet",
+      "winner_candidate": "baseline",
+      "winner_slot": "A"
+    },
+    {
+      "auto": false,
+      "reasons": "Output A better models a formal client-facing small talk scenario with clear, A2-level language and professional tone appropriate for adult German-L1 learners; Output B is fine but feels more informal and internal (colleague-to-colleague) rather than client-facing.",
+      "slot_a_candidate": "baseline",
+      "slot_b_candidate": "finetune",
+      "task_id": "eval-t07-A2-dialogue",
+      "winner_candidate": "baseline",
+      "winner_slot": "A"
+    },
+    {
+      "auto": true,
+      "reasons": "finetune failed to parse output (automatic loss)",
+      "slot_a_candidate": "finetune",
+      "slot_b_candidate": "baseline",
+      "task_id": "eval-t08-A2-grammarExplainer",
+      "winner_candidate": "baseline",
+      "winner_slot": "B"
+    },
+    {
+      "auto": true,
+      "reasons": "infrastructure/transport failure for baseline -- task incomplete, not scored",
+      "slot_a_candidate": "finetune",
+      "slot_b_candidate": "baseline",
+      "task_id": "eval-t09-A2-exerciseAtom",
+      "winner_candidate": "error",
+      "winner_slot": "error"
+    },
+    {
+      "auto": false,
+      "reasons": "Output A provides richer, realistic booking details (parking, Wi‑Fi, clear policies) and uses German names/currency, making it more useful and authentic for adult German‑L1 A2 learners while remaining professional and format-valid.",
+      "slot_a_candidate": "finetune",
+      "slot_b_candidate": "baseline",
+      "task_id": "eval-t10-A2-readingPassage",
+      "winner_candidate": "finetune",
+      "winner_slot": "A"
+    },
+    {
+      "auto": true,
+      "reasons": "finetune failed to parse output (automatic loss)",
+      "slot_a_candidate": "finetune",
+      "slot_b_candidate": "baseline",
+      "task_id": "eval-t11-B1-vocabSet",
+      "winner_candidate": "baseline",
+      "winner_slot": "B"
+    },
+    {
+      "auto": false,
+      "reasons": "B uses the correct dialogue object shape and offers a fuller, practiceable exchange with clear turn-taking suited to B1 adult learners; A is professional and concise but uses an unstructured body and mixes German inline, which breaks the expected block-type format.",
+      "slot_a_candidate": "baseline",
+      "slot_b_candidate": "finetune",
+      "task_id": "eval-t12-B1-dialogue",
+      "winner_candidate": "finetune",
+      "winner_slot": "B"
+    },
+    {
+      "auto": false,
+      "reasons": "A is more comprehensive and B1-appropriate, offering clear structures, practical examples, and useful softening phrases for workplace requests; it maintains a professional tone. B is shorter and introduces a potentially confusing reference to 'will,' making A the stronger pedagogical match for German-speaking adults.",
+      "slot_a_candidate": "finetune",
+      "slot_b_candidate": "baseline",
+      "task_id": "eval-t13-B1-grammarExplainer",
+      "winner_candidate": "finetune",
+      "winner_slot": "A"
+    },
+    {
+      "auto": false,
+      "reasons": "B offers clearer scaffolding for B1 learners (subject line, greeting, polite phrasing) and includes a helpful German tip for L1 speakers, making it more pedagogically appropriate. A's strict word-count and less explicit structure make it slightly less flexible and user-friendly for adult learners.",
+      "slot_a_candidate": "finetune",
+      "slot_b_candidate": "baseline",
+      "task_id": "eval-t14-B1-exerciseAtom",
+      "winner_candidate": "baseline",
+      "winner_slot": "B"
+    },
+    {
+      "auto": false,
+      "reasons": "A uses a concise, professional tone and includes relevant logistics vocabulary (customs, clearance, tracking, business days) that is useful for B1-level adult German learners; B is slightly more casual and less focused on specific business terms.",
+      "slot_a_candidate": "baseline",
+      "slot_b_candidate": "finetune",
+      "task_id": "eval-t15-B1-readingPassage",
+      "winner_candidate": "baseline",
+      "winner_slot": "A"
+    },
+    {
+      "auto": true,
+      "reasons": "finetune failed to parse output (automatic loss)",
+      "slot_a_candidate": "baseline",
+      "slot_b_candidate": "finetune",
+      "task_id": "eval-t16-B2-vocabSet",
+      "winner_candidate": "baseline",
+      "winner_slot": "A"
+    },
+    {
+      "auto": false,
+      "reasons": "A follows the expected dialogue JSON structure, uses appropriate B2-level language and explicit pedagogical notes for German L1 adults; B embeds the dialogue as an unstructured string (and mixes inline German), failing the required block-type shape.",
+      "slot_a_candidate": "finetune",
+      "slot_b_candidate": "baseline",
+      "task_id": "eval-t17-B2-dialogue",
+      "winner_candidate": "finetune",
+      "winner_slot": "A"
+    },
+    {
+      "auto": false,
+      "reasons": "A is concise and well-targeted for B2 learners, with a clear, professional tone and a helpful, specific note addressing a common German-L1 error; B is more detailed but contains a minor repetition and is slightly less focused for the target audience.",
+      "slot_a_candidate": "baseline",
+      "slot_b_candidate": "finetune",
+      "task_id": "eval-t18-B2-grammarExplainer",
+      "winner_candidate": "baseline",
+      "winner_slot": "A"
+    },
+    {
+      "auto": false,
+      "reasons": "Output A better fits B2 by specifying a 150–200 word task, gives explicit pedagogical guidance (including a German hint for L1 speakers), maintains a professional tone and uses a clean HTML body without markdown artifacts; Output B is vaguer (no CEFR level or word limit), lacks L1 scaffolding and includes an empty 'prompt' field, reducing its pedagogical clarity.",
+      "slot_a_candidate": "baseline",
+      "slot_b_candidate": "finetune",
+      "task_id": "eval-t19-B2-exerciseAtom",
+      "winner_candidate": "baseline",
+      "winner_slot": "A"
+    },
+    {
+      "auto": true,
+      "reasons": "finetune failed to parse output (automatic loss)",
+      "slot_a_candidate": "finetune",
+      "slot_b_candidate": "baseline",
+      "task_id": "eval-t20-C1-vocabSet",
+      "winner_candidate": "baseline",
+      "winner_slot": "B"
+    }
+  ],
+  "wins": {
+    "baseline": 12,
+    "finetune": 7
+  }
+}

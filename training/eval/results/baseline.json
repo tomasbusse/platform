@@ -1,0 +1,298 @@
+[
+  {
+    "task_id": "eval-t01-A1-vocabSet",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Essential Office Vocabulary & Professional Greetings",
+      "topic": "Everyday office objects and greetings",
+      "body": "### Professional Greetings\n- **Good morning / Good afternoon** (Formal greeting)\n- **Nice to meet you** (Used when meeting someone for the first time)\n- **How are you?** (Standard professional inquiry)\n- **Have a nice day** (Professional closing)\n\n### Office Equipment\n- **Laptop** (Portable computer)\n- **Keyboard** (Tastatur)\n- **Mouse** (Maus)\n- **Screen / Monitor** (Bildschirm)\n- **Printer** (Drucker)\n- **Stationery** (Büromaterial)\n- **Notebook** (Notizbuch)\n- **Folder** (Ordner)\n- **Stapler** (Tacker)\n- **Desk** (Schreibtisch)\n- **Chair** (Stuhl)\n\n### Useful Phrases\n- **'Where is the printer?'**\n- **'Could you help me with the laptop?'**\n- **'I need a new notebook, please.'**"
+    },
+    "raw_content": "{\n  \"title\": \"Essential Office Vocabulary & Professional Greetings\",\n  \"topic\": \"Everyday office objects and greetings\",\n  \"body\": \"### Professional Greetings\\n- **Good morning / Good afternoon** (Formal greeting)\\n- **Nice to meet you** (Used when meeting someone for the first time)\\n- **How are you?** (Standard professional inquiry)\\n- **Have a nice day** (Professional closing)\\n\\n### Office Equipment\\n- **Laptop** (Portable computer)\\n- **Keyboard** (Tastatur)\\n- **Mouse** (Maus)\\n- **Screen / Monitor** (Bildschirm)\\n- **Printer** (Drucker)\\n- **Stationery** (Büromaterial)\\n- **Notebook** (Notizbuch)\\n- **Folder** (Ordner)\\n- **Stapler** (Tacker)\\n- **Desk** (Schreibtisch)\\n- **Chair** (Stuhl)\\n\\n### Useful Phrases\\n- **'Where is the printer?'**\\n- **'Could you help me with the laptop?'**\\n- **'I need a new notebook, please.'**\"\n}"
+  },
+  {
+    "task_id": "eval-t02-A1-dialogue",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "First Day Introductions",
+      "topic": "Introducing yourself to new colleagues in a professional environment",
+      "body": "Sarah: Hello, I am Sarah. Today is my first day. I am the new Project Manager.\n\nMark: Nice to meet you, Sarah. I am Mark, the Head of Sales. Welcome to the team.\n\nSarah: Thank you, Mark. Where is my desk?\n\nMark: It is over here. This is your workspace. Do you have any questions?\n\nSarah: Yes, please. Who is my direct supervisor?\n\nMark: That is Ms. Weber. She is in a meeting now, but she will see you at 10:00 AM.\n\nSarah: Perfect. Thank you for your help.\n\nMark: You are welcome. Good luck!"
+    },
+    "raw_content": "{\n  \"title\": \"First Day Introductions\",\n  \"topic\": \"Introducing yourself to new colleagues in a professional environment\",\n  \"body\": \"Sarah: Hello, I am Sarah. Today is my first day. I am the new Project Manager.\\n\\nMark: Nice to meet you, Sarah. I am Mark, the Head of Sales. Welcome to the team.\\n\\nSarah: Thank you, Mark. Where is my desk?\\n\\nMark: It is over here. This is your workspace. Do you have any questions?\\n\\nSarah: Yes, please. Who is my direct supervisor?\\n\\nMark: That is Ms. Weber. She is in a meeting now, but she will see you at 10:00 AM.\\n\\nSarah: Perfect. Thank you for your help.\\n\\nMark: You are welcome. Good luck!\"\n}"
+  },
+  {
+    "task_id": "eval-t03-A1-grammarExplainer",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "The Present Simple for Professional Routines",
+      "topic": "Present Tense Verbs in a Work Context",
+      "body": "In a professional context, we use the Present Simple to describe regular activities, habits, and permanent states. This is the standard tense for explaining your daily work routine.\n\n1. Sentence Structure\nFor most subjects, use the base form of the verb: 'I check my emails' or 'We attend a weekly meeting.'\n\n2. The Third Person Singular (He/She/It)\nCrucially, add an '-s' or '-es' to the verb when referring to a colleague or manager: 'He manages the project' or 'She coordinates the team.'\n(Hinweis: Achten Sie auf das 's' in der 3. Person Singular – ein häufiger Fehler bei Deutschsprachigen.)\n\n3. Common Business Verbs for Routines\n- To organize: 'I organize the schedule.'\n- To report: 'He reports to the CEO.'\n- To collaborate: 'We collaborate with the marketing department.'\n- To handle: 'She handles customer inquiries.'\n\n4. Negative Forms and Questions\nUse 'do not' (don't) or 'does not' (doesn't) for negatives: 'I don't work on weekends.'\nUse 'Do' or 'Does' for questions: 'Does he lead the presentation?'"
+    },
+    "raw_content": "{\n  \"title\": \"The Present Simple for Professional Routines\",\n  \"topic\": \"Present Tense Verbs in a Work Context\",\n  \"body\": \"In a professional context, we use the Present Simple to describe regular activities, habits, and permanent states. This is the standard tense for explaining your daily work routine.\\n\\n1. Sentence Structure\\nFor most subjects, use the base form of the verb: 'I check my emails' or 'We attend a weekly meeting.'\\n\\n2. The Third Person Singular (He/She/It)\\nCrucially, add an '-s' or '-es' to the verb when referring to a colleague or manager: 'He manages the project' or 'She coordinates the team.'\\n(Hinweis: Achten Sie auf das 's' in der 3. Person Singular – ein häufiger Fehler bei Deutschsprachigen.)\\n\\n3. Common Business Verbs for Routines\\n- To organize: 'I organize the schedule.'\\n- To report: 'He reports to the CEO.'\\n- To collaborate: 'We collaborate with the marketing department.'\\n- To handle: 'She handles customer inquiries.'\\n\\n4. Negative Forms and Questions\\nUse 'do not' (don't) or 'does not' (doesn't) for negatives: 'I don't work on weekends.'\\nUse 'Do' or 'Does' for questions: 'Does he lead the presentation?'\"\n}"
+  },
+  {
+    "task_id": "eval-t04-A1-exerciseAtom",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Visitor Registration",
+      "topic": "Filling in a company sign-in sheet",
+      "body": "Complete the visitor sign-in sheet for your arrival at the corporate office. Use the information provided in the profile below.\n\nProfile:\nName: Marcus Weber\nCompany: TechSolutions GmbH\nTime of Arrival: 09:15\nPerson to visit: Sarah Jenkins\n\nSign-in Sheet:\nDate: 24 May 2024\nVisitor Name: [ ]\nCompany: [ ]\nTime In: [ ]\nHost/Contact Person: [ ]\n\n(Hinweis: Achten Sie auf die korrekte Zuordnung der Begriffe.)"
+    },
+    "raw_content": "{\n  \"title\": \"Visitor Registration\",\n  \"topic\": \"Filling in a company sign-in sheet\",\n  \"body\": \"Complete the visitor sign-in sheet for your arrival at the corporate office. Use the information provided in the profile below.\\n\\nProfile:\\nName: Marcus Weber\\nCompany: TechSolutions GmbH\\nTime of Arrival: 09:15\\nPerson to visit: Sarah Jenkins\\n\\nSign-in Sheet:\\nDate: 24 May 2024\\nVisitor Name: [ ]\\nCompany: [ ]\\nTime In: [ ]\\nHost/Contact Person: [ ]\\n\\n(Hinweis: Achten Sie auf die korrekte Zuordnung der Begriffe.)\"\n}"
+  },
+  {
+    "task_id": "eval-t05-A1-readingPassage",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Office Notice: Lunch Break Schedule",
+      "topic": "Reading a short office notice about lunch break times",
+      "body": "OFFICE NOTICE\n\nTo: All Staff\nFrom: Office Management\nDate: October 12\n\nSubject: New Lunch Break Times\n\nDear Colleagues,\n\nPlease note the new lunch break schedule (Mittagspause) for the office:\n\n- Team A: 12:00 PM – 1:00 PM\n- Team B: 1:00 PM – 2:00 PM\n\nPlease use the break room for your meals. Do not eat at your desks. \n\nThank you for your cooperation.\n\nManagement"
+    },
+    "raw_content": "{\n  \"title\": \"Office Notice: Lunch Break Schedule\",\n  \"topic\": \"Reading a short office notice about lunch break times\",\n  \"body\": \"OFFICE NOTICE\\n\\nTo: All Staff\\nFrom: Office Management\\nDate: October 12\\n\\nSubject: New Lunch Break Times\\n\\nDear Colleagues,\\n\\nPlease note the new lunch break schedule (Mittagspause) for the office:\\n\\n- Team A: 12:00 PM – 1:00 PM\\n- Team B: 1:00 PM – 2:00 PM\\n\\nPlease use the break room for your meals. Do not eat at your desks. \\n\\nThank you for your cooperation.\\n\\nManagement\"\n}"
+  },
+  {
+    "task_id": "eval-t06-A2-vocabSet",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Booking Business Travel",
+      "topic": "Flights, Hotels, and Ground Transportation",
+      "body": "Essential vocabulary for arranging corporate travel:\n\n1. Round-trip ticket (Hin- und Rückflug) – A flight to a destination and back.\n2. One-way ticket (Hinflug/Einfacher Ticket) – A flight to a destination only.\n3. Direct flight (Direktflug) – A flight without any stops.\n4. Layover / Stopover (Zwischenstopp) – A short stay between connecting flights.\n5. To book in advance (im Voraus buchen) – To make a reservation early.\n6. Corporate rate (Firmentarif) – A discounted price negotiated by a company.\n7. Single room (Einzelzimmer) – A hotel room for one person.\n8. Double room (Doppelzimmer) – A hotel room for two people.\n9. Complimentary breakfast (kostenloses Frühstück) – Breakfast included in the room price.\n10. Shuttle service (Shuttle-Service) – Transport between the airport and the hotel.\n11. To hail a taxi (ein Taxi herbeirufen) – To signal a taxi to stop.\n12. Expense claim (Spesenabrechnung) – The process of requesting reimbursement for travel costs."
+    },
+    "raw_content": "{\n  \"title\": \"Booking Business Travel\",\n  \"topic\": \"Flights, Hotels, and Ground Transportation\",\n  \"body\": \"Essential vocabulary for arranging corporate travel:\\n\\n1. Round-trip ticket (Hin- und Rückflug) – A flight to a destination and back.\\n2. One-way ticket (Hinflug/Einfacher Ticket) – A flight to a destination only.\\n3. Direct flight (Direktflug) – A flight without any stops.\\n4. Layover / Stopover (Zwischenstopp) – A short stay between connecting flights.\\n5. To book in advance (im Voraus buchen) – To make a reservation early.\\n6. Corporate rate (Firmentarif) – A discounted price negotiated by a company.\\n7. Single room (Einzelzimmer) – A hotel room for one person.\\n8. Double room (Doppelzimmer) – A hotel room for two people.\\n9. Complimentary breakfast (kostenloses Frühstück) – Breakfast included in the room price.\\n10. Shuttle service (Shuttle-Service) – Transport between the airport and the hotel.\\n11. To hail a taxi (ein Taxi herbeirufen) – To signal a taxi to stop.\\n12. Expense claim (Spesenabrechnung) – The process of requesting reimbursement for travel costs.\"\n}"
+  },
+  {
+    "task_id": "eval-t07-A2-dialogue",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Pre-Call Small Talk",
+      "topic": "Professional networking and rapport building before a formal meeting",
+      "body": "Sarah: Good morning, Mr. Tanaka. Can you hear me clearly?\n\nMr. Tanaka: Yes, I can. Good morning, Sarah. How are you today?\n\nSarah: I'm very well, thank you. How is the weather in Tokyo? I heard it is quite rainy this week.\n\nMr. Tanaka: That is correct. It has been raining since Monday, but it is still very warm.\n\nSarah: I see. Well, we are lucky here in London; the sun is finally out. Did you have a good weekend?\n\nMr. Tanaka: Yes, it was very relaxing. I spent some time with my family. And you?\n\nSarah: It was quite busy, actually. I had to prepare the quarterly reports. But I am looking forward to our discussion today.\n\nMr. Tanaka: Me too. Shall we start the presentation? (Sollen wir mit der Präsentation beginnen?)"
+    },
+    "raw_content": "{\n  \"title\": \"Pre-Call Small Talk\",\n  \"topic\": \"Professional networking and rapport building before a formal meeting\",\n  \"body\": \"Sarah: Good morning, Mr. Tanaka. Can you hear me clearly?\\n\\nMr. Tanaka: Yes, I can. Good morning, Sarah. How are you today?\\n\\nSarah: I'm very well, thank you. How is the weather in Tokyo? I heard it is quite rainy this week.\\n\\nMr. Tanaka: That is correct. It has been raining since Monday, but it is still very warm.\\n\\nSarah: I see. Well, we are lucky here in London; the sun is finally out. Did you have a good weekend?\\n\\nMr. Tanaka: Yes, it was very relaxing. I spent some time with my family. And you?\\n\\nSarah: It was quite busy, actually. I had to prepare the quarterly reports. But I am looking forward to our discussion today.\\n\\nMr. Tanaka: Me too. Shall we start the presentation? (Sollen wir mit der Präsentation beginnen?)\"\n}"
+  },
+  {
+    "task_id": "eval-t08-A2-grammarExplainer",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 2,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Reporting Meeting Outcomes: The Past Simple",
+      "topic": "Past Tense for Business Reporting",
+      "body": "When summarizing a meeting, the Past Simple is the primary tense used to describe completed actions and decisions. For regular verbs, add the suffix '-ed' (e.g., 'The team discussed the budget'). For irregular verbs, the form changes completely (e.g., 'We spoke about the timeline' or 'The CEO wrote the proposal'). To describe a lack of agreement or a missed point, use 'did not' followed by the base form of the verb: 'We did not reach a decision on the marketing spend.' (Hinweis: Im Englischen wird das Hilfsverb 'did' für die Verneinung genutzt, das Hauptverb bleibt im Infinitiv). Use this tense to provide a clear, chronological account of the meeting's proceedings in your minutes or follow-up emails."
+    },
+    "raw_content": "{\n  \"title\": \"Reporting Meeting Outcomes: The Past Simple\",\n  \"topic\": \"Past Tense for Business Reporting\",\n  \"body\": \"When summarizing a meeting, the Past Simple is the primary tense used to describe completed actions and decisions. For regular verbs, add the suffix '-ed' (e.g., 'The team discussed the budget'). For irregular verbs, the form changes completely (e.g., 'We spoke about the timeline' or 'The CEO wrote the proposal'). To describe a lack of agreement or a missed point, use 'did not' followed by the base form of the verb: 'We did not reach a decision on the marketing spend.' (Hinweis: Im Englischen wird das Hilfsverb 'did' für die Verneinung genutzt, das Hauptverb bleibt im Infinitiv). Use this tense to provide a clear, chronological account of the meeting's proceedings in your minutes or follow-up emails.\"\n}"
+  },
+  {
+    "task_id": "eval-t09-A2-exerciseAtom",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 2,
+    "parse_failed": true,
+    "failure_kind": "transport",
+    "final_error": "transport after retries: {\"message\":\"We're experiencing high traffic right now! Please try again soon.\",\"type\":\"too_many_requests_error\",\"param\":\"queue\",\"code\":\"queue_exceeded",
+    "output": null,
+    "raw_content": null
+  },
+  {
+    "task_id": "eval-t10-A2-readingPassage",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Hotel Booking Confirmation",
+      "topic": "Reading a hotel booking confirmation for a work trip",
+      "body": "Booking Confirmation: #BK-99210\n\nDear Mr. Schmidt,\n\nThank you for choosing the Grand Plaza Hotel for your upcoming business trip to London. We are pleased to confirm your reservation.\n\nGuest Name: Hans Schmidt\nCheck-in: Monday, 14 October (from 15:00)\nCheck-out: Thursday, 17 October (until 11:00)\nRoom Type: Single Executive Room (includes high-speed Wi-Fi and desk)\n\nPayment Details:\nTotal Cost: £450.00\nPayment Method: Corporate Account (Company: Schmidt Logistics GmbH)\n\nImportant Information:\nBreakfast is served in the main lobby from 06:30 to 10:00. Please present your ID and this confirmation email upon arrival. If you need to cancel your booking, please notify us 24 hours before your arrival to avoid a cancellation fee (Stornogebühr).\n\nWe look forward to welcoming you.\n\nBest regards,\n\nThe Grand Plaza Management"
+    },
+    "raw_content": "{\n  \"title\": \"Hotel Booking Confirmation\",\n  \"topic\": \"Reading a hotel booking confirmation for a work trip\",\n  \"body\": \"Booking Confirmation: #BK-99210\\n\\nDear Mr. Schmidt,\\n\\nThank you for choosing the Grand Plaza Hotel for your upcoming business trip to London. We are pleased to confirm your reservation.\\n\\nGuest Name: Hans Schmidt\\nCheck-in: Monday, 14 October (from 15:00)\\nCheck-out: Thursday, 17 October (until 11:00)\\nRoom Type: Single Executive Room (includes high-speed Wi-Fi and desk)\\n\\nPayment Details:\\nTotal Cost: £450.00\\nPayment Method: Corporate Account (Company: Schmidt Logistics GmbH)\\n\\nImportant Information:\\nBreakfast is served in the main lobby from 06:30 to 10:00. Please present your ID and this confirmation email upon arrival. If you need to cancel your booking, please notify us 24 hours before your arrival to avoid a cancellation fee (Stornogebühr).\\n\\nWe look forward to welcoming you.\\n\\nBest regards,\\n\\nThe Grand Plaza Management\"\n}"
+  },
+  {
+    "task_id": "eval-t11-B1-vocabSet",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Giving Constructive Feedback in Professional Meetings",
+      "topic": "Business Communication: Feedback & Diplomacy",
+      "body": "To maintain professional relationships while ensuring quality, use these B1-level phrases to soften criticism and provide actionable suggestions.\n\n1. Softening the Approach (Diplomatie):\n- 'I see your point, but...'\n- 'I have a few concerns regarding...'\n- 'Could we look at this from another angle?'\n\n2. Highlighting Areas for Improvement (Verbesserungspotenzial):\n- 'There is room for improvement in...'\n- 'I think this section needs more detail.'\n- 'It might be more effective if we...'\n\n3. Providing Positive Reinforcement (Positive Verstärkung):\n- 'I really appreciate the way you handled...'\n- 'This part of the proposal is very strong.'\n- 'You've made a great start on...'\n\n4. Action-Oriented Closing (Ergebnisorientierung):\n- 'How about we try...?'\n- 'What would be the best way to address this?'\n- 'Let's agree on a revised deadline for this part.'"
+    },
+    "raw_content": "{\n  \"title\": \"Giving Constructive Feedback in Professional Meetings\",\n  \"topic\": \"Business Communication: Feedback & Diplomacy\",\n  \"body\": \"To maintain professional relationships while ensuring quality, use these B1-level phrases to soften criticism and provide actionable suggestions.\\n\\n1. Softening the Approach (Diplomatie):\\n- 'I see your point, but...'\\n- 'I have a few concerns regarding...'\\n- 'Could we look at this from another angle?'\\n\\n2. Highlighting Areas for Improvement (Verbesserungspotenzial):\\n- 'There is room for improvement in...'\\n- 'I think this section needs more detail.'\\n- 'It might be more effective if we...'\\n\\n3. Providing Positive Reinforcement (Positive Verstärkung):\\n- 'I really appreciate the way you handled...'\\n- 'This part of the proposal is very strong.'\\n- 'You've made a great start on...'\\n\\n4. Action-Oriented Closing (Ergebnisorientierung):\\n- 'How about we try...?'\\n- 'What would be the best way to address this?'\\n- 'Let's agree on a revised deadline for this part.'\"\n}"
+  },
+  {
+    "task_id": "eval-t12-B1-dialogue",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Addressing Project Delays",
+      "topic": "Explaining a project delay to a manager",
+      "body": "Manager: Good morning, Sarah. I was looking at the project timeline. It seems we've missed the milestone for the prototype. What happened?\n\nSarah: Good morning, Mr. Weber. Yes, I'm afraid we are running behind schedule. We've encountered some unexpected technical issues with the API integration (die API-Integration).\n\nManager: I see. Is this a major setback? How much of a delay are we talking about?\n\nSarah: It's a significant hurdle, but we have a solution. We expect a delay of about one week. I've already coordinated with the development team to prioritize this task.\n\nManager: A week is manageable, but we cannot afford further slips. What is the plan to ensure we meet the final deadline?\n\nSarah: We are implementing a daily stand-up meeting to track progress more closely. I will send you a revised timeline by the end of the day to ensure we stay on track."
+    },
+    "raw_content": "{\n  \"title\": \"Addressing Project Delays\",\n  \"topic\": \"Explaining a project delay to a manager\",\n  \"body\": \"Manager: Good morning, Sarah. I was looking at the project timeline. It seems we've missed the milestone for the prototype. What happened?\\n\\nSarah: Good morning, Mr. Weber. Yes, I'm afraid we are running behind schedule. We've encountered some unexpected technical issues with the API integration (die API-Integration).\\n\\nManager: I see. Is this a major setback? How much of a delay are we talking about?\\n\\nSarah: It's a significant hurdle, but we have a solution. We expect a delay of about one week. I've already coordinated with the development team to prioritize this task.\\n\\nManager: A week is manageable, but we cannot afford further slips. What is the plan to ensure we meet the final deadline?\\n\\nSarah: We are implementing a daily stand-up meeting to track progress more closely. I will send you a revised timeline by the end of the day to ensure we stay on track.\"\n}"
+  },
+  {
+    "task_id": "eval-t13-B1-grammarExplainer",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Polite Requests in the Workplace",
+      "topic": "Modal Verbs for Professional Requests (B1)",
+      "body": "In a professional environment, the direct imperative (e.g., 'Send me the report') can appear demanding or rude. To maintain a collaborative tone with colleagues, we use modal verbs to soften the request. \n\n1. 'Can' and 'Could': 'Can' is standard for peers. 'Could' is more formal and polite, often used when requesting a favor or addressing a senior colleague. \nExample: 'Could you please review the slide deck by 5 PM?'\n\n2. 'Will' and 'Would': 'Would' is the most polite option for formal requests, often paired with 'mind'. \nExample: 'Would you mind sending me the meeting minutes?' (Note: Use the -ing form after 'mind').\n\n3. 'May': While 'May I' is used for asking permission, it is rarely used to ask others to do something. \n\nPedagogical Hint: Im Deutschen nutzen wir oft den Konjunktiv II ('Könnten Sie...'), um Höflichkeit auszudrücken. Im Englischen übernimmt 'Could' und 'Would' diese Funktion, um Distanz und Respekt zu wahren."
+    },
+    "raw_content": "{\n  \"title\": \"Polite Requests in the Workplace\",\n  \"topic\": \"Modal Verbs for Professional Requests (B1)\",\n  \"body\": \"In a professional environment, the direct imperative (e.g., 'Send me the report') can appear demanding or rude. To maintain a collaborative tone with colleagues, we use modal verbs to soften the request. \\n\\n1. 'Can' and 'Could': 'Can' is standard for peers. 'Could' is more formal and polite, often used when requesting a favor or addressing a senior colleague. \\nExample: 'Could you please review the slide deck by 5 PM?'\\n\\n2. 'Will' and 'Would': 'Would' is the most polite option for formal requests, often paired with 'mind'. \\nExample: 'Would you mind sending me the meeting minutes?' (Note: Use the -ing form after 'mind').\\n\\n3. 'May': While 'May I' is used for asking permission, it is rarely used to ask others to do something. \\n\\nPedagogical Hint: Im Deutschen nutzen wir oft den Konjunktiv II ('Könnten Sie...'), um Höflichkeit auszudrücken. Im Englischen übernimmt 'Could' und 'Would' diese Funktion, um Distanz und Respekt zu wahren.\"\n}"
+  },
+  {
+    "task_id": "eval-t14-B1-exerciseAtom",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Requesting a Deadline Extension",
+      "topic": "Professional Email Writing (B1)",
+      "body": "Scenario: You are working on a quarterly report for your manager, Ms. Henderson. Due to an unexpected delay in receiving data from the sales department, you cannot finish the report by Friday. You need an extension until next Wednesday.\n\nTask: Write a professional email to Ms. Henderson. Your email must include:\n1. A clear subject line.\n2. A formal greeting.\n3. A polite explanation of the delay (avoiding overly emotional language).\n4. A specific proposal for the new deadline.\n5. A professional closing.\n\nWriting Tip: Use polite modal verbs such as 'would' or 'could' to make your request less demanding. (Tipp: Nutzen Sie höfliche Modalverben, um die Anfrage weniger fordernd zu formulieren.)"
+    },
+    "raw_content": "{\n  \"title\": \"Requesting a Deadline Extension\",\n  \"topic\": \"Professional Email Writing (B1)\",\n  \"body\": \"Scenario: You are working on a quarterly report for your manager, Ms. Henderson. Due to an unexpected delay in receiving data from the sales department, you cannot finish the report by Friday. You need an extension until next Wednesday.\\n\\nTask: Write a professional email to Ms. Henderson. Your email must include:\\n1. A clear subject line.\\n2. A formal greeting.\\n3. A polite explanation of the delay (avoiding overly emotional language).\\n4. A specific proposal for the new deadline.\\n5. A professional closing.\\n\\nWriting Tip: Use polite modal verbs such as 'would' or 'could' to make your request less demanding. (Tipp: Nutzen Sie höfliche Modalverben, um die Anfrage weniger fordernd zu formulieren.)\"\n}"
+  },
+  {
+    "task_id": "eval-t15-B1-readingPassage",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Voicemail: Shipment Delay Notification",
+      "topic": "Handling logistics issues and delivery delays in a professional context",
+      "body": "Hello, this is Marcus Thorne from Global Logistics Solutions. I am calling regarding your order number 8842, which was scheduled for delivery this Thursday. Unfortunately, due to an unexpected customs delay at the border, your shipment has been held up. We expect the clearance process to be completed by tomorrow morning, meaning your delivery will likely be delayed by approximately two business days. We apologize for any inconvenience this may cause to your project timeline. I will send a follow-up email with the updated tracking link shortly. If you have any urgent questions, please call me back at extension 402. Thank you."
+    },
+    "raw_content": "{\n  \"title\": \"Voicemail: Shipment Delay Notification\",\n  \"topic\": \"Handling logistics issues and delivery delays in a professional context\",\n  \"body\": \"Hello, this is Marcus Thorne from Global Logistics Solutions. I am calling regarding your order number 8842, which was scheduled for delivery this Thursday. Unfortunately, due to an unexpected customs delay at the border, your shipment has been held up. We expect the clearance process to be completed by tomorrow morning, meaning your delivery will likely be delayed by approximately two business days. We apologize for any inconvenience this may cause to your project timeline. I will send a follow-up email with the updated tracking link shortly. If you have any urgent questions, please call me back at extension 402. Thank you.\"\n}"
+  },
+  {
+    "task_id": "eval-t16-B2-vocabSet",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Negotiating Supplier Contracts",
+      "topic": "Business English: Procurement and Contractual Terms",
+      "body": "### Key Terminology for Contract Negotiations\n\n**1. Core Contractual Terms**\n* **Liability (Haftung):** The legal responsibility for damages or losses. *Example: 'We need to cap our total liability at 100% of the annual contract value.'*\n* **Indemnification:** An agreement where one party compensates the other for losses incurred. *Example: 'The supplier shall provide full indemnification against third-party intellectual property claims.'*\n* **Termination Clause:** The section specifying how and when the contract can be ended. *Example: 'We require a termination for convenience clause with a 30-day notice period.'*\n* **Force Majeure:** Unforeseeable circumstances that prevent someone from fulfilling a contract. *Example: 'The force majeure clause covers natural disasters and political instability.'*\n\n**2. Commercial Terms & Pricing**\n* **Volume Discount:** A reduction in price based on the quantity purchased. *Example: 'Can we agree on a tiered volume discount if our orders exceed 10,000 units?'*\n* **Payment Terms (Zahlungsbedingungen):** The conditions under which payment is made. *Example: 'Our standard payment terms are Net 30.'*\n* **Lead Time:** The time between the initiation and completion of a production process. *Example: 'We need to reduce the lead time from six weeks to four to maintain agility.'*\n* **Service Level Agreement (SLA):** A commitment between a service provider and a client regarding quality and uptime. *Example: 'The SLA must guarantee 99.9% system availability.'*\n\n**3. Negotiation Phrases for B2 Proficiency**\n* **Proposing a compromise:** 'Would you be open to a middle ground regarding the delivery schedule?'\n* **Expressing a non-negotiable point:** 'I'm afraid the liability cap is a deal-breaker for our legal department.'\n* **Seeking clarification:** 'Could you elaborate on how this penalty clause would be triggered?'\n* **Confirming agreement:** 'If you can lower the unit price by 5%, we can sign the agreement today.'"
+    },
+    "raw_content": "{\n  \"title\": \"Negotiating Supplier Contracts\",\n  \"topic\": \"Business English: Procurement and Contractual Terms\",\n  \"body\": \"### Key Terminology for Contract Negotiations\\n\\n**1. Core Contractual Terms**\\n* **Liability (Haftung):** The legal responsibility for damages or losses. *Example: 'We need to cap our total liability at 100% of the annual contract value.'*\\n* **Indemnification:** An agreement where one party compensates the other for losses incurred. *Example: 'The supplier shall provide full indemnification against third-party intellectual property claims.'*\\n* **Termination Clause:** The section specifying how and when the contract can be ended. *Example: 'We require a termination for convenience clause with a 30-day notice period.'*\\n* **Force Majeure:** Unforeseeable circumstances that prevent someone from fulfilling a contract. *Example: 'The force majeure clause covers natural disasters and political instability.'*\\n\\n**2. Commercial Terms & Pricing**\\n* **Volume Discount:** A reduction in price based on the quantity purchased. *Example: 'Can we agree on a tiered volume discount if our orders exceed 10,000 units?'*\\n* **Payment Terms (Zahlungsbedingungen):** The conditions under which payment is made. *Example: 'Our standard payment terms are Net 30.'*\\n* **Lead Time:** The time between the initiation and completion of a production process. *Example: 'We need to reduce the lead time from six weeks to four to maintain agility.'*\\n* **Service Level Agreement (SLA):** A commitment between a service provider and a client regarding quality and uptime. *Example: 'The SLA must guarantee 99.9% system availability.'*\\n\\n**3. Negotiation Phrases for B2 Proficiency**\\n* **Proposing a compromise:** 'Would you be open to a middle ground regarding the delivery schedule?'\\n* **Expressing a non-negotiable point:** 'I'm afraid the liability cap is a deal-breaker for our legal department.'\\n* **Seeking clarification:** 'Could you elaborate on how this penalty clause would be triggered?'\\n* **Confirming agreement:** 'If you can lower the unit price by 5%, we can sign the agreement today.'\"\n}"
+  },
+  {
+    "task_id": "eval-t17-B2-dialogue",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Navigating Professional Disagreement",
+      "topic": "Diplomatically challenging a colleague's proposal in a corporate setting",
+      "body": "Sarah: I’ve reviewed the proposal for the Q3 marketing campaign. I believe we should allocate the entire budget to social media influencers to maximize our reach among Gen Z.\n\nMark: I see where you're coming from, Sarah, and I agree that influencer marketing is powerful. However, I have some reservations about putting all our eggs in one basket. (Hinweis: 'to put all one's eggs in one basket' = sich auf eine einzige Karte setzen).\n\nSarah: Why is that? The data shows the highest engagement rates are currently on TikTok and Instagram.\n\nMark: That's a fair point. That said, I'm concerned that we might alienate our existing B2B client base who rely more on LinkedIn and industry whitepapers. Perhaps we could consider a hybrid approach instead?\n\nSarah: I hadn't fully considered the B2B impact. Could you elaborate on how you'd split the budget?\n\nMark: With pleasure. I suggest a 60/40 split. This allows us to capture the new demographic while maintaining our professional credibility with long-term partners."
+    },
+    "raw_content": "{\n  \"title\": \"Navigating Professional Disagreement\",\n  \"topic\": \"Diplomatically challenging a colleague's proposal in a corporate setting\",\n  \"body\": \"Sarah: I’ve reviewed the proposal for the Q3 marketing campaign. I believe we should allocate the entire budget to social media influencers to maximize our reach among Gen Z.\\n\\nMark: I see where you're coming from, Sarah, and I agree that influencer marketing is powerful. However, I have some reservations about putting all our eggs in one basket. (Hinweis: 'to put all one's eggs in one basket' = sich auf eine einzige Karte setzen).\\n\\nSarah: Why is that? The data shows the highest engagement rates are currently on TikTok and Instagram.\\n\\nMark: That's a fair point. That said, I'm concerned that we might alienate our existing B2B client base who rely more on LinkedIn and industry whitepapers. Perhaps we could consider a hybrid approach instead?\\n\\nSarah: I hadn't fully considered the B2B impact. Could you elaborate on how you'd split the budget?\\n\\nMark: With pleasure. I suggest a 60/40 split. This allows us to capture the new demographic while maintaining our professional credibility with long-term partners.\"\n}"
+  },
+  {
+    "task_id": "eval-t18-B2-grammarExplainer",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 2,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Navigating Hypotheticals: Advanced Conditionals in Business",
+      "topic": "Conditional Sentences for Hypothetical Business Scenarios (B2)",
+      "body": "In professional contexts, the ability to discuss hypothetical outcomes is essential for risk assessment, strategic planning, and negotiation. At the B2 level, you must distinguish between realistic possibilities and purely theoretical scenarios.\n\n1. The First Conditional (Real Possibility)\nUsed for likely future outcomes based on specific conditions. \nStructure: If + Present Simple, will + infinitive.\nExample: 'If the client approves the budget by Friday, we will initiate the onboarding process.'\n\n2. The Second Conditional (Hypothetical/Unlikely)\nUsed for scenarios that are improbable or contrary to current facts. This is vital for 'what-if' brainstorming sessions.\nStructure: If + Past Simple, would + infinitive.\nExample: 'If we had a larger marketing budget, we would expand into the Asian market.'\nNote for German speakers: Avoid the common mistake of using 'would' in the if-clause (e.g., avoid 'If we would have...'). In English, the condition remains in the past tense: 'If we had...'\n\n3. Mixed Conditionals (Past Cause, Present Result)\nUsed when a past action or decision has a continuing effect on the present situation.\nStructure: If + Past Perfect, would + infinitive.\nExample: 'If we had invested in the software last year, we would be more efficient now.'\n\nProfessional Tip: To sound more formal in executive summaries or proposals, replace 'if' with 'provided that' or 'assuming that'.\nExample: 'Provided that the market remains stable, we expect a 5% growth in Q4.'"
+    },
+    "raw_content": "{\n  \"title\": \"Navigating Hypotheticals: Advanced Conditionals in Business\",\n  \"topic\": \"Conditional Sentences for Hypothetical Business Scenarios (B2)\",\n  \"body\": \"In professional contexts, the ability to discuss hypothetical outcomes is essential for risk assessment, strategic planning, and negotiation. At the B2 level, you must distinguish between realistic possibilities and purely theoretical scenarios.\\n\\n1. The First Conditional (Real Possibility)\\nUsed for likely future outcomes based on specific conditions. \\nStructure: If + Present Simple, will + infinitive.\\nExample: 'If the client approves the budget by Friday, we will initiate the onboarding process.'\\n\\n2. The Second Conditional (Hypothetical/Unlikely)\\nUsed for scenarios that are improbable or contrary to current facts. This is vital for 'what-if' brainstorming sessions.\\nStructure: If + Past Simple, would + infinitive.\\nExample: 'If we had a larger marketing budget, we would expand into the Asian market.'\\nNote for German speakers: Avoid the common mistake of using 'would' in the if-clause (e.g., avoid 'If we would have...'). In English, the condition remains in the past tense: 'If we had...'\\n\\n3. Mixed Conditionals (Past Cause, Present Result)\\nUsed when a past action or decision has a continuing effect on the present situation.\\nStructure: If + Past Perfect, would + infinitive.\\nExample: 'If we had invested in the software last year, we would be more efficient now.'\\n\\nProfessional Tip: To sound more formal in executive summaries or proposals, replace 'if' with 'provided that' or 'assuming that'.\\nExample: 'Provided that the market remains stable, we expect a 5% growth in Q4.'\"\n}"
+  },
+  {
+    "task_id": "eval-t19-B2-exerciseAtom",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Formal Correspondence: Drafting a Complaint",
+      "topic": "Writing a formal complaint regarding a late delivery (CEFR B2)",
+      "body": "<h3>Exercise: Professional Complaint Letter</h3><p>You are a Procurement Manager at a logistics firm. You ordered a shipment of specialized hardware from a supplier, 'Global Tech Solutions', which was guaranteed for delivery by the 1st of the month. It is now the 10th, and the shipment has not arrived, causing delays in your production schedule.</p><p><strong>Task:</strong> Write a formal letter of complaint (150–200 words). Your letter must include the following points:</p><ul><li>A clear reference to the order number and date.</li><li>A professional explanation of the inconvenience caused by the delay.</li><li>A firm request for an immediate status update and a proposed solution (e.g., expedited shipping or a discount).</li><li>A professional closing statement.</li></ul><p><em>Pedagogical Hint: Avoid emotional language. Use the passive voice to maintain a professional distance (e.g., 'It has come to my attention that...' instead of 'I saw that...'). / Vermeiden Sie emotionale Sprache; nutzen Sie das Passiv für eine professionelle Distanz.</em></p>"
+    },
+    "raw_content": "{\n  \"title\": \"Formal Correspondence: Drafting a Complaint\",\n  \"topic\": \"Writing a formal complaint regarding a late delivery (CEFR B2)\",\n  \"body\": \"<h3>Exercise: Professional Complaint Letter</h3><p>You are a Procurement Manager at a logistics firm. You ordered a shipment of specialized hardware from a supplier, 'Global Tech Solutions', which was guaranteed for delivery by the 1st of the month. It is now the 10th, and the shipment has not arrived, causing delays in your production schedule.</p><p><strong>Task:</strong> Write a formal letter of complaint (150–200 words). Your letter must include the following points:</p><ul><li>A clear reference to the order number and date.</li><li>A professional explanation of the inconvenience caused by the delay.</li><li>A firm request for an immediate status update and a proposed solution (e.g., expedited shipping or a discount).</li><li>A professional closing statement.</li></ul><p><em>Pedagogical Hint: Avoid emotional language. Use the passive voice to maintain a professional distance (e.g., 'It has come to my attention that...' instead of 'I saw that...'). / Vermeiden Sie emotionale Sprache; nutzen Sie das Passiv für eine professionelle Distanz.</em></p>\"\n}"
+  },
+  {
+    "task_id": "eval-t20-C1-vocabSet",
+    "candidate": "baseline",
+    "model": "gemma-4-31b",
+    "attempts": 1,
+    "parse_failed": false,
+    "failure_kind": null,
+    "final_error": null,
+    "output": {
+      "title": "Executive Reporting: Quarterly Results",
+      "topic": "Advanced vocabulary for presenting financial and operational performance to senior management.",
+      "body": "1. To plateau (v.) – To reach a state of little or no change after a period of growth. (stagnieren)\n2. To offset (v.) – To counteract the effect of something by providing an opposite force. (ausgleichen)\n3. To pivot (v.) – To fundamentally change a business strategy to adapt to market conditions. (strategisch neu ausrichten)\n4. A shortfall (n.) – A deficit of a required amount; failing to meet a target. (Defizit/Fehlbetrag)\n5. To leverage (v.) – To use something to maximum advantage. (nutzen/hebeln)\n6. Year-on-year / YoY (adj./adv.) – Comparing financial results for one period with those of the same period last year. (im Vorjahresvergleich)\n7. To outperform (v.) – To perform better than a competitor or a benchmark. (übertreffen)\n8. Volatility (n.) – Liability to change rapidly and unpredictably, especially for the worse. (Volatilität/Schwankungsbreite)\n9. To streamline (v.) – To make an organization or system more efficient by removing unnecessary steps. (optimieren/verschlanken)\n10. A catalyst (n.) – An event or factor that accelerates a significant change. (Katalysator/Auslöser)"
+    },
+    "raw_content": "{\n  \"title\": \"Executive Reporting: Quarterly Results\",\n  \"topic\": \"Advanced vocabulary for presenting financial and operational performance to senior management.\",\n  \"body\": \"1. To plateau (v.) – To reach a state of little or no change after a period of growth. (stagnieren)\\n2. To offset (v.) – To counteract the effect of something by providing an opposite force. (ausgleichen)\\n3. To pivot (v.) – To fundamentally change a business strategy to adapt to market conditions. (strategisch neu ausrichten)\\n4. A shortfall (n.) – A deficit of a required amount; failing to meet a target. (Defizit/Fehlbetrag)\\n5. To leverage (v.) – To use something to maximum advantage. (nutzen/hebeln)\\n6. Year-on-year / YoY (adj./adv.) – Comparing financial results for one period with those of the same period last year. (im Vorjahresvergleich)\\n7. To outperform (v.) – To perform better than a competitor or a benchmark. (übertreffen)\\n8. Volatility (n.) – Liability to change rapidly and unpredictably, especially for the worse. (Volatilität/Schwankungsbreite)\\n9. To streamline (v.) – To make an organization or system more efficient by removing unnecessary steps. (optimieren/verschlanken)\\n10. A catalyst (n.) – An event or factor that accelerates a significant change. (Katalysator/Auslöser)\"\n}"
+  }
+]

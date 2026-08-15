@@ -31,7 +31,9 @@ type BlockType =
   | 'listeningScript'
   | 'culturalNote'
   | 'imagePromptTemplate'
-  | 'speakingPrompt';
+  | 'speakingPrompt'
+  | 'offerLetter'
+  | 'offerSection';
 
 interface GraderScores {
   pedagogy: number;
@@ -69,6 +71,8 @@ const BLOCK_TYPE_LABELS: Record<BlockType, string> = {
   culturalNote: 'Kulturhinweis',
   imagePromptTemplate: 'Bildvorlage',
   speakingPrompt: 'Sprechaufgabe',
+  offerLetter: 'Angebotsschreiben',
+  offerSection: 'Angebotsbaustein',
 };
 
 const SKILL_LABELS: Record<Skill, string> = {
@@ -92,6 +96,9 @@ const asString = (value: unknown): string | null =>
 
 const asNonEmptyArray = (value: unknown): unknown[] | null =>
   Array.isArray(value) && value.length > 0 ? value : null;
+
+const truncatePreview = (value: string, maximum = 600): string =>
+  value.length <= maximum ? value : `${value.slice(0, maximum).trimEnd()}…`;
 
 const firstString = (record: Record<string, unknown>, keys: string[]): string | null => {
   for (const key of keys) {
@@ -342,6 +349,39 @@ const BlockBodyPreview: React.FC<{ blockType: BlockType; body: unknown }> = ({ b
         <div>
           <SectionLabel>Aufgabe</SectionLabel>
           <p className="whitespace-pre-wrap text-sm text-simmonds-charcoal">{prompt}</p>
+        </div>
+      );
+    }
+
+    case 'offerLetter': {
+      const betreff = asString(body.betreff);
+      const anschreiben = asString(body.anschreiben);
+      if (!betreff || !anschreiben) return <RawBody body={body} />;
+      const signatur = asString(body.signatur);
+      return (
+        <div className="space-y-3">
+          <div>
+            <SectionLabel>Betreff</SectionLabel>
+            <p className="text-sm font-medium text-simmonds-charcoal">{betreff}</p>
+          </div>
+          <p className="whitespace-pre-wrap text-sm text-simmonds-charcoal">
+            {truncatePreview(anschreiben)}
+          </p>
+          {signatur && <p className="text-sm italic text-simmonds-stone">{signatur}</p>}
+        </div>
+      );
+    }
+
+    case 'offerSection': {
+      const heading = asString(body.heading);
+      const text = asString(body.text);
+      if (!heading || !text) return <RawBody body={body} />;
+      return (
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-simmonds-charcoal">{heading}</p>
+          <p className="whitespace-pre-wrap text-sm text-simmonds-charcoal">
+            {truncatePreview(text)}
+          </p>
         </div>
       );
     }

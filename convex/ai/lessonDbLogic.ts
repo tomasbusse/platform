@@ -105,6 +105,17 @@ export function validateBlockBody(
     case "speakingPrompt":
       requireString("prompt");
       break;
+    case "offerLetter":
+      requireString("betreff");
+      requireString("anschreiben");
+      if (body.signatur !== undefined && !isNonEmptyString(body.signatur)) {
+        errors.push("signatur must be a non-empty string when present");
+      }
+      break;
+    case "offerSection":
+      requireString("heading");
+      requireString("text");
+      break;
     default:
       errors.push(`unsupported blockType: ${blockType}`);
   }
@@ -183,6 +194,8 @@ const BLOCK_SHAPE_INSTRUCTIONS: Record<string, string> = {
   culturalNote: '{ "note": "cultural note" }',
   imagePromptTemplate: '{ "prompt": "image-generation prompt" }',
   speakingPrompt: '{ "prompt": "speaking task" }',
+  offerLetter: '{ "betreff": "offer subject", "anschreiben": "offer letter", "signatur"?: "signature" }',
+  offerSection: '{ "heading": "section heading", "text": "section text" }',
 };
 
 export function buildGeneratorPrompt(args: {

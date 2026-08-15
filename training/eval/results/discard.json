@@ -1,0 +1,222 @@
+[
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t01-A1-vocabSet"
+  },
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t02-A1-dialogue"
+  },
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t03-A1-grammarExplainer"
+  },
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t04-A1-exerciseAtom"
+  },
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t05-A1-readingPassage"
+  },
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t06-A2-vocabSet"
+  },
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t07-A2-dialogue"
+  },
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t08-A2-grammarExplainer"
+  },
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t09-A2-exerciseAtom"
+  },
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t10-A2-readingPassage"
+  },
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t11-B1-vocabSet"
+  },
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t12-B1-dialogue"
+  },
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t13-B1-grammarExplainer"
+  },
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t14-B1-exerciseAtom"
+  },
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t15-B1-readingPassage"
+  },
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t16-B2-vocabSet"
+  },
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t17-B2-dialogue"
+  },
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t18-B2-grammarExplainer"
+  },
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t19-B2-exerciseAtom"
+  },
+  {
+    "attempts": 2,
+    "candidate": "discard",
+    "failure_kind": "transport",
+    "final_error": "transport error: HTTP Error 403: Forbidden",
+    "model": "gemma-4-31b",
+    "output": null,
+    "parse_failed": true,
+    "raw_content": null,
+    "task_id": "eval-t20-C1-vocabSet"
+  }
+]

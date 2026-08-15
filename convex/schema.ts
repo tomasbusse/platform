@@ -1167,7 +1167,9 @@ export default defineSchema({
       v.literal("listeningScript"),
       v.literal("culturalNote"),
       v.literal("imagePromptTemplate"),
-      v.literal("speakingPrompt")
+      v.literal("speakingPrompt"),
+      v.literal("offerLetter"),
+      v.literal("offerSection")
     ),
     level: v.union(
       v.literal("A1"),

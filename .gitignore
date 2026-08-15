@@ -18,3 +18,7 @@ dist/
 # Claude
 .claude/
 training/data/
+__pycache__/
+*.pyc
+training/ingest/output/
+training/adapters/
